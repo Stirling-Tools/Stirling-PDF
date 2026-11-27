@@ -49,11 +49,11 @@ test.describe("PDF text editor - desktop layout", () => {
     await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
   });
 
-  test("marks the document unsaved once edited", async ({ page }) => {
+  test("Save comes alive once the document is edited", async ({ page }) => {
     test.setTimeout(120_000);
     await openEditor(page);
 
-    expect(await page.getByTestId("pdf-editor-dirty-dot").count()).toBe(0);
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
 
     await page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(
@@ -71,7 +71,7 @@ test.describe("PDF text editor - desktop layout", () => {
       document.execCommand("insertText", false, "X");
     });
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled({
       timeout: 15_000,
     });
   });

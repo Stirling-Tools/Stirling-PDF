@@ -7745,6 +7745,29 @@ confirm = "Discard and open"
 hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
 
+[pdfTextEditor.document]
+allText = "All text"
+changeAllColours = "Change all colours"
+changeAllFonts = "Change all fonts"
+changeAllFontsHint = "All text in the document will change to the font you pick. Locked text stays the same."
+changeColour = "Change colour"
+changeFont = "Change font"
+changeFontHint = "All text in this font will change. Locked text stays the same."
+colours = "Text colours"
+colourUses_one = "{{hex}} · {{count}} text box"
+colourUses_other = "{{hex}} · {{count}} text boxes"
+done = "Done"
+keepStyle = "Keep bold and italic text as it is"
+locked = "{{count}} locked"
+makeBold = "Make it all bold"
+makeItalic = "Make it all italic"
+moreColours = "{{count}} more colours"
+replaceFont = "Replace this font"
+unlockAll = "Unlock all"
+unnamedFont = "Embedded font"
+usedTimes_one = "Used once"
+usedTimes_other = "Used {{uses}} times"
+
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
@@ -7815,14 +7838,15 @@ weightSemibold = "Semibold"
 weightThin = "Thin"
 
 [pdfTextEditor.fonts]
-allPresent = "All letters & numbers present"
+allPresent = "Has every letter and number."
+coverageUnknown = "Couldn't check which letters it has."
 missing = "Missing: {{glyphs}}"
 title = "Fonts"
 
 [pdfTextEditor.fonts.compat]
-info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
-ok = "Every font includes the full alphabet and digits - type freely."
-warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
+info = "New letters you type may look slightly different."
+ok = "You can type any letter or number in these fonts."
+warnOther = "Some fonts are missing letters. Those will look slightly different when typed."
 
 [pdfTextEditor.fonts.pill]
 info = "Embedded"
@@ -7830,12 +7854,15 @@ ok = "All glyphs"
 warn = "{{count}} with gaps"
 
 [pdfTextEditor.fonts.status.embedded]
+hint = "Included in this PDF. Anything you type will match."
 label = "Embedded"
 
 [pdfTextEditor.fonts.status.standard]
+hint = "A common font. Anything you type will match."
 label = "Standard"
 
 [pdfTextEditor.fonts.status.subset]
+hint = "Only part of this font is included. Some letters you type may look different."
 label = "Subset"
 
 [pdfTextEditor.help]
@@ -7882,49 +7909,33 @@ zoomDesc = "Zoom in / out"
 
 [pdfTextEditor.inspector]
 document = "Document"
-fontCompletedClosest = "Embedded font · characters it lacks are drawn in {{name}}, the closest match available."
-fontCompletedOriginal = "Embedded font · characters it lacks are drawn in {{name}}, the same font."
-fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
 fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}."
-fontUnknownCoverage = "{{name}} · a character it lacks falls back to {{fallback}}."
-formField = "Form field"
 geometry = "Position & size"
 height = "Height"
 heightHint = "A text box's height follows its type size and line count."
+heightShort = "H"
 image = "Image"
-images = "Images"
-manyImages = "{{count}} images"
-manyShapes = "{{count}} shapes"
-manyText = "Text · {{count}} boxes"
-mixed = "{{count}} objects"
 multiGeometry = "Select a single object to edit its position and size."
 nothingSelected = "Nothing selected"
-nothingSelectedHint = "Click any text, image or shape on the page to edit it, or add something new with Text, Table or Image above."
+nothingSelectedHint = "Click any text, image or shape on the page to edit it."
 ocrDocumentChanged = "The document changed while OCR was running. Run OCR again to include your latest changes."
 ocrInvalidResult = "OCR did not return a PDF. Please try again."
 ocrNoLanguages = "No OCR languages are installed on the server."
 ocrProtected = "OCR cannot yet preserve this PDF's protection. The protected original remains available for viewing."
 ocrRunning = "Recognizing text..."
 ocrUnavailable = "OCR is unavailable on this server."
-oneImage = "Image"
-oneShape = "Shape"
-oneText = "Text"
 outlinedTextHint_one = "This page's text is drawn as shapes, so there is no text to edit. Run OCR first to make it editable."
 outlinedTextHint_other = "{{count}} pages have their text drawn as shapes, so there is no text to edit. Run OCR first to make it editable."
-pages = "Pages"
 runOcr = "Run OCR"
 scanHint_one = "This page is a scanned image with no text to edit. Run OCR first to make its text editable."
 scanHint_other = "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable."
-scannedText = "Scanned text · changed words are covered and redrawn in a matching font."
 scannedTextMisaligned = "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted."
 scannedTextNoFont = "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works."
 scannedTextOffInk = "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again."
-tabDocument = "Document"
-tabSelected = "Selected"
-textBoxes = "Text boxes"
 unreadPagesHint = "{{count}} pages have no text to edit: some are scanned images and some draw their text as shapes. Run OCR first to make them editable."
 width = "Width"
 widthHint = "Text re-wraps to fit the width."
+widthShort = "W"
 x = "X"
 y = "Y"
 
@@ -8190,7 +8201,6 @@ outline = "Outline"
 [pdfTextEditor.settings]
 advanced = "Advanced"
 find = "Find in document"
-view = "View"
 
 [pdfTextEditor.shape]
 groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
@@ -8198,6 +8208,7 @@ groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 [pdfTextEditor.sidebar]
 addImage = "Add image"
 addTable = "Add table"
+addToPage = "Add to page"
 clickPageToAddTable = "Click page to add a table"
 clickPageToAddText = "Click page to add text"
 group = "Group"
@@ -8222,11 +8233,6 @@ ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
 widthGrow = "Grow"
 widthGrowHint = "Grow widens a box as you type until it reaches the page edge, then flows onto new lines; Wrap keeps its width and flows onto new lines."
 widthWrap = "Wrap"
-
-[pdfTextEditor.spellcheck]
-auto = "Automatic"
-enable = "Check spelling as you type"
-language = "Dictionary language"
 
 [pdfTextEditor.table]
 addColumn = "Add column"

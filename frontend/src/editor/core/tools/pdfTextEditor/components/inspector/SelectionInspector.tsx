@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
-  Field,
   PointsInput,
   Section,
   SectionLabel,
@@ -23,7 +23,7 @@ interface Props {
   controller: InspectorController;
   selection: SelectionState;
   geometry: SelectionGeometry;
-  /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
+  /** Why typing into the selected text will not come out as expected, if it won't. */
   fontNote: string | null;
   scanFontMatch?: ScanFontMatch | null;
   canGroup: boolean;
@@ -56,21 +56,20 @@ export function SelectionInspector({
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
-  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
+  const note = hasRunSelection ? fontNote : null;
+  const showScanFont = !!scanFontMatch?.canShow;
 
   return (
     <Stack gap={0} data-testid="pdf-editor-selection-inspector">
-      <SelectionHeader
-        runCount={runCount}
-        imageCount={imageCount}
-        shapeCount={shapeCount}
-        formField={selection.formFieldId !== null}
-        fontNote={hasRunSelection ? fontNote : null}
-      />
-      {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
+      {note && <FontWarning note={note} />}
+      {showScanFont && <ScanFontMatchRow match={scanFontMatch} />}
       {runCount + imageCount > 0 && (
-        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+        <GeometrySection
+          geometry={geometry}
+          isImage={!hasRunSelection}
+          first={!note && !showScanFont}
+        />
       )}
       {hasRunSelection && (
         <ParagraphSection
@@ -87,69 +86,18 @@ export function SelectionInspector({
   );
 }
 
-/** Names what is selected, and how its font will treat new characters. */
-function SelectionHeader({
-  runCount,
-  imageCount,
-  shapeCount,
-  formField,
-  fontNote,
-}: {
-  runCount: number;
-  imageCount: number;
-  shapeCount: number;
-  /** A form field is only ever selected alone. */
-  formField: boolean;
-  fontNote: string | null;
-}) {
-  const { t } = useTranslation();
-  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
-  let title: string;
-  if (formField) {
-    title = t("pdfTextEditor.inspector.formField", "Form field");
-  } else if (kinds > 1) {
-    title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount + shapeCount,
-    });
-  } else if (shapeCount > 0) {
-    title =
-      shapeCount === 1
-        ? t("pdfTextEditor.inspector.oneShape", "Shape")
-        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
-            count: shapeCount,
-          });
-  } else if (runCount > 0) {
-    title =
-      runCount === 1
-        ? t("pdfTextEditor.inspector.oneText", "Text")
-        : t("pdfTextEditor.inspector.manyText", "Text · {{count}} boxes", {
-            count: runCount,
-          });
-  } else {
-    title =
-      imageCount === 1
-        ? t("pdfTextEditor.inspector.oneImage", "Image")
-        : t("pdfTextEditor.inspector.manyImages", "{{count}} images", {
-            count: imageCount,
-          });
-  }
+/** Shown only when typing into the selection will not come out as expected. */
+function FontWarning({ note }: { note: string }) {
   return (
-    <Section tinted first>
-      {/* Doubles as the old sidebar's selection readout, moved from the very
-          bottom of the panel to the top where the user is already looking. */}
-      <Text size="sm" fw={600} data-testid="pdf-editor-selection-count">
-        {title}
-      </Text>
-      {fontNote && (
-        <Text
-          size="xs"
-          c="dimmed"
-          mt={4}
-          data-testid="pdf-editor-inspector-font-note"
-        >
-          {fontNote}
-        </Text>
-      )}
+    <Section first testId="pdf-editor-inspector-font-note">
+      <Group gap={6} wrap="nowrap" align="flex-start">
+        <Icon
+          name="circle-alert"
+          size={16}
+          style={{ flexShrink: 0, marginTop: 1, color: "var(--c-warning)" }}
+        />
+        <Text size="xs">{note}</Text>
+      </Group>
     </Section>
   );
 }
@@ -174,7 +122,8 @@ function ParagraphSection({
       </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Tooltip
-          label={
+          position="top"
+          content={
             canGroup
               ? t("pdfTextEditor.sidebar.groupTooltip", {
                   defaultValue:
@@ -200,7 +149,8 @@ function ParagraphSection({
           </Button>
         </Tooltip>
         <Tooltip
-          label={
+          position="top"
+          content={
             canUngroup
               ? t(
                   "pdfTextEditor.sidebar.ungroupTooltip",
@@ -233,14 +183,16 @@ function ParagraphSection({
 function GeometrySection({
   geometry,
   isImage,
+  first,
 }: {
   geometry: SelectionGeometry;
   isImage: boolean;
+  first: boolean;
 }) {
   const { t } = useTranslation();
   if (!geometry.single) {
     return (
-      <Section>
+      <Section first={first}>
         <SectionLabel>
           {t("pdfTextEditor.inspector.geometry", "Position & size")}
         </SectionLabel>
@@ -253,75 +205,85 @@ function GeometrySection({
       </Section>
     );
   }
-  const { bounds, setX, setY, setWidth, setHeight } = geometry.single;
   return (
-    <Section testId="pdf-editor-geometry-section">
+    <Section testId="pdf-editor-geometry-section" first={first}>
       <SectionLabel>
         {t("pdfTextEditor.inspector.geometry", "Position & size")}
       </SectionLabel>
-      <Stack gap="xs">
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field label={t("pdfTextEditor.inspector.x", "X")}>
-            <PointsInput
-              value={bounds.x}
-              onCommit={setX}
-              label={t("pdfTextEditor.inspector.x", "X")}
-              testId="pdf-editor-pos-x"
-            />
-          </Field>
-          <Field label={t("pdfTextEditor.inspector.y", "Y")}>
-            <PointsInput
-              value={bounds.y}
-              onCommit={setY}
-              label={t("pdfTextEditor.inspector.y", "Y")}
-              testId="pdf-editor-pos-y"
-            />
-          </Field>
-        </Group>
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field
-            label={t("pdfTextEditor.inspector.width", "Width")}
-            hint={
-              isImage || !setWidth
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.widthHint",
-                    "Text re-wraps to fit the width.",
-                  )
-            }
-          >
-            <PointsInput
-              value={bounds.width}
-              onCommit={setWidth ?? (() => undefined)}
-              min={1}
-              disabled={!setWidth}
-              label={t("pdfTextEditor.inspector.width", "Width")}
-              testId="pdf-editor-size-w"
-            />
-          </Field>
-          <Field
-            label={t("pdfTextEditor.inspector.height", "Height")}
-            hint={
-              setHeight
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.heightHint",
-                    "A text box's height follows its type size and line count.",
-                  )
-            }
-          >
-            <PointsInput
-              value={bounds.height}
-              onCommit={setHeight ?? (() => undefined)}
-              min={1}
-              disabled={!setHeight}
-              label={t("pdfTextEditor.inspector.height", "Height")}
-              testId="pdf-editor-size-h"
-            />
-          </Field>
-        </Group>
-      </Stack>
+      <GeometryFields single={geometry.single} isImage={isImage} />
     </Section>
+  );
+}
+
+/** X, Y, width and height of one selected object, in PDF points. */
+export function GeometryFields({
+  single,
+  isImage,
+}: {
+  single: NonNullable<SelectionGeometry["single"]>;
+  isImage: boolean;
+}) {
+  const { t } = useTranslation();
+  const { bounds, setX, setY, setWidth, setHeight } = single;
+  return (
+    <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+      <PointsInput
+        value={bounds.x}
+        onCommit={setX}
+        label={t("pdfTextEditor.inspector.x", "X")}
+        prefix={t("pdfTextEditor.inspector.x", "X")}
+        testId="pdf-editor-pos-x"
+      />
+      <PointsInput
+        value={bounds.y}
+        onCommit={setY}
+        label={t("pdfTextEditor.inspector.y", "Y")}
+        prefix={t("pdfTextEditor.inspector.y", "Y")}
+        testId="pdf-editor-pos-y"
+      />
+      <Tooltip
+        position="top"
+        content={t(
+          "pdfTextEditor.inspector.widthHint",
+          "Text re-wraps to fit the width.",
+        )}
+        disabled={isImage || !setWidth}
+        maxWidth={200}
+      >
+        <div>
+          <PointsInput
+            value={bounds.width}
+            onCommit={setWidth ?? (() => undefined)}
+            min={1}
+            disabled={!setWidth}
+            label={t("pdfTextEditor.inspector.width", "Width")}
+            prefix={t("pdfTextEditor.inspector.widthShort", "W")}
+            testId="pdf-editor-size-w"
+          />
+        </div>
+      </Tooltip>
+      <Tooltip
+        position="top"
+        content={t(
+          "pdfTextEditor.inspector.heightHint",
+          "A text box's height follows its type size and line count.",
+        )}
+        disabled={!!setHeight}
+        maxWidth={200}
+      >
+        <div>
+          <PointsInput
+            value={bounds.height}
+            onCommit={setHeight ?? (() => undefined)}
+            min={1}
+            disabled={!setHeight}
+            label={t("pdfTextEditor.inspector.height", "Height")}
+            prefix={t("pdfTextEditor.inspector.heightShort", "H")}
+            testId="pdf-editor-size-h"
+          />
+        </div>
+      </Tooltip>
+    </SimpleGrid>
   );
 }
 
@@ -342,7 +304,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
       <Stack gap="xs">
         <Group gap={4} wrap="nowrap">
           {transforms.map((tr) => (
-            <Tooltip key={tr.mode} label={tr.label}>
+            <Tooltip position="top" key={tr.mode} content={tr.label}>
               <Button
                 size="sm"
                 variant="secondary"

@@ -177,14 +177,14 @@ test("permitted text edits preserve protection and a fresh reader follows the se
     .locator('[data-testid^="pdf-editor-run-"][contenteditable="true"]')
     .first();
   await run.fill("Owner-authorized text edit");
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+  await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
   await page.getByTestId("pdf-editor-download").click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("pdf-editor-save-risk-confirm").click();
   const download = await downloadPromise;
   const savedPath = test.info().outputPath("restricted-edited.pdf");
   await download.saveAs(savedPath);
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
+  await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
   const saved = await fs.readFile(savedPath);
   expect(await inspect(page, saved, "")).toMatchObject({
     encrypted: true,

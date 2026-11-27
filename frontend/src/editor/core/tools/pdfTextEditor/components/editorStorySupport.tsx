@@ -143,11 +143,12 @@ function run(id: string, text: string, y: number, fontSize: number) {
 
 /**
  * The view state of a one-page document matching {@link MockPage}: runs r1
- * and r2, image i1, and with `table` a 3 by 3 table, t1, below them.
+ * and r2, image i1, and with `table` a 3 by 3 table, t1, below them. With
+ * `paragraph`, r2 is a two-line paragraph.
  */
 export function storyState(
   store: EditorStore,
-  { table = false, lockedImage = false } = {},
+  { table = false, lockedImage = false, paragraph = false } = {},
 ): EditorViewState {
   const tables = table
     ? [
@@ -172,7 +173,11 @@ export function storyState(
     display: DisplayTransform.identity(PAGE_WIDTH, PAGE_HEIGHT).toData(),
     runs: [
       run("r1", "Quarterly report", 290, 22),
-      run("r2", "Prepared by the finance team for the board.", 255, 15),
+      {
+        ...run("r2", "Prepared by the finance team for the board.", 255, 15),
+        // Two lines grouped into one paragraph, so it can be split back.
+        paragraphLineCount: paragraph ? 2 : undefined,
+      },
     ],
     images: [
       {

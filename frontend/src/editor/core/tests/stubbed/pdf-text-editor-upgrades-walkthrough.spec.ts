@@ -106,8 +106,8 @@ test("rulers and guides can be switched on from the sidebar", async ({
   test.setTimeout(140_000);
   await openEditor(page);
 
-  await page.getByTestId("pdf-editor-tab-document").click();
-  const toggle = page.getByTestId("pdf-editor-toggle-rulers");
+  // The checkbox's own input is hidden under its drawn box; its label takes the click.
+  const toggle = page.getByText("Rulers and guides", { exact: true });
   await expect(toggle).toBeVisible();
   await toggle.click();
 
@@ -136,22 +136,6 @@ test("find offers the new matching options", async ({
     page.getByTestId("pdf-editor-find-ignore-accents"),
   ).toBeVisible();
   await page.screenshot({ path: path.join(SHOTS, "04-find.png") });
-});
-
-test("the sidebar exposes the spellcheck control", async ({
-  page,
-}: {
-  page: Page;
-}) => {
-  test.setTimeout(140_000);
-  await openEditor(page);
-  await page.getByTestId("pdf-editor-tab-document").click();
-  const control = page.getByTestId("pdf-editor-spellcheck");
-  await expect(control).toBeVisible();
-  await expect(
-    page.getByTestId("pdf-editor-spellcheck-language"),
-  ).toBeVisible();
-  await page.screenshot({ path: path.join(SHOTS, "05-sidebar.png") });
 });
 
 test("a save still produces a readable PDF after the new passes run", async ({

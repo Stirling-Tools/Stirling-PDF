@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openInTextEditor,
+  openAdvancedSettings,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -36,7 +39,8 @@ test("fonts panel reports concrete a-zA-Z0-9 coverage gaps client-side", async (
   // must not corrupt PDFium.
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible();
 
-  await page.getByTestId("pdf-editor-tab-document").click();
+  // The font list lives under the panel's Advanced section.
+  await openAdvancedSettings(page);
   const panel = page.getByTestId("pdf-editor-fonts-panel");
   await expect(panel).toBeVisible();
 

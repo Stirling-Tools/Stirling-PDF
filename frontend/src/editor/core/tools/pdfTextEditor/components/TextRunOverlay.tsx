@@ -17,10 +17,6 @@ import {
 } from "@editor/tools/pdfTextEditor/types";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
-import {
-  resolveLang,
-  useSpellcheckPreference,
-} from "@editor/tools/pdfTextEditor/util/spellcheck";
 import { embeddedFaceFamily } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 import { useFontEpoch } from "@editor/tools/pdfTextEditor/hooks/useFontEpoch";
 import {
@@ -547,8 +543,6 @@ export function TextRunOverlay({
   readOnly = false,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
-  // Subscribed, so toggling the preference re-renders every overlay.
-  const spellcheck = useSpellcheckPreference();
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -1236,11 +1230,6 @@ export function TextRunOverlay({
     window.addEventListener("pointerup", onPointerUp);
   }
 
-  const spellcheckLang = resolveLang(
-    spellcheck,
-    typeof document === "undefined" ? null : document.documentElement.lang,
-  );
-
   const pristine = !showsGlyphs;
 
   const boxTransform =
@@ -1361,8 +1350,9 @@ export function TextRunOverlay({
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked && !run.textReadOnly && !readOnly}
       suppressContentEditableWarning
-      spellCheck={spellcheck.enabled && focused}
-      lang={spellcheckLang ?? undefined}
+      // Editable text is spellchecked unless told otherwise, and the
+      // browser's squiggles land on the overlay, not the drawn glyphs.
+      spellCheck={false}
       data-locked={run.locked ? "true" : undefined}
       title={
         run.locked

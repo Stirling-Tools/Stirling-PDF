@@ -53,7 +53,7 @@ async function makeAnEdit(page: Page): Promise<void> {
     selection.addRange(range);
     document.execCommand("insertText", false, "GUARDED");
   });
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible({
+  await expect(page.getByTestId("pdf-editor-save")).toBeEnabled({
     timeout: 15_000,
   });
 }
@@ -94,7 +94,7 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
     await expect(page.getByTestId("unsaved-discard")).toBeHidden();
     await expect(page.getByTestId("pdf-editor-discard-modal")).toBeHidden();
     await expect(openFile(page)).toContainText(opened);
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
     const stillThere = await page.evaluate(() =>
       (
         window as unknown as {
@@ -126,7 +126,7 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
     });
     // The app's prompt settled it: the editor must not ask a second time.
     await expect(page.getByTestId("pdf-editor-discard-modal")).toBeHidden();
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 60_000,
     });
@@ -167,7 +167,7 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
     await page.getByRole("button", { name: "Keep Working" }).click();
 
     await expect(page.getByTestId("unsaved-discard")).toBeHidden();
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
     expect(
       await page.evaluate(
         () =>

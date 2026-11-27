@@ -3596,11 +3596,11 @@ test.describe("PDF text editor - workbench tab UX", () => {
 });
 
 test.describe("PDF text editor - dirty state", () => {
-  test("top bar marks the file dirty after an edit", async ({ page }) => {
+  test("Save comes alive after an edit", async ({ page }) => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled();
 
     const firstRunTestId = await page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
@@ -3608,7 +3608,7 @@ test.describe("PDF text editor - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
   });
 });
 
@@ -3796,7 +3796,7 @@ test.describe("PDF text editor - marquee + merge", () => {
     expect(selected).toBe(totalRuns);
   });
 
-  test("Group / Ungroup toolbar buttons merge and split paragraphs", async ({
+  test("Group / Ungroup in the right-click menu merge and split paragraphs", async ({
     page,
   }) => {
     await gotoEditor(page);
@@ -3828,15 +3828,18 @@ test.describe("PDF text editor - marquee + merge", () => {
     }, ids);
     await page.waitForTimeout(100);
 
-    await expect(page.getByTestId("pdf-editor-group")).toBeEnabled();
-    await page.getByTestId("pdf-editor-group").click();
+    await page
+      .getByTestId(`pdf-editor-run-${ids[0]}`)
+      .click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-group").click();
     await page.waitForTimeout(200);
 
     const merged = await runs.count();
     expect(merged).toBe(initial - 1);
 
-    await expect(page.getByTestId("pdf-editor-ungroup")).toBeEnabled();
-    await page.getByTestId("pdf-editor-ungroup").click();
+    // The merged paragraph stays selected; its menu offers the split.
+    await runs.first().click({ button: "right" });
+    await page.getByTestId("pdf-editor-context-ungroup").click();
     await page.waitForTimeout(200);
 
     const split = await runs.count();
@@ -3909,25 +3912,6 @@ test.describe("PDF text editor - help overlay", () => {
     await expect(
       page.getByRole("heading", { name: "Keyboard shortcuts" }),
     ).toBeVisible();
-  });
-});
-
-test.describe("PDF text editor - selection count panel", () => {
-  test("sidebar shows N runs selected after multi-select", async ({ page }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-
-    const ids = await page
-      .locator('[data-testid^="pdf-editor-run-p0-"]')
-      .evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!));
-    expect(ids.length).toBeGreaterThan(1);
-
-    await page.getByTestId(ids[0]).click();
-    await page.getByTestId(ids[1]).click({ modifiers: ["Shift"] });
-
-    const countNode = page.getByTestId("pdf-editor-selection-count");
-    await expect(countNode).toBeVisible();
-    await expect(countNode).toContainText(/2 boxes/);
   });
 });
 

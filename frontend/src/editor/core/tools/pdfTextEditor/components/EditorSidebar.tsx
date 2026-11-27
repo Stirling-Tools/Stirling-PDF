@@ -1,5 +1,5 @@
-import { memo, useEffect, useState } from "react";
-import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
+import { memo } from "react";
+import { Box, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { CreateNewPdfButton } from "@editor/components/createPdf/CreateNewPdfButton";
@@ -9,21 +9,13 @@ import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspec
 import { EditorPanelTools } from "@editor/tools/pdfTextEditor/components/EditorPanelTools";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import {
-  useSelectedFontNote,
-  type ScanNote,
-} from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
+import { useSelectionNote } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import {
   ScanHint,
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
-import {
-  scanBlockMisaligned,
-  scanBlockOffInk,
-  scanTypingDropped,
-} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
@@ -46,12 +38,16 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  initialTab?: SidebarTab;
-  /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
+  /**
+   * Desktop: the panel's head shows the insert tools, and the floating
+   * selection bar carries everything about the selection, so the panel holds
+   * only the document. Elsewhere the selection's details lead the panel.
+   */
   desktop?: boolean;
 }
 
-export type SidebarTab = "selected" | "document";
+/** The position and size fields' height: a heading and two rows of inputs. */
+const NOTHING_SELECTED_HEIGHT = "5.77rem";
 
 export const EditorSidebar = memo(function EditorSidebar({
   store,
@@ -69,31 +65,14 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrAvailable,
   ocrBlockedReason,
   onRemovePassword,
-  initialTab = "selected",
   desktop = false,
 }: SidebarProps) {
-  const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
-  const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
     selection.shapeIds.length > 0 ||
     selection.formFieldId !== null;
-  const [tab, setTab] = useState<SidebarTab>(initialTab);
-  // Picking something on the page is a request to see its properties, so the
-  // panel follows. Clearing does NOT yank the tab back - a user who opened
-  // Document then clicked bare page should stay where they were.
-  useEffect(() => {
-    if (hasSelection) setTab("selected");
-  }, [hasSelection]);
-
-  const fontNote = useSelectedFontNote(
-    state,
-    selection,
-    selectedScanNote(store, state, selection),
-  );
-  const scanFontMatch = useScanFontMatch(store, state, selection);
 
   if (!state.hasDocument) {
     return (
@@ -103,128 +82,144 @@ export const EditorSidebar = memo(function EditorSidebar({
     );
   }
 
+  const scanHint = {
+    pages: state.pages,
+    onRunOcr,
+    ocrRunning,
+    ocrAvailable,
+    ocrBlockedReason,
+    onRemovePassword,
+  };
   return (
-    <Tabs
-      value={tab}
-      onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
-      data-testid="pdf-editor-sidebar-status"
-    >
-      <Box
-        // Sticky for the same reason the footer is: the outer ScrollArea owns
-        // the scrolling, so the tools and tabs must hold themselves in place.
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 2,
-          background: "var(--c-bg-raised)",
-          borderBottom: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        {desktop && <EditorPanelTools store={store} state={state} />}
-        <Group gap={0} wrap="nowrap" px="xs">
-          <Tabs.List style={{ flex: 1, borderBottom: "none" }}>
-            <Tabs.Tab value="selected" data-testid="pdf-editor-tab-selected">
-              {t("pdfTextEditor.inspector.tabSelected", "Selected")}
-            </Tabs.Tab>
-            <Tabs.Tab value="document" data-testid="pdf-editor-tab-document">
-              {t("pdfTextEditor.inspector.tabDocument", "Document")}
-            </Tabs.Tab>
-          </Tabs.List>
-        </Group>
-      </Box>
-
-      <LanguagesInUse.Provider value={state.languagesInUse}>
-        <Box>
-          <Tabs.Panel value="selected">
-            {hasSelection ? (
-              <SelectionInspector
-                controller={controller}
-                selection={selection}
-                geometry={geometry}
-                fontNote={fontNote}
-                scanFontMatch={scanFontMatch}
-                canGroup={canGroup}
-                canUngroup={canUngroup}
-                onGroup={onGroup}
-                onUngroup={onUngroup}
-                showImageTools={!desktop}
-              />
-            ) : (
-              <NothingSelected
-                pages={state.pages}
-                onRunOcr={onRunOcr}
-                ocrRunning={ocrRunning}
-                ocrAvailable={ocrAvailable}
-                ocrBlockedReason={ocrBlockedReason}
-                onRemovePassword={onRemovePassword}
-              />
-            )}
-          </Tabs.Panel>
-          <Tabs.Panel value="document">
-            {tab === "document" && (
-              <DocumentInspector
-                pages={state.pages}
-                groupingMode={state.groupingMode}
-                widthMode={state.widthMode}
-                showRulers={state.showRulers}
-                onSetGroupingMode={onSetGroupingMode}
-                onSetWidthMode={onSetWidthMode}
-                onSetShowRulers={onSetShowRulers}
-              />
-            )}
-          </Tabs.Panel>
+    <Stack gap={0} data-testid="pdf-editor-sidebar-status">
+      {desktop && (
+        <Box
+          // Sticky because the outer ScrollArea owns the scrolling, so the
+          // insert tools must hold themselves in place.
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            background: "var(--c-bg-raised)",
+            borderBottom: "1px solid var(--mantine-color-default-border)",
+          }}
+        >
+          <EditorPanelTools store={store} state={state} />
         </Box>
+      )}
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        {desktop ? (
+          <div className="pdf-editor-panel-hint">
+            <ScanHint {...scanHint} />
+          </div>
+        ) : hasSelection ? (
+          <SelectionPanel
+            store={store}
+            state={state}
+            selection={selection}
+            controller={controller}
+            canGroup={canGroup}
+            canUngroup={canUngroup}
+            onGroup={onGroup}
+            onUngroup={onUngroup}
+          />
+        ) : (
+          <NothingSelected {...scanHint} />
+        )}
+        <DocumentInspector
+          store={store}
+          pages={state.pages}
+          onChangeFontEverywhere={controller.onChangeFontFamilyEverywhere}
+          groupingMode={state.groupingMode}
+          widthMode={state.widthMode}
+          showRulers={state.showRulers}
+          onSetGroupingMode={onSetGroupingMode}
+          onSetWidthMode={onSetWidthMode}
+          onSetShowRulers={onSetShowRulers}
+        />
       </LanguagesInUse.Provider>
-      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
-    </Tabs>
+    </Stack>
   );
 });
 
-/** What the Selected tab shows before the user has picked anything. */
-function NothingSelected(props: ScanHintProps) {
-  const { t } = useTranslation();
+/** The selection's details where no floating bar carries them. */
+function SelectionPanel({
+  store,
+  state,
+  selection,
+  controller,
+  canGroup,
+  canUngroup,
+  onGroup,
+  onUngroup,
+}: Pick<
+  SidebarProps,
+  | "store"
+  | "state"
+  | "selection"
+  | "canGroup"
+  | "canUngroup"
+  | "onGroup"
+  | "onUngroup"
+> & { controller: ReturnType<typeof useToolbarController> }) {
+  const geometry = useSelectionGeometry(store, state, selection);
+  const fontNote = useSelectionNote(store, state, selection);
+  const scanFontMatch = useScanFontMatch(store, state, selection);
   return (
-    <Center p="xl" data-testid="pdf-editor-nothing-selected">
-      <Stack align="center" gap={6}>
-        <Icon
-          name="square-dashed"
-          size={34}
-          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
-        />
-        <Text size="sm" fw={500} c="dimmed">
-          {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
-        </Text>
-        <Text size="xs" c="dimmed" ta="center">
-          {t(
-            "pdfTextEditor.inspector.nothingSelectedHint",
-            "Click any text, image or shape on the page to edit it, or add something new with Insert above.",
-          )}
-        </Text>
-        <ScanHint {...props} />
-      </Stack>
-    </Center>
+    <>
+      <SelectionInspector
+        controller={controller}
+        selection={selection}
+        geometry={geometry}
+        fontNote={fontNote}
+        scanFontMatch={scanFontMatch}
+        canGroup={canGroup}
+        canUngroup={canUngroup}
+        onGroup={onGroup}
+        onUngroup={onUngroup}
+      />
+      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
+    </>
   );
 }
 
-function selectedScanNote(
-  store: EditorStore,
-  state: EditorViewState,
-  selection: SelectionState,
-): ScanNote {
-  const doc = store.document;
-  if (!doc) return null;
-  const picked = new Set(selection.runIds);
-  const runs = state.pages.flatMap((page) =>
-    page.runs.flatMap((r) => {
-      if (!picked.has(r.id)) return [];
-      const run = doc.page(page.pageIndex).findRun(r.id);
-      return run ? [run] : [];
-    }),
+/** A single quiet line where a selection's properties would go. */
+function NothingSelected(props: ScanHintProps) {
+  const { t } = useTranslation();
+  return (
+    <Box px="md" py="md" data-testid="pdf-editor-nothing-selected">
+      {/* As tall as the position and size fields a selection brings, so
+          picking something does not shift the settings below. */}
+      <Stack
+        align="center"
+        justify="center"
+        gap={4}
+        px="md"
+        style={{
+          height: NOTHING_SELECTED_HEIGHT,
+          border: "1px dashed var(--c-border)",
+          borderRadius: "var(--mantine-radius-md)",
+          textAlign: "center",
+        }}
+      >
+        <Icon
+          name="square-dashed"
+          size={18}
+          style={{ color: "var(--c-text-muted)" }}
+        />
+        <Text size="sm" fw={500}>
+          {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "pdfTextEditor.inspector.nothingSelectedHint",
+            "Click any text, image or shape on the page to edit it.",
+          )}
+        </Text>
+      </Stack>
+      <ScanHint {...props} />
+    </Box>
   );
-  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
-  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
-  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
-  return null;
 }
 
 function EmptySidebar({

@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Box, Group, Tooltip } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -75,7 +76,8 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           </Group>
         )}
         <Tooltip
-          label={t("pdfTextEditor.saveTooltip", {
+          position="top"
+          content={t("pdfTextEditor.saveTooltip", {
             defaultValue:
               "Apply changes to the file in your workspace ({{shortcut}})",
             shortcut: modShortcut("S"),
@@ -84,26 +86,25 @@ export const EditorPanelActions = memo(function EditorPanelActions({
           <Button
             size="sm"
             onClick={onSave}
+            // Live only once there is something to save, which is itself the
+            // sign of unsaved edits.
+            disabled={!dirty}
             data-testid="pdf-editor-save"
             style={{ flex: 1, minWidth: 0 }}
-            // Phones show the unsaved dot by the file name instead.
-            rightSection={
-              dirty && !compact ? (
-                <span
-                  className="pdf-editor-topbar__dirty"
-                  data-testid="pdf-editor-dirty-dot"
-                  role="status"
-                  aria-label={t("pdfTextEditor.unsaved", "(unsaved)")}
-                  title={t("pdfTextEditor.unsaved", "(unsaved)")}
-                />
-              ) : undefined
-            }
           >
             {t("pdfTextEditor.save", "Save PDF")}
           </Button>
         </Tooltip>
+        {/* Save coming alive is silent, so screen readers hear the change
+            here. Phones announce it with the dot by the file name. */}
+        {!compact && (
+          <span className="sr-only" role="status">
+            {dirty ? t("pdfTextEditor.unsaved", "(unsaved)") : ""}
+          </span>
+        )}
         <Tooltip
-          label={t(
+          position="top"
+          content={t(
             "pdfTextEditor.downloadTooltip",
             "Save and download the edited PDF",
           )}
@@ -121,7 +122,8 @@ export const EditorPanelActions = memo(function EditorPanelActions({
         {compact && (
           <>
             <Tooltip
-              label={t("pdfTextEditor.settings.find", "Find in document")}
+              position="top"
+              content={t("pdfTextEditor.settings.find", "Find in document")}
             >
               <Button
                 size="sm"
@@ -137,7 +139,8 @@ export const EditorPanelActions = memo(function EditorPanelActions({
               />
             </Tooltip>
             <Tooltip
-              label={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
+              position="top"
+              content={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
             >
               <Button
                 size="sm"

@@ -73,9 +73,9 @@ describe("useSelectedFontNote", () => {
     });
   });
 
-  it("drops the unknown-coverage note once the server face arrives", async () => {
+  it("says nothing about a font that only might lack characters", async () => {
     const { result } = renderHook(() => useSelectedFontNote(STATE, SELECTION));
-    expect(result.current).toBe("pdfTextEditor.inspector.fontUnknownCoverage");
+    expect(result.current).toBeNull();
 
     await act(async () => {
       await loadServerFontBytes("DejaVu Serif Bold");

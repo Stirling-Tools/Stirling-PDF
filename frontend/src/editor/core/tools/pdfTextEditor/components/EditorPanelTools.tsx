@@ -1,8 +1,10 @@
-import { Box, Group, Tooltip } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { SectionLabel } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import type {
   EditorStore,
   EditorViewState,
@@ -27,7 +29,7 @@ export function EditorPanelTools({ store, state }: Props) {
     testId: string,
     extra: { armed?: boolean; disabled?: boolean; tooltip: string },
   ) => (
-    <Tooltip label={extra.tooltip}>
+    <Tooltip position="top" content={extra.tooltip}>
       <Button
         size="sm"
         variant={extra.armed ? "primary" : "secondary"}
@@ -45,7 +47,10 @@ export function EditorPanelTools({ store, state }: Props) {
   );
 
   return (
-    <Box px="md" py="xs" data-testid="pdf-editor-panel-tools">
+    <Box px="md" pt="xs" pb="sm" data-testid="pdf-editor-panel-tools">
+      <SectionLabel>
+        {t("pdfTextEditor.sidebar.addToPage", "Add to page")}
+      </SectionLabel>
       <Group gap={6} wrap="nowrap">
         {insertButton(
           t("pdfTextEditor.sidebar.text", "Text"),

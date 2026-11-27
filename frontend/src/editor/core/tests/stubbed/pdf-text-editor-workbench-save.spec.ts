@@ -48,7 +48,7 @@ async function editFirstRun(page: Page, text = "ZZSAVED") {
     [id, text],
   );
   await expect(firstRun).toContainText(text);
-  await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+  await expect(page.getByTestId("pdf-editor-save")).toBeEnabled();
 }
 
 /** The workbench view switcher's "Active Files" tab (a Mantine radio label). */
@@ -74,8 +74,8 @@ test.describe("PDF text editor - standardised save", () => {
     // Plain save: no download is expected, the edit lands in the workbench.
     await page.getByTestId("pdf-editor-save").click();
 
-    // The dirty marker clears only after the edit reaches the workbench.
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden({
+    // Save goes quiet only after the edit reaches the workbench.
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled({
       timeout: 60_000,
     });
 
@@ -105,7 +105,7 @@ test.describe("PDF text editor - standardised save", () => {
       await workbenchTab(page, /^Viewer$/).click();
       await editFirstRun(page, text);
       await page.getByTestId("pdf-editor-save").click();
-      await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden({
+      await expect(page.getByTestId("pdf-editor-save")).toBeDisabled({
         timeout: 60_000,
       });
 
@@ -159,7 +159,7 @@ test.describe("PDF text editor - standardised save", () => {
     await editFirstRun(page);
 
     await page.getByTestId("pdf-editor-save").click();
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden({
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled({
       timeout: 60_000,
     });
 

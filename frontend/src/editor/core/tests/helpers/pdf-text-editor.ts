@@ -248,3 +248,17 @@ export async function clearEditorSelection(page: Page): Promise<void> {
     ).__editor_store.selection.clear(),
   );
 }
+
+/**
+ * Opens the side panel's Advanced section, which holds the document's fonts,
+ * text colours, text grouping and new text box width.
+ */
+export async function openAdvancedSettings(page: Page): Promise<void> {
+  const advanced = page.getByTestId("pdf-editor-advanced-settings");
+  const toggle = advanced.getByRole("button", { name: "Advanced" });
+  if ((await toggle.getAttribute("aria-expanded")) !== "true")
+    await toggle.click();
+  await expect(
+    page.getByTestId("pdf-editor-grouping-mode-control"),
+  ).toBeVisible();
+}

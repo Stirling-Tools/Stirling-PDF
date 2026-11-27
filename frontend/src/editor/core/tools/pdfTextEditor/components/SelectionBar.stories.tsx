@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { userEvent, within } from "storybook/test";
 import { SelectionBar } from "@editor/tools/pdfTextEditor/components/SelectionBar";
 import {
   MockPage,
@@ -51,4 +52,16 @@ export const Image: Story = { args: { imageIds: ["i1"] } };
 /** Several objects: no Duplicate, and Arrange can align them. */
 export const MultipleObjects: Story = {
   args: { runIds: ["r1", "r2"], imageIds: ["i1"] },
+};
+
+/** Position and size open from the bar, in points, for one selected object. */
+export const PositionAndSize: Story = {
+  args: { runIds: ["r1"] },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      await within(canvasElement.ownerDocument.body).findByTestId(
+        "pdf-editor-geometry-menu",
+      ),
+    );
+  },
 };
