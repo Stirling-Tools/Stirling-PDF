@@ -177,6 +177,7 @@ function FontsBlock({
       <ChangePopover
         opened={target !== null}
         width={FONT_POPOVER_WIDTH}
+        label={t("pdfTextEditor.fonts.title", "Fonts")}
         // The Fonts row, not the row of the font being replaced, which goes
         // from the list as soon as its text previews in another font.
         anchor={
@@ -669,6 +670,7 @@ function ColoursBlock({
     <Stack gap="xs" data-testid="pdf-editor-document-colours">
       <ChangePopover
         opened={target !== null}
+        label={t("pdfTextEditor.document.colours", "Text colours")}
         // The heading, not the swatch, which goes as its colour previews.
         anchor={
           <BlockHeading

@@ -8,6 +8,7 @@ import { Group, Popover, Text, type PopoverProps } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { CHANGE_PREVIEW_ATTR } from "@editor/tools/pdfTextEditor/util/dom";
 
 /** A block's heading, with its document-wide control at the end of the row. */
 export function BlockHeading({
@@ -96,10 +97,12 @@ export function ChangePopover({
   width = "target",
   position,
   middlewares,
+  label,
   children,
 }: {
   opened: boolean;
   anchor: ReactNode;
+  label?: string;
   /** Wider than the panel reaches out over the page from its right edge. */
   width?: number | "target";
   position?: PopoverProps["position"];
@@ -130,7 +133,12 @@ export function ChangePopover({
       <Popover.Target>
         <div>{anchor}</div>
       </Popover.Target>
-      <Popover.Dropdown>
+      <Popover.Dropdown
+        role="dialog"
+        aria-modal={opened ? "true" : undefined}
+        aria-label={label}
+        {...(opened && { [CHANGE_PREVIEW_ATTR]: "" })}
+      >
         {/* Focus lands on the popover, not its first field: the font list
             opens on focus and would cover what the popover offers. */}
         <div tabIndex={-1} data-autofocus style={{ outline: "none" }}>

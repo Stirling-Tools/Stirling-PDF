@@ -30,6 +30,12 @@ export function isModalOpen(): boolean {
   return document.querySelector('[aria-modal="true"]') !== null;
 }
 
+export const CHANGE_PREVIEW_ATTR = "data-change-preview";
+
+export function isChangePreviewOpen(): boolean {
+  return document.querySelector(`[${CHANGE_PREVIEW_ATTR}]`) !== null;
+}
+
 // The page index of the page nearest the viewport centre.
 export function visiblePageIndex(): number {
   const pages = pageElements();

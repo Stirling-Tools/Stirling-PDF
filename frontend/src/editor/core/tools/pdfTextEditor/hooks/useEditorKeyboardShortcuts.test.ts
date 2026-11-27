@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { CHANGE_PREVIEW_ATTR } from "@editor/tools/pdfTextEditor/util/dom";
 
 function setup() {
   const store = {
@@ -73,6 +74,26 @@ describe("editor shortcuts behind a dialog", () => {
     press("?");
     press("s", { ctrlKey: true });
     expect(cbs.onToggleHelp).toHaveBeenCalledTimes(1);
+    expect(cbs.onSave).toHaveBeenCalledTimes(1);
+  });
+
+  test("save and undo wait while a change is previewing, then save works again", () => {
+    const cbs = setup();
+    const preview = openModal().parentElement!;
+    preview.setAttribute(CHANGE_PREVIEW_ATTR, "");
+    const saving = new KeyboardEvent("keydown", {
+      key: "s",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(saving);
+    press("z", { ctrlKey: true });
+    expect(saving.defaultPrevented).toBe(true);
+    expect(cbs.onSave).not.toHaveBeenCalled();
+    expect(cbs.onUndo).not.toHaveBeenCalled();
+
+    preview.remove();
+    press("s", { ctrlKey: true });
     expect(cbs.onSave).toHaveBeenCalledTimes(1);
   });
 

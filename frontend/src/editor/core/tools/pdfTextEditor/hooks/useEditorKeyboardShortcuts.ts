@@ -3,6 +3,7 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import {
   isFocusInContentEditable,
   isFocusInFormField,
+  isChangePreviewOpen,
   isModalOpen,
   visiblePageIndex,
 } from "@editor/tools/pdfTextEditor/util/dom";
@@ -86,6 +87,10 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (!meta) return;
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       const key = e.key.toLowerCase();
+      if (key === "s" && isChangePreviewOpen()) {
+        e.preventDefault();
+        return;
+      }
       if (key !== "s" && isModalOpen()) return;
       const hasRuns = store.selection.value.runIds.length > 0;
       const typesCharacter = e.altKey;
