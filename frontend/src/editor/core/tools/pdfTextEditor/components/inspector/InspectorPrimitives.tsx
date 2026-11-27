@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
+import {
+  POINT_TO_UNIT,
+  type MeasurementUnit,
+} from "@editor/utils/measurementUtils";
+import { localPaperSize } from "@editor/utils/paperSize";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Section heading, optionally with an info affordance beside it and a trailing control. */
@@ -96,6 +101,14 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+type LengthUnit = Extract<MeasurementUnit, "mm" | "in">;
+
+const DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
+
+export function lengthUnitFor(locales?: readonly string[]): LengthUnit {
+  return localPaperSize<LengthUnit>("mm", "in", locales);
+}
+
 /**
  * A points field that only commits a real change. Its short name (X, W) sits
  * inside the field, so a pair of them fits side by side without labels above.
@@ -103,21 +116,6 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
  * Geometry edits dispatch undoable commands, so re-emitting the value the
  * field already shows would cost a spurious undo step on every blur.
  */
-export type LengthUnit = "mm" | "in";
-
-const POINTS_PER: Record<LengthUnit, number> = { mm: 72 / 25.4, in: 72 };
-const DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
-const INCH_REGIONS = new Set(["US", "LR", "MM"]);
-
-export function lengthUnitFor(locale: string): LengthUnit {
-  const region = locale
-    .split(/[-_]/)
-    .slice(1)
-    .find((part) => /^([a-z]{2}|\d{3})$/i.test(part))
-    ?.toUpperCase();
-  return region && INCH_REGIONS.has(region) ? "in" : "mm";
-}
-
 export function PointsInput({
   value,
   onCommit,
@@ -139,9 +137,9 @@ export function PointsInput({
   min?: number;
   disabled?: boolean;
 }) {
-  const perUnit = POINTS_PER[unit];
+  const perPoint = POINT_TO_UNIT[unit];
   const decimals = DECIMALS[unit];
-  const shown = Number((value / perUnit).toFixed(decimals));
+  const shown = Number((value * perPoint).toFixed(decimals));
   return (
     <NumberInput
       size="xs"
@@ -156,7 +154,7 @@ export function PointsInput({
           {unit}
         </Text>
       }
-      min={min === undefined ? undefined : min / perUnit}
+      min={min === undefined ? undefined : min * perPoint}
       decimalScale={decimals}
       fixedDecimalScale
       step={unit === "in" ? 0.1 : 1}
@@ -167,7 +165,7 @@ export function PointsInput({
       onChange={(next) => {
         const n = typeof next === "number" ? next : Number(next);
         if (!Number.isFinite(n) || n === shown) return;
-        onCommit(n * perUnit);
+        onCommit(n / perPoint);
       }}
     />
   );

@@ -229,7 +229,7 @@ export function GeometryFields({
 }) {
   const { t } = useTranslation();
   const { bounds, display, moveDisplayed, setWidth, setHeight } = single;
-  const unit = lengthUnitFor(navigator.language);
+  const unit = lengthUnitFor();
   const { left, top } = displayedTopLeft(display, bounds);
   return (
     <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
