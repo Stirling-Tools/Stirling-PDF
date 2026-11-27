@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.awt.Color;
-import java.awt.color.ICC_Profile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,7 +125,6 @@ public class ConvertPDFToPDFA {
                 Math.max(0, applicationProperties.getSystem().getMaxPdfaConversionPages());
     }
 
-    private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int FLATTEN_DPI = 300;
 
     private static final String ANNOTATION_HIGHLIGHT = "Highlight";
@@ -193,12 +191,6 @@ public class ConvertPDFToPDFA {
                             });
         } catch (IOException e) {
             log.warn("Failed to clean temporary directory: {}", directory, e);
-        }
-    }
-
-    private static void writeJavaIccProfile(ICC_Profile profile, Path target) throws IOException {
-        try (OutputStream out = Files.newOutputStream(target)) {
-            out.write(profile.getData());
         }
     }
 
@@ -1333,59 +1325,6 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private Path sanitizePdfWithPdfBox(Path inputPdf, boolean addWhiteBackground) {
-        try {
-            Path sanitizedPath =
-                    inputPdf.getParent().resolve("sanitized_" + inputPdf.getFileName().toString());
-
-            sanitizeDocument(inputPdf, sanitizedPath, addWhiteBackground);
-
-            log.info("PDF sanitized with PDFBox for better Ghostscript compatibility");
-            return sanitizedPath;
-        } catch (IOException e) {
-            log.warn(
-                    "PDF sanitization I/O error, proceeding with original file: {}",
-                    e.getMessage());
-            return null;
-        }
-    }
-
-    private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground)
-            throws IOException {
-        try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
-            requireSanitizablePageCount(doc, maxConversionPages);
-            Map<String, DocumentSanitizer> sanitizers = new LinkedHashMap<>();
-            sanitizers.put(
-                    "Flatten highlight annotations", ConvertPDFToPDFA::flattenHighlightsToContent);
-            sanitizers.put("Sanitize font resources", ConvertPDFToPDFA::sanitizeFontResources);
-            sanitizers.put("Clean metadata", this::sanitizeMetadata);
-            sanitizers.put("Remove forbidden actions", this::removeForbiddenActions);
-            sanitizers.put("Ensure annotation appearances", this::ensureAnnotationAppearances);
-            sanitizers.put("Ensure embedded file compliance", this::ensureEmbeddedFileCompliance);
-            sanitizers.put(
-                    "Fix optional content groups", ConvertPDFToPDFA::fixOptionalContentGroups);
-            sanitizers.put("Fix separation color spaces", this::fixSeparationColorSpaces);
-
-            if (addWhiteBackground) {
-                sanitizers.put("Add white background", this::addWhiteBackground);
-            }
-
-            for (Map.Entry<String, DocumentSanitizer> entry : sanitizers.entrySet()) {
-                try {
-                    entry.getValue().sanitize(doc);
-                    log.debug("Sanitization step completed: {}", entry.getKey());
-                } catch (Exception e) {
-                    log.warn(
-                            "Sanitization step '{}' failed, continuing: {}",
-                            entry.getKey(),
-                            e.getMessage());
-                }
-            }
-
-            doc.save(outputPath.toFile());
-        }
-    }
-
     private void fixSeparationColorSpaces(PDDocument doc) throws IOException {
         Map<String, COSBase> knownTintTransforms = new HashMap<>();
         Set<COSBase> visitedResources = new HashSet<>();
@@ -1977,16 +1916,6 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private void copyResourceIcc(Path target) throws IOException {
-        try (InputStream in = getClass().getResourceAsStream(ICC_RESOURCE_PATH)) {
-            if (in == null) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.resourceNotFound", "Resource not found: {0}", ICC_RESOURCE_PATH);
-            }
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
     @Getter
     private enum PdfaProfile {
         PDF_A_1B(1, "B", "PDF/A-1b", "1.4", Format.PDF_A1B, "pdfa-1"),
@@ -2037,10 +1966,6 @@ public class ConvertPDFToPDFA {
                             .findFirst();
 
             return match.orElse(PDF_A_2B);
-        }
-
-        Optional<Format> preflightFormat() {
-            return Optional.ofNullable(preflightFormat);
         }
     }
 
