@@ -49,12 +49,17 @@ export type ContextMenuRequest =
 
 let request: ContextMenuRequest | null = null;
 let hosts = 0;
-let focusedAtPress: Element | null = null;
+/** Focus just before the latest right press; undefined once a key is pressed, so a keyboard menu is told apart. */
+let focusedAtPress: Element | null | undefined;
+let returnFocus: Element | null = null;
 
 // A right press focuses the text box under it before `contextmenu` fires, so
 // whether the user was already typing there is read from before the press.
 function recordFocus(e: PointerEvent): void {
   if (e.button === 2) focusedAtPress = document.activeElement;
+}
+function forgetPress(): void {
+  focusedAtPress = undefined;
 }
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
@@ -67,6 +72,7 @@ const notify = () => listeners.forEach((listener) => listener());
  */
 export const editorContextMenu = {
   open(next: ContextMenuRequest): void {
+    if (!request) returnFocus = document.activeElement;
     request = next;
     notify();
   },
@@ -74,22 +80,41 @@ export const editorContextMenu = {
     if (!request) return;
     request = null;
     notify();
+    // Back to where the menu was opened from, unless its action moved focus on.
+    const back = returnFocus;
+    returnFocus = null;
+    requestAnimationFrame(() => {
+      const now = document.activeElement;
+      if (
+        back instanceof HTMLElement &&
+        back.isConnected &&
+        (!now || now === document.body)
+      )
+        back.focus({ preventScroll: true });
+    });
   },
   /** Registers a mounted menu; returns its unregister. */
   attachHost(): () => void {
     hosts += 1;
-    if (hosts === 1) window.addEventListener("pointerdown", recordFocus, true);
+    if (hosts === 1) {
+      window.addEventListener("pointerdown", recordFocus, true);
+      window.addEventListener("keydown", forgetPress, true);
+    }
     return () => {
       hosts -= 1;
       if (hosts === 0) {
         window.removeEventListener("pointerdown", recordFocus, true);
+        window.removeEventListener("keydown", forgetPress, true);
         editorContextMenu.close();
       }
     };
   },
   hasHost: (): boolean => hosts > 0,
-  /** What had focus just before the latest right press. */
-  focusedAtPress: (): Element | null => focusedAtPress,
+  /**
+   * What had focus just before the latest right press; undefined when a key
+   * was pressed since, as when the menu key opens a menu.
+   */
+  focusedAtPress: (): Element | null | undefined => focusedAtPress,
   subscribe(listener: () => void): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);

@@ -33,6 +33,9 @@ export function ToolIconButton({
       <span
         style={{ display: "inline-flex", flexShrink: 0 }}
         onPointerLeave={() => setClicked(false)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setClicked(false);
+        }}
       >
         <Button
           size="sm"

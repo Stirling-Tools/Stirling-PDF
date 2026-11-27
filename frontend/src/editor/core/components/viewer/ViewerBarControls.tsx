@@ -133,6 +133,9 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         <span
           className="viewer-bar-button-wrap"
           onPointerLeave={() => setClicked(false)}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setClicked(false);
+          }}
         >
           {button}
         </span>

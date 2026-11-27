@@ -76,6 +76,7 @@ import {
   centredImageRect,
   InsertImageCommand,
 } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
@@ -479,6 +480,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     async (file: File) => {
       const doc = store.document;
       if (!doc) return;
+      // Onto the point the picker was opened for, else the page in view. Read
+      // now: another pick may set a new point while this image decodes.
+      const at = imagePlacementRef.current;
+      imagePlacementRef.current = null;
       // Decode via an <img> element rather than createImageBitmap: the latter
       // lacks codec support in some environments.
       let decoded: { data: ImageData; width: number; height: number };
@@ -511,9 +516,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
-      // Onto the point the picker was opened for, else the page in view.
-      const at = imagePlacementRef.current;
-      imagePlacementRef.current = null;
       const pages = store.getState().pages;
       const targetIndex = at?.pageIndex ?? visiblePageNumber();
       const page = pages.find((p) => p.pageIndex === targetIndex) ?? pages[0];
@@ -524,16 +526,27 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         decoded.height,
         INSERTED_IMAGE_RATIO,
       );
-      // Kept on the page: PDFium crops whatever hangs off it.
-      const clamp = (v: number, size: number, limit: number) =>
-        Math.min(Math.max(v, 0), Math.max(limit - size, 0));
-      const rect = at
-        ? {
-            ...sized,
-            x: clamp(at.x - sized.width / 2, sized.width, page.width),
-            y: clamp(at.y - sized.height / 2, sized.height, page.height),
-          }
-        : sized;
+      // Kept on the visible page, where the image shows upright: PDFium crops
+      // whatever hangs off it.
+      let rect = sized;
+      if (at) {
+        const view = DisplayTransform.fromData(page.display);
+        const clamp = (v: number, size: number, limit: number) =>
+          Math.min(
+            Math.max(v, size / 2),
+            Math.max(limit - size / 2, limit / 2),
+          );
+        const shown = view.apply(at.x, at.y);
+        const centre = view.invert(
+          clamp(shown.x, sized.width, page.display.displayWidth),
+          clamp(shown.y, sized.height, page.display.displayHeight),
+        );
+        rect = {
+          ...sized,
+          x: centre.x - sized.width / 2,
+          y: centre.y - sized.height / 2,
+        };
+      }
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
@@ -702,7 +715,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       [store],
     ),
     onOpenFind: useCallback(() => {
-      if (!reviewing) store.setFindOpen(true);
+      if (reviewing) return;
+      // Already open: take the cursor back to the search box.
+      if (store.getState().findOpen)
+        document
+          .querySelector<HTMLInputElement>(
+            '[data-testid="pdf-editor-find-input"]',
+          )
+          ?.focus();
+      else store.setFindOpen(true);
     }, [store, reviewing]),
     onFindNext: reviewing ? noop : handleFindNext,
     onEscape: handleEscape,

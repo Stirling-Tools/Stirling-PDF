@@ -134,6 +134,9 @@ export function ImageHandle({
   const [keepRatio, setKeepRatio] = useState(false);
   const [ghost, setGhost] = useState<ImagePixels | null>(null);
   const dragOriginRef = useRef<DragOrigin | null>(null);
+  // A Shift press on a selected image deselects it only on release without a
+  // drag, so Shift-dragging a multi-selection keeps it.
+  const shiftDeselectRef = useRef(false);
   const [dragPosition, setDragPosition] = useState<{
     x: number;
     y: number;
@@ -328,6 +331,7 @@ export function ImageHandle({
         if (!("shiftKey" in e && e.shiftKey)) onSelect(false);
       }}
       onDrag={(e) => {
+        shiftDeselectRef.current = false;
         const at = draggedTo(dragOriginRef.current, e);
         if (at) setDragPosition(at);
       }}
@@ -394,11 +398,18 @@ export function ImageHandle({
         // it, so without this their pointerdown reaches the stage's
         // "empty space clears" handler and deselects mid-resize.
         e.stopPropagation();
-        onSelect(e.shiftKey);
+        shiftDeselectRef.current = e.shiftKey && selected;
+        if (!shiftDeselectRef.current) onSelect(e.shiftKey);
+      }}
+      onPointerUp={() => {
+        // A Shift press on a selected image takes it out on release, unless
+        // it was dragged.
+        if (shiftDeselectRef.current) onSelect(true);
+        shiftDeselectRef.current = false;
       }}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
-        // A Shift press toggled the image on pointerdown; a second toggle would undo it.
+        // A Shift press added the image on pointerdown, or takes it out on release.
         if (locked || e.shiftKey) return;
         onSelect(false);
       }}

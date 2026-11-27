@@ -193,7 +193,8 @@ function createHandlers(store: EditorStore) {
       // Inside the text being typed the browser's menu stays: it alone offers
       // spelling corrections.
       const editable = target.closest('[contenteditable="true"]');
-      const focused = editorContextMenu.focusedAtPress();
+      const pressed = editorContextMenu.focusedAtPress();
+      const focused = pressed === undefined ? document.activeElement : pressed;
       if (editable && focused && editable.contains(focused)) return;
       event.preventDefault();
       const at = { pageIndex, x: pageX, y: pageY };

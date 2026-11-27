@@ -399,16 +399,16 @@ export function FormatGroup({
         />
       </Tooltip>
       <Menu shadow="md" position={menuPosition} withinPortal={!inPopover}>
-        <Menu.Target>
-          <Tooltip
-            label={
-              readOnlyNote ??
-              t(
-                "pdfTextEditor.toolbar.changeCaseTooltip",
-                "Change case (text runs only)",
-              )
-            }
-          >
+        <Tooltip
+          label={
+            readOnlyNote ??
+            t(
+              "pdfTextEditor.toolbar.changeCaseTooltip",
+              "Change case (text runs only)",
+            )
+          }
+        >
+          <Menu.Target>
             <Button
               variant="tertiary"
               accent="neutral"
@@ -419,8 +419,8 @@ export function FormatGroup({
               style={NO_SHRINK}
               leftSection={<Icon name="type" size={20} />}
             />
-          </Tooltip>
-        </Menu.Target>
+          </Menu.Target>
+        </Tooltip>
         <Menu.Dropdown {...selectionBarMenuProps}>
           <Menu.Item
             data-testid="pdf-editor-change-case-upper"
@@ -458,19 +458,19 @@ export function FormatGroup({
     const swatch = fillPending ?? fillHex;
     return (
       <>
-        <Popover position={dropdownPosition} withinPortal shadow="md">
-          <Popover.Target>
-            <Tooltip
-              label={
-                readOnlyNote ??
-                (fontName
-                  ? t("pdfTextEditor.selectionBar.fontNamed", {
-                      defaultValue: "Font: {{name}}",
-                      name: fontName,
-                    })
-                  : t("pdfTextEditor.fontPicker.label", "Font family"))
-              }
-            >
+        <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
+          <Tooltip
+            label={
+              readOnlyNote ??
+              (fontName
+                ? t("pdfTextEditor.selectionBar.fontNamed", {
+                    defaultValue: "Font: {{name}}",
+                    name: fontName,
+                  })
+                : t("pdfTextEditor.fontPicker.label", "Font family"))
+            }
+          >
+            <Popover.Target>
               <Button
                 variant="tertiary"
                 accent="neutral"
@@ -481,8 +481,8 @@ export function FormatGroup({
                 style={NO_SHRINK}
                 leftSection={<Icon name="case-sensitive" size={20} />}
               />
-            </Tooltip>
-          </Popover.Target>
+            </Popover.Target>
+          </Tooltip>
           <Popover.Dropdown {...selectionBarMenuProps}>
             <Group gap="xs" wrap="nowrap">
               {fontPicker}
@@ -497,14 +497,14 @@ export function FormatGroup({
         >
           {sizeInput}
         </Tooltip>
-        <Popover position={dropdownPosition} withinPortal shadow="md">
-          <Popover.Target>
-            <Tooltip
-              label={
-                readOnlyNote ??
-                t("pdfTextEditor.toolbar.fontColour", "Font colour")
-              }
-            >
+        <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
+          <Tooltip
+            label={
+              readOnlyNote ??
+              t("pdfTextEditor.toolbar.fontColour", "Font colour")
+            }
+          >
+            <Popover.Target>
               <Button
                 variant={outlineWidth > 0 ? "secondary" : "tertiary"}
                 accent="neutral"
@@ -530,14 +530,19 @@ export function FormatGroup({
                   />
                 }
               />
-            </Tooltip>
-          </Popover.Target>
+            </Popover.Target>
+          </Tooltip>
           <Popover.Dropdown {...selectionBarMenuProps}>
             <Stack gap="xs" w={220}>
               <ColorPicker
                 format="hex"
                 size="sm"
                 fullWidth
+                saturationLabel={t(
+                  "colorPicker.saturation",
+                  "Saturation and brightness",
+                )}
+                hueLabel={t("colorPicker.hue", "Hue")}
                 value={swatch}
                 onChange={(next) => {
                   fillPendingRef.current = next;
@@ -573,16 +578,16 @@ export function FormatGroup({
       {sizeInput}
       {fillInput}
       <Popover position="bottom-start" withinPortal={!inPopover} shadow="md">
-        <Popover.Target>
-          <Tooltip
-            label={
-              readOnlyNote ??
-              t(
-                "pdfTextEditor.toolbar.advancedColourTooltip",
-                "Advanced colour (glyph outline)",
-              )
-            }
-          >
+        <Tooltip
+          label={
+            readOnlyNote ??
+            t(
+              "pdfTextEditor.toolbar.advancedColourTooltip",
+              "Advanced colour (glyph outline)",
+            )
+          }
+        >
+          <Popover.Target>
             <Button
               variant={outlineWidth > 0 ? "primary" : "tertiary"}
               accent={outlineWidth > 0 ? "default" : "neutral"}
@@ -596,8 +601,8 @@ export function FormatGroup({
               style={NO_SHRINK}
               leftSection={<Icon name="sliders-horizontal" size={20} />}
             />
-          </Tooltip>
-        </Popover.Target>
+          </Popover.Target>
+        </Tooltip>
         <Popover.Dropdown>{outlineControls}</Popover.Dropdown>
       </Popover>
       {toggles}

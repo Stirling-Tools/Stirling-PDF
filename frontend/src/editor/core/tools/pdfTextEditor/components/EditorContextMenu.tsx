@@ -48,8 +48,13 @@ function keyboardRequest(
   state: EditorViewState,
   selection: SelectionState,
 ): ContextMenuRequest | null {
-  const id = selection.runIds[0] ?? selection.imageIds[0];
-  const prefix = selection.runIds[0] ? "pdf-editor-run-" : "pdf-editor-image-";
+  const id =
+    selection.runIds[0] ?? selection.imageIds[0] ?? selection.shapeIds[0];
+  const prefix = selection.runIds[0]
+    ? "pdf-editor-run-"
+    : selection.imageIds[0]
+      ? "pdf-editor-image-"
+      : "pdf-editor-shape-";
   const el = id
     ? document.querySelector(`[data-testid="${CSS.escape(prefix + id)}"]`)
     : null;
@@ -59,7 +64,8 @@ function keyboardRequest(
   for (const page of state.pages) {
     const item =
       page.runs.find((run) => run.id === id) ??
-      page.images.find((image) => image.id === id);
+      page.images.find((image) => image.id === id) ??
+      page.shapes.find((shape) => shape.id === id);
     if (item) {
       at = {
         pageIndex: page.pageIndex,
@@ -186,8 +192,10 @@ function ContextMenuBody({
     if (text) await navigator.clipboard.writeText(text);
   };
   const pasteAt = async (point: PagePoint) => {
+    const doc = store.document;
     const text = (await navigator.clipboard.readText()).replace(/\r\n?/g, "\n");
-    if (!text) return;
+    // Another file may have opened while the clipboard was read.
+    if (!text || store.document !== doc) return;
     const cmd = new InsertTextCommand({ ...point, text });
     store.dispatch(cmd);
     if (cmd.insertedRunId) store.selection.selectOne(cmd.insertedRunId);
@@ -347,18 +355,29 @@ function ContextMenuBody({
   const particular: ReactNode[] = [];
   const unlock: ReactNode[] = [];
 
+  // Cut copies only text, and Delete would leave locked text in place, so it
+  // is offered only where everything selected is unlocked text.
+  const cuttable =
+    selection.imageIds.length === 0 &&
+    selection.shapeIds.length === 0 &&
+    !state.pages.some((page) =>
+      page.runs.some((run) => run.locked && selection.runIds.includes(run.id)),
+    );
   if (objects && hasRunSelection) {
+    if (cuttable)
+      clipboard.push(
+        item(
+          "scissors",
+          t("pdfTextEditor.contextMenu.cut", "Cut"),
+          () =>
+            void copy()
+              .then(() => controller.onDelete())
+              .catch(clipboardFailed),
+          "pdf-editor-context-cut",
+          { shortcut: modShortcut("X") },
+        ),
+      );
     clipboard.push(
-      item(
-        "scissors",
-        t("pdfTextEditor.contextMenu.cut", "Cut"),
-        () =>
-          void copy()
-            .then(() => controller.onDelete())
-            .catch(clipboardFailed),
-        "pdf-editor-context-cut",
-        { shortcut: modShortcut("X") },
-      ),
       item(
         "copy",
         t("pdfTextEditor.contextMenu.copy", "Copy"),

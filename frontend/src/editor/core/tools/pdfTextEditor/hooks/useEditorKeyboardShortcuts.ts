@@ -104,7 +104,11 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           // No focus guard: duplicate must work while a run's editable is
           // focused.
           e.preventDefault();
-          if (store.selection.value.runIds.length === 0) return;
+          if (
+            store.selection.value.runIds.length === 0 &&
+            store.selection.value.imageIds.length === 0
+          )
+            return;
           onDuplicate();
           return;
         case "a":

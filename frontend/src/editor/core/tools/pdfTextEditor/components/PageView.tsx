@@ -1,4 +1,5 @@
 import {
+  Fragment,
   memo,
   useEffect,
   useMemo,
@@ -558,37 +559,31 @@ export const PageView = memo(function PageView({
             onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
           />
         ))}
+        {/* A locked image's zone follows its own image, under tables, text and
+            any later image, so whatever is drawn over it still takes clicks. */}
         {page.images.map((image) => (
-          <ImageHandle
-            key={image.id}
-            image={image}
-            pageHeight={page.height}
-            transform={transform}
-            scale={cssScale}
-            selected={selectedImageIds.includes(image.id)}
-            fixed={reviewing}
-            onSelect={(extend) => onSelectImage(image.id, extend)}
-            onTransformCommit={(next) =>
-              onTransformImage?.(page.pageIndex, image.id, next)
-            }
-            attention={attention.images.get(image.id) ?? null}
-            readPixels={() =>
-              readShownImagePixels(store, page.pageIndex, image.id)
-            }
-            onLift={() => liftImage(image.id)}
-            onSettle={settleImage}
-            pageRevision={paintedRevision}
-          />
-        ))}
-        {/* Locked images' zones sit with the images, under tables and text,
-            so anything drawn over a locked image still takes its clicks. */}
-        {onUnlock &&
-          !reviewing &&
-          page.images
-            .filter((image) => image.locked)
-            .map((image) => (
+          <Fragment key={image.id}>
+            <ImageHandle
+              image={image}
+              pageHeight={page.height}
+              transform={transform}
+              scale={cssScale}
+              selected={selectedImageIds.includes(image.id)}
+              fixed={reviewing}
+              onSelect={(extend) => onSelectImage(image.id, extend)}
+              onTransformCommit={(next) =>
+                onTransformImage?.(page.pageIndex, image.id, next)
+              }
+              attention={attention.images.get(image.id) ?? null}
+              readPixels={() =>
+                readShownImagePixels(store, page.pageIndex, image.id)
+              }
+              onLift={() => liftImage(image.id)}
+              onSettle={settleImage}
+              pageRevision={paintedRevision}
+            />
+            {onUnlock && !reviewing && image.locked && (
               <LockBadge
-                key={`lock-${image.id}`}
                 rect={image.bounds}
                 pageHeight={page.height}
                 transform={transform}
@@ -597,7 +592,9 @@ export const PageView = memo(function PageView({
                 testId={`pdf-editor-unlock-${image.id}`}
                 underContent
               />
-            ))}
+            )}
+          </Fragment>
+        ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
             cells are edited through their own run. */}
         {!reviewing && (

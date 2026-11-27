@@ -112,8 +112,8 @@ export function ObjectGroup({
         withinPortal
         closeOnItemClick
       >
-        <Menu.Target>
-          <Tooltip label={t("pdfTextEditor.toolbar.arrange", "Arrange")}>
+        <Tooltip label={t("pdfTextEditor.toolbar.arrange", "Arrange")}>
+          <Menu.Target>
             <Button
               size="sm"
               disabled={!arrangeable}
@@ -124,8 +124,8 @@ export function ObjectGroup({
               data-testid="pdf-editor-arrange-menu"
               style={NO_SHRINK}
             />
-          </Tooltip>
-        </Menu.Target>
+          </Menu.Target>
+        </Tooltip>
         <Menu.Dropdown {...selectionBarMenuProps}>
           <ArrangeMenuItems controller={controller} />
         </Menu.Dropdown>

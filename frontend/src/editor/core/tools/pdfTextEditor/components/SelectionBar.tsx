@@ -42,13 +42,12 @@ function selectedElements(selection: SelectionState): HTMLElement[] {
   });
 }
 
+/** Under the pointer: the bar itself or one of its open menus. */
 function isInUse(bar: HTMLElement | null): boolean {
   if (!bar) return false;
-  if (bar.matches(":hover")) return true;
-  const focused = document.activeElement;
   return (
-    !!focused &&
-    (bar.contains(focused) || !!focused.closest(`[${SELECTION_BAR_MENU_ATTR}]`))
+    bar.matches(":hover") ||
+    !!document.querySelector(`[${SELECTION_BAR_MENU_ATTR}]:hover`)
   );
 }
 
@@ -70,6 +69,10 @@ function useSelectionPlacement(
       return;
     }
     let els: HTMLElement[] = [];
+    const expected =
+      selection.runIds.length +
+      selection.imageIds.length +
+      selection.shapeIds.length;
     let frame = 0;
     let last = "";
     const tick = () => {
@@ -78,7 +81,7 @@ function useSelectionPlacement(
       // selection; the bar stays put under the pointer until the user leaves it.
       if (last && isInUse(barRef.current)) return;
       // Pages mount and unmount as they scroll; look the nodes up again then.
-      if (els.length === 0 || els.some((el) => !el.isConnected)) {
+      if (els.length < expected || els.some((el) => !el.isConnected)) {
         els = selectedElements(selection);
       }
       const pages = document.querySelector("[data-viewer-pages]");
@@ -162,6 +165,8 @@ export const SelectionBar = memo(function SelectionBar({
 }: SelectionBarProps) {
   const { t } = useTranslation();
   const barRef = useRef<HTMLDivElement | null>(null);
+  // Where focus came from into the bar, for Escape to hand it back.
+  const cameFromRef = useRef<HTMLElement | null>(null);
   const controller = useToolbarController(store, state, selection);
   const active = controller.selectionCount > 0;
   const contextMenuOpen = useEditorContextMenu() !== null;
@@ -197,6 +202,29 @@ export const SelectionBar = memo(function SelectionBar({
       className="pdf-editor-selection-bar"
       data-below={placement?.below ? "true" : "false"}
       data-testid="pdf-editor-selection-bar"
+      onFocus={(e) => {
+        const from = e.relatedTarget;
+        if (
+          from instanceof HTMLElement &&
+          !barRef.current?.contains(from) &&
+          !from.closest(`[${SELECTION_BAR_MENU_ATTR}]`)
+        )
+          cameFromRef.current = from;
+      }}
+      onKeyDown={(e) => {
+        // Open menus close on their own Escape; elsewhere Escape leaves the bar.
+        const target = e.target as HTMLElement;
+        if (
+          e.key !== "Escape" ||
+          !barRef.current?.contains(target) ||
+          target.getAttribute("aria-expanded") === "true"
+        )
+          return;
+        const back = cameFromRef.current;
+        cameFromRef.current = null;
+        if (back?.isConnected) back.focus({ preventScroll: true });
+        else target.blur();
+      }}
       // Hidden until placed: placing it needs its own size.
       style={
         placement

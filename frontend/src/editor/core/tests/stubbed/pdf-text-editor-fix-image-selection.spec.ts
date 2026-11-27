@@ -206,6 +206,42 @@ test.describe("PDF text editor - selection survives resize, marquee never wipes 
     expect(await selectedRunIds(page)).toHaveLength(1);
   });
 
+  test("Shift-dragging a selected image keeps it selected", async ({
+    page,
+  }) => {
+    await openSample(page);
+    const img = page.locator(IMG_SEL).first();
+    await expect(img).toBeVisible({ timeout: 30_000 });
+    await img.click();
+    expect(await selectedImageIds(page)).toHaveLength(1);
+
+    const box = (await img.boundingBox())!;
+    const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.keyboard.down("Shift");
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x + 20, from.y + 15, { steps: 6 });
+    await page.mouse.move(from.x + 40, from.y + 30, { steps: 6 });
+    await page.mouse.up();
+    await page.keyboard.up("Shift");
+    await page.waitForTimeout(400);
+
+    expect(
+      await selectedImageIds(page),
+      "the drag must not have taken the image out of the selection",
+    ).toHaveLength(1);
+  });
+
+  test("Ctrl+D duplicates a selected image", async ({ page }) => {
+    await openSample(page);
+    const img = page.locator(IMG_SEL).first();
+    await expect(img).toBeVisible({ timeout: 30_000 });
+    const before = await page.locator(IMG_SEL).count();
+    await img.click();
+    await page.keyboard.press("Control+d");
+    await expect(page.locator(IMG_SEL)).toHaveCount(before + 1);
+  });
+
   // (B) Before the fix: runIds went [id] -> [] because PageStage cleared at
   // the marquee's pointerdown, and the empty marquee never restored anything.
   test("a marquee that catches nothing leaves the existing selection alone", async ({

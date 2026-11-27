@@ -135,9 +135,11 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   const { busy: replacing, dispatch: dispatchAfterScanFit } =
     useDispatchAfterScanFit(store);
 
+  // The bar is hidden until placed, and a hidden input cannot take focus.
+  const placed = placement !== null;
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (placed) inputRef.current?.focus();
+  }, [placed]);
 
   // Opening Find is a document-wide request, so pull in every page that lazy
   // loading has not read yet.

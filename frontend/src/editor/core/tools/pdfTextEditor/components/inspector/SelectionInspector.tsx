@@ -325,10 +325,15 @@ function GeometrySection({
   );
 }
 
-/** Rotate/flip plus replacing the image's pixels. */
+/** Rotate/flip plus the two ways to swap an image's pixels. */
 function ImageSection({ controller }: { controller: InspectorController }) {
   const { t } = useTranslation();
-  const { onTransformImage, onReplaceImage } = controller;
+  const {
+    onTransformImage,
+    onReplaceImage,
+    onEditImageExternally,
+    externalEditSupported,
+  } = controller;
   const transforms = useMemo(() => imageTransforms(t), [t]);
 
   return (
@@ -363,6 +368,22 @@ function ImageSection({ controller }: { controller: InspectorController }) {
           {t(
             "pdfTextEditor.toolbar.replaceImage",
             "Replace, keeping placement",
+          )}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          accent="neutral"
+          fullWidth
+          justify="start"
+          leftSection={<Icon name="external-link" size={20} />}
+          onClick={onEditImageExternally}
+          disabled={!externalEditSupported}
+          data-testid="pdf-editor-imgop-edit-externally"
+        >
+          {t(
+            "pdfTextEditor.toolbar.editImageExternally",
+            "Edit in another app",
           )}
         </Button>
       </Stack>
