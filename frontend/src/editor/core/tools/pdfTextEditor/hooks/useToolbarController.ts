@@ -34,6 +34,7 @@ import {
   type ZOrderMode,
 } from "@editor/tools/pdfTextEditor/commands/ChangeZOrderCommand";
 import { KeepWidthCommand } from "@editor/tools/pdfTextEditor/commands/KeepWidthCommand";
+import { lineSpacingFactor } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
@@ -547,9 +548,7 @@ export function useToolbarController(
       first && runs.every((r) => read(r) === read(first)) ? read(first) : null;
     const multiLine = runs.some((r) => (r.paragraphSlotCount ?? 0) >= 2);
     const spacing = same((r) =>
-      r.fontSize > 0 && (r.paragraphLineHeight ?? 0) > 0
-        ? Math.round(((r.paragraphLineHeight ?? 0) / r.fontSize) * 100) / 100
-        : null,
+      lineSpacingFactor(r.fontSize, r.paragraphLineHeight ?? 0),
     );
     return {
       align: same((r) => r.align ?? null),

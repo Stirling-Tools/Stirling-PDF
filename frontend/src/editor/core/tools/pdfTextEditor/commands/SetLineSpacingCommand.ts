@@ -4,6 +4,14 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 
 const SINGLE_LINE_EM = 1.2;
 
+export function lineSpacingFactor(
+  fontSize: number,
+  lineHeight: number,
+): number | null {
+  if (fontSize <= 0 || lineHeight <= 0) return null;
+  return Math.round((lineHeight / (fontSize * SINGLE_LINE_EM)) * 100) / 100;
+}
+
 export class SetLineSpacingCommand implements Command {
   readonly type = "set-line-spacing";
   private readonly pageIndex: number;
