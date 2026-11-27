@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -48,12 +51,13 @@ test("the new toolbar controls are present and usable", async ({
   test.setTimeout(140_000);
   await openEditor(page);
 
-  // Outline controls live behind the advanced-colour button.
+  // Outline controls live in the colour menu, behind the swatch.
   await selectFirstRun(page);
-  await page.getByTestId("pdf-editor-colour-advanced").click();
+  await openFormatMenu(page, "colour");
   await expect(page.getByTestId("pdf-editor-outline-colour")).toBeVisible();
   await expect(page.getByTestId("pdf-editor-outline-width")).toBeVisible();
   // The device-font picker replaced the plain family Select.
+  await openFormatMenu(page, "font");
   await expect(page.getByTestId("pdf-editor-font-family")).toBeVisible();
 
   await page.screenshot({ path: path.join(SHOTS, "01-toolbar.png") });
@@ -75,7 +79,7 @@ test("giving a run an outline changes it, and undo takes it back", async ({
   }, runId);
   expect(before.stroke).toBeNull();
 
-  await page.getByTestId("pdf-editor-colour-advanced").click();
+  await openFormatMenu(page, "colour");
   await page.getByTestId("pdf-editor-outline-width").fill("2");
   await page.getByTestId("pdf-editor-outline-width").press("Enter");
 

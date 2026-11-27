@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -403,6 +406,7 @@ test.describe("PDF text editor - undo/redo restores the page bitmap", () => {
     ).toBeLessThan(5);
 
     await selectRun(page, HEAD);
+    await openFormatMenu(page, "colour");
     await page.getByTestId("pdf-editor-colour").fill("#cc0000"); // theme-allow-color PDF ink, matched against the rendered bitmap
     await blurAll(page);
     await page.waitForTimeout(1500);
@@ -592,7 +596,6 @@ test.describe("PDF text editor - undo/redo restores the page bitmap", () => {
     ).toBeGreaterThan(1.1);
 
     await selectInsertedImage(page);
-    await page.getByTestId("pdf-editor-imgop-menu").click();
     await page.getByTestId("pdf-editor-imgop-rotate-cw").click();
     await page.waitForTimeout(2000);
     const rotated = await settle(page);

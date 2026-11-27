@@ -264,7 +264,6 @@ async function selectImage(page: Page, locator: ReturnType<Page["locator"]>) {
 }
 
 async function imageMenu(page: Page, itemTestId: string): Promise<void> {
-  await page.getByTestId("pdf-editor-imgop-menu").click();
   await page.getByTestId(itemTestId).click();
 }
 

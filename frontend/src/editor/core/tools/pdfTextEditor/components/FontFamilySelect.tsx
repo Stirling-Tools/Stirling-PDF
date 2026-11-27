@@ -11,7 +11,6 @@ import {
   Group,
   Loader,
   Select,
-  Text,
   Tooltip,
 } from "@mantine/core";
 import type {
@@ -62,6 +61,7 @@ function withoutKeys(
 }
 
 type DeviceFontNotice = "unavailable" | "none";
+const NOTICE_MS = 4000;
 
 interface FontFamilySelectProps {
   value: string | null;
@@ -142,6 +142,12 @@ export function FontFamilySelect({
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   // Already allowed, so listing cannot prompt: skip the button.
   useEffect(() => {
@@ -350,10 +356,27 @@ export function FontFamilySelect({
       />
       {supported && deviceOptions.length === 0 && (
         <Tooltip
-          label={t(
-            "pdfTextEditor.fontPicker.useDeviceFonts",
-            "Use device fonts",
-          )}
+          label={
+            notice ? (
+              <span data-testid="pdf-editor-device-fonts-notice">
+                {notice === "unavailable"
+                  ? t(
+                      "pdfTextEditor.fontPicker.deviceFontsUnavailable",
+                      "Device fonts are unavailable. The built-in fonts still work.",
+                    )
+                  : t(
+                      "pdfTextEditor.fontPicker.deviceFontsNone",
+                      "No extra device fonts were found.",
+                    )}
+              </span>
+            ) : (
+              t("pdfTextEditor.fontPicker.useDeviceFonts", "Use device fonts")
+            )
+          }
+          // The outcome shows on the button that asked, rather than widening
+          // the toolbar; undefined hands the tooltip back to hover.
+          opened={notice ? true : undefined}
+          transitionProps={{ transition: "fade", duration: 200 }}
         >
           <Button
             variant="tertiary"
@@ -373,19 +396,6 @@ export function FontFamilySelect({
             leftSection={<Icon name="case-sensitive" size={20} />}
           />
         </Tooltip>
-      )}
-      {notice && (
-        <Text size="xs" c="dimmed" data-testid="pdf-editor-device-fonts-notice">
-          {notice === "unavailable"
-            ? t(
-                "pdfTextEditor.fontPicker.deviceFontsUnavailable",
-                "Device fonts are unavailable. The built-in fonts still work.",
-              )
-            : t(
-                "pdfTextEditor.fontPicker.deviceFontsNone",
-                "No extra device fonts were found.",
-              )}
-        </Text>
       )}
     </Group>
   );

@@ -56,7 +56,7 @@
 }
 
 .sui-panelhdr__label {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 0.9rem;
   font-weight: 600;
@@ -64,6 +64,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--mantine-color-text);
+}
+
+/* The active tool's own controls, just after its title. */
+.sui-panelhdr__actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sui-panelhdr__actions:empty {
+  display: none;
 }
 
 /* Dark mode: let the header blend into the rail — just a thin border, no fill —

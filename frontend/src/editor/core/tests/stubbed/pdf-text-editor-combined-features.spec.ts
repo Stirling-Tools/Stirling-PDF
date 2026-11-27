@@ -22,7 +22,6 @@ async function clickArrange(page: Page, testid: string): Promise<void> {
   await page.getByTestId(testid).click();
 }
 async function clickImage(page: Page, testid: string): Promise<void> {
-  await page.getByTestId("pdf-editor-imgop-menu").click();
   await page.getByTestId(testid).click();
 }
 

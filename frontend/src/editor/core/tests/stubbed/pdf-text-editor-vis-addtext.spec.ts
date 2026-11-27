@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // ADD-TEXT, judged on the PAGE BITMAP rather than on the store.
@@ -221,8 +224,9 @@ async function addTextAt(
   const runs = page.locator(`[data-testid^="pdf-editor-run-p${pageIndex}-"]`);
   const before = await runs.count();
   await page.getByTestId("pdf-editor-add-text").click();
-  await expect(page.getByTestId("pdf-editor-add-text")).toContainText(
-    /click page to add text/i,
+  await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+    "aria-pressed",
+    "true",
   );
   await page
     .getByTestId(`pdf-editor-page-${pageIndex}`)
@@ -341,8 +345,9 @@ test.describe("PDF text editor - add text, checked in the bitmap", () => {
     const first = await settledInk(page, 0, BLANK);
     expect(first.count, "first insert must ink the page").toBeGreaterThan(40);
 
-    await expect(page.getByTestId("pdf-editor-add-text")).toHaveText(
-      /add text/i,
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+      "aria-pressed",
+      "false",
     );
     const secondSpot: Rect = { x: 60, y: 355, w: 480, h: 80 };
     expect(
@@ -500,6 +505,7 @@ test.describe("PDF text editor - add text, checked in the bitmap", () => {
       `default fill must be dark, saw mean r=${black.meanR}`,
     ).toBeLessThan(150);
 
+    await openFormatMenu(page, "colour");
     await page.getByTestId("pdf-editor-colour").fill("#c02020"); // theme-allow-color test input for the picker, not a UI colour
     await page.getByTestId("pdf-editor-colour").blur();
     const coloured = await settledInk(page, 0, BLANK, "any");

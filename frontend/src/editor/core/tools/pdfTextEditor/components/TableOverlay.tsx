@@ -107,6 +107,34 @@ function rectToCss(
   };
 }
 
+/**
+ * Applies a structural edit to `table`. A scanned table is a picture with
+ * invisible OCR text over it, so an edit would move text nobody can see and
+ * leave the page looking unchanged; it is rebuilt as real objects first, in
+ * the SAME undo step, so one press of undo puts the scan back rather than
+ * stranding a half-built table.
+ */
+export function dispatchTableEdit(
+  store: EditorStore,
+  page: PageSnapshot,
+  table: TableSnapshot,
+  transform: DisplayTransform,
+  cmd: Command,
+): void {
+  if (!table.scanned || table.ruled) {
+    store.dispatch(cmd);
+    return;
+  }
+  const canvas = pageCanvas(page.pageIndex);
+  const colors = canvas ? sampleTableColors(canvas, table, transform) : null;
+  store.dispatch(
+    new CompositeCommand([
+      new MaterialiseTableCommand({ tableId: table.id, colors }),
+      cmd,
+    ]),
+  );
+}
+
 /** Draws recognized + inserted tables and their editing affordances. */
 export function TableOverlay({
   page,
@@ -433,24 +461,8 @@ function EditableTable({
     return { x: p.x - o.x, y: p.y - o.y };
   };
 
-  // A scanned table is a picture with invisible OCR text over it, so a
-  // structural edit moves text nobody can see and the page looks unchanged.
-  // Rebuild it as real objects first, in the SAME undo step, so one press of
-  // undo puts the scan back rather than stranding a half-built table.
-  const mutate = (cmd: Command): void => {
-    if (!table.scanned || table.ruled) {
-      store.dispatch(cmd);
-      return;
-    }
-    const canvas = pageCanvas(page.pageIndex);
-    const colors = canvas ? sampleTableColors(canvas, table, transform) : null;
-    store.dispatch(
-      new CompositeCommand([
-        new MaterialiseTableCommand({ tableId: table.id, colors }),
-        cmd,
-      ]),
-    );
-  };
+  const mutate = (cmd: Command): void =>
+    dispatchTableEdit(store, page, table, transform, cmd);
 
   const commitDrag = (d: DragState) => {
     const delta = toPdfDelta(d.dx, d.dy);

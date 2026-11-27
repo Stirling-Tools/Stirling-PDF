@@ -66,7 +66,7 @@ const CAN_UNDO = 1;
 const CAN_REDO = 2;
 
 // Read from the store, not the deferred state the bars render: a stale enabled redo gets clicked past the end of history.
-function useHistoryFlags(store: EditorStore): {
+export function useHistoryFlags(store: EditorStore): {
   canUndo: boolean;
   canRedo: boolean;
 } {
@@ -594,6 +594,7 @@ export function useToolbarController(
     onToggleItalic: sel.toggleItalic,
     onChangeFontWeight: sel.changeFontWeight,
     onDelete: sel.deleteSelection,
+    onDuplicate: sel.duplicateFirstSelected,
     onToggleLock,
     onChangeCase,
     onChangeZOrder,

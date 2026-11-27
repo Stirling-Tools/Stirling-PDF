@@ -2,6 +2,7 @@ import { useId, type ReactNode } from "react";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
+import { toolPanelHeaderSlot } from "@editor/components/shared/toolPanelHeaderSlot";
 import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
@@ -53,6 +54,10 @@ export function ToolPanelHeader({
       <span id={titleId} className="sui-panelhdr__label">
         {title}
       </span>
+      <span
+        ref={toolPanelHeaderSlot.attach}
+        className="sui-panelhdr__actions"
+      />
     </div>
   );
 

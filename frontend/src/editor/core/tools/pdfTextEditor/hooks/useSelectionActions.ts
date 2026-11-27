@@ -5,6 +5,8 @@ import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import { unsafeRtlEditMessage } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
@@ -293,6 +295,40 @@ function refusePart(
     store,
     doc && rangeRefusal(doc, part.page, part.run, part.range),
   );
+}
+
+/** Matches a duplicated text box's step right and down, in points. */
+const DUPLICATE_OFFSET = 12;
+
+/**
+ * Copies an image as the page shows it, one step right and down, and selects
+ * the copy. The copy embeds the rendered pixels, so any crop or mask is baked
+ * in rather than carried over.
+ */
+function duplicateImage(
+  store: EditorStore,
+  doc: EditorDocument,
+  imageId: string,
+): void {
+  const image = doc
+    .loadedPages()
+    .flatMap((page) => page.images)
+    .find((img) => img.id === imageId);
+  if (!image) return;
+  const pixels = readShownImagePixels(store, image.pageIndex, imageId);
+  if (!pixels) return;
+  const cmd = new InsertImageCommand({
+    pageIndex: image.pageIndex,
+    rgba: new Uint8ClampedArray(pixels.rgba),
+    pixelWidth: pixels.width,
+    pixelHeight: pixels.height,
+    x: image.bounds.x + DUPLICATE_OFFSET,
+    y: image.bounds.y - DUPLICATE_OFFSET,
+    width: image.bounds.width,
+    height: image.bounds.height,
+  });
+  store.dispatch(cmd);
+  if (cmd.insertedImageId) store.selection.selectImage(cmd.insertedImageId);
 }
 
 /** Bundle of callbacks that operate on the current selection. */
@@ -839,9 +875,13 @@ export function useSelectionActions(store: EditorStore) {
 
   const duplicateFirstSelected = useCallback(() => {
     const sel = store.selection.value;
-    if (sel.runIds.length === 0) return;
     const doc = store.document;
     if (!doc) return;
+    if (sel.runIds.length === 0 && sel.imageIds.length === 1) {
+      duplicateImage(store, doc, sel.imageIds[0]);
+      return;
+    }
+    if (sel.runIds.length === 0) return;
     const targetId = sel.runIds[0];
     for (const page of doc.loadedPages()) {
       for (const r of page.runs) {

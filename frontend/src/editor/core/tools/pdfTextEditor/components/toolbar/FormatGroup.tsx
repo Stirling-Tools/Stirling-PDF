@@ -2,11 +2,15 @@ import { useRef, useState } from "react";
 import { Icon } from "@editor/ui/Icon";
 import {
   ColorInput,
+  ColorPicker,
+  Divider,
   Group,
   Menu,
   NumberInput,
   Popover,
   Select,
+  Stack,
+  Text,
   Tooltip,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -20,6 +24,7 @@ import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFam
 import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import {
   NO_SHRINK,
+  selectionBarMenuProps,
   type Controller,
 } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
@@ -88,12 +93,18 @@ interface FormatGroupProps {
    * closes the popover and the dropdown with it.
    */
   inPopover?: boolean;
+  /** Font and colour fold into menus behind an icon and a swatch, for the floating selection bar. */
+  compact?: boolean;
+  /** Which way this group's menus open, so they can open away from the selected text. */
+  dropdownPosition?: "top" | "bottom";
 }
 
 export function FormatGroup({
   controller,
   touch = false,
   inPopover = false,
+  compact = false,
+  dropdownPosition = "bottom",
 }: FormatGroupProps) {
   const { t } = useTranslation();
   const {
@@ -116,9 +127,18 @@ export function FormatGroup({
   // pick after the model has it, and that late value would replace the text
   // the user is selecting or typing over.
   const [fillDraft, setFillDraft] = useState<string | null>(null);
+  // The colour under the picker's handle while it is dragged; one change is
+  // applied when the drag ends, so a drag is one undo step.
+  const [fillPending, setFillPending] = useState<string | null>(null);
+  // Mantine moves the handle on the next frame but can report a fast click's
+  // end before that frame, with the colour from before the click; the drag's
+  // last colour is read from here a frame later instead.
+  const fillPendingRef = useRef<string | null>(null);
   const fillFocusedRef = useRef(false);
   if (!hasRunSelection) return null;
 
+  // The compact layout's font and colour controls live in its own popovers.
+  const nested = inPopover || compact;
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
   const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
   const outlineWidth = state.strokeWidth ?? 0;
@@ -127,6 +147,9 @@ export function FormatGroup({
     scanFont === undefined ? documentFamily : (scanFont?.family ?? null);
   const inputSize = touch ? "lg" : "xs";
   const buttonSize = touch ? "xl" : "sm";
+  const menuPosition = compact
+    ? (`${dropdownPosition}-start` as const)
+    : "bottom-start";
   const weightName = (weight: number) =>
     WEIGHT_NAMES[weight]
       ? t(...WEIGHT_NAMES[weight])
@@ -156,193 +179,185 @@ export function FormatGroup({
             : texts.unavailable),
     );
 
-  return (
-    <>
-      <FontFamilySelect
-        value={fontFamily}
-        fontId={scanFont === undefined ? state.fontFamily : null}
-        documentFamilies={state.documentFamilies}
-        scanned={
-          scanFont === undefined ? undefined : { label: scanFont?.label }
+  const fontPicker = (
+    <FontFamilySelect
+      value={fontFamily}
+      fontId={scanFont === undefined ? state.fontFamily : null}
+      documentFamilies={state.documentFamilies}
+      scanned={scanFont === undefined ? undefined : { label: scanFont?.label }}
+      documentFontId={state.documentFontId}
+      onChange={onChangeFontFamily}
+      mixed={state.mixed.fontFamily}
+      disabled={selectionTextReadOnly}
+      touch={touch}
+      withinPortal={!nested}
+    />
+  );
+  const weightSelect = state.weights.length > 0 && !state.mixed.fontFamily && (
+    <Select
+      size={inputSize}
+      w={touch ? 140 : 104}
+      data={state.weights.map((weight) => ({
+        value: String(weight),
+        label: weightName(weight),
+      }))}
+      value={state.weight === null ? null : String(state.weight)}
+      placeholder={t("pdfTextEditor.fontPicker.mixed", "Mixed")}
+      onChange={(next) => {
+        if (next) void warnAbout(() => onChangeFontWeight(Number(next)));
+      }}
+      allowDeselect={false}
+      comboboxProps={{ withinPortal: !nested }}
+      disabled={selectionTextReadOnly}
+      aria-label={t("pdfTextEditor.fontPicker.weight", "Font weight")}
+      data-testid="pdf-editor-font-weight"
+      style={NO_SHRINK}
+    />
+  );
+  const sizeInput = (
+    <NumberInput
+      size={inputSize}
+      w={touch ? 104 : 76}
+      min={4}
+      max={144}
+      decimalScale={1}
+      value={
+        state.mixed.fontSize ? "" : Math.round((state.fontSize ?? 12) * 10) / 10
+      }
+      placeholder={
+        state.mixed.fontSize
+          ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
+          : undefined
+      }
+      onChange={(value) => {
+        const next = typeof value === "number" ? value : Number(value);
+        if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
+      }}
+      disabled={selectionTextReadOnly}
+      title={readOnlyNote ?? undefined}
+      aria-label={t("pdfTextEditor.toolbar.fontSize", "Font size")}
+      data-testid="pdf-editor-font-size"
+      style={NO_SHRINK}
+    />
+  );
+  const applyFill = (next: string) => {
+    if (!next) return;
+    const rgb = parseCssColor(next);
+    if (!rgb) return;
+    if (
+      state.fill &&
+      rgb.r === state.fill.r &&
+      rgb.g === state.fill.g &&
+      rgb.b === state.fill.b
+    ) {
+      return;
+    }
+    onChangeFill(next);
+  };
+  const fillInput = (
+    <ColorInput
+      size={inputSize}
+      w={
+        compact
+          ? undefined
+          : touch
+            ? fillPickerOpen
+              ? 150
+              : 96
+            : fillPickerOpen
+              ? 116
+              : 74
+      }
+      withEyeDropper={false}
+      // The compact layout shows its own picker above this field.
+      withPicker={!compact}
+      styles={
+        compact
+          ? undefined
+          : {
+              section: { pointerEvents: "none" },
+              input: {
+                color: fillPickerOpen ? undefined : "transparent",
+                transition: "width 120ms ease-out",
+              },
+            }
+      }
+      value={fillDraft ?? fillHex}
+      fixOnBlur={false}
+      onChange={(next) => {
+        if (fillFocusedRef.current) setFillDraft(next);
+        applyFill(next);
+      }}
+      onChangeEnd={() =>
+        window.requestAnimationFrame(() => setFillPickerOpen(false))
+      }
+      onFocus={() => {
+        fillFocusedRef.current = true;
+        setFillDraft(fillHex);
+        setFillPickerOpen(true);
+      }}
+      onClick={() => setFillPickerOpen(true)}
+      onBlur={() => {
+        fillFocusedRef.current = false;
+        setFillDraft(null);
+        setFillPickerOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" || event.key === "Enter") {
+          setFillPickerOpen(false);
         }
-        documentFontId={state.documentFontId}
-        onChange={onChangeFontFamily}
-        mixed={state.mixed.fontFamily}
-        disabled={selectionTextReadOnly}
-        touch={touch}
-        withinPortal={!inPopover}
+      }}
+      popoverProps={{
+        withinPortal: !inPopover,
+        opened: fillPickerOpen,
+        onChange: setFillPickerOpen,
+        transitionProps: { transition: "fade", duration: 0 },
+      }}
+      aria-expanded={compact ? undefined : fillPickerOpen}
+      aria-label={t("pdfTextEditor.toolbar.fontColour", "Font colour")}
+      data-testid="pdf-editor-colour"
+      style={NO_SHRINK}
+    />
+  );
+  const outlineControls = (
+    <Group gap="xs" align="center" wrap="nowrap">
+      <ColorInput
+        size="xs"
+        w={132}
+        value={outlineHex}
+        onChange={(next) => {
+          if (!next || !parseCssColor(next)) return;
+          onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
+        }}
+        popoverProps={{ withinPortal: !nested }}
+        aria-label={t("pdfTextEditor.toolbar.outlineColour", "Outline colour")}
+        data-testid="pdf-editor-outline-colour"
       />
-      {state.weights.length > 0 && !state.mixed.fontFamily && (
-        <Select
-          size={inputSize}
-          w={touch ? 140 : 104}
-          data={state.weights.map((weight) => ({
-            value: String(weight),
-            label: weightName(weight),
-          }))}
-          value={state.weight === null ? null : String(state.weight)}
-          placeholder={t("pdfTextEditor.fontPicker.mixed", "Mixed")}
-          onChange={(next) => {
-            if (next) void warnAbout(() => onChangeFontWeight(Number(next)));
-          }}
-          allowDeselect={false}
-          comboboxProps={{ withinPortal: !inPopover }}
-          disabled={selectionTextReadOnly}
-          aria-label={t("pdfTextEditor.fontPicker.weight", "Font weight")}
-          data-testid="pdf-editor-font-weight"
-          style={NO_SHRINK}
-        />
-      )}
       <NumberInput
-        size={inputSize}
-        w={touch ? 104 : 76}
-        min={4}
-        max={144}
-        decimalScale={1}
-        value={
-          state.mixed.fontSize
-            ? ""
-            : Math.round((state.fontSize ?? 12) * 10) / 10
-        }
-        placeholder={
-          state.mixed.fontSize
-            ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
-            : undefined
-        }
+        size="xs"
+        w={76}
+        min={0}
+        max={12}
+        step={0.25}
+        decimalScale={2}
+        value={outlineWidth}
         onChange={(value) => {
           const next = typeof value === "number" ? value : Number(value);
-          if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
+          if (!Number.isFinite(next) || next < 0) return;
+          if (next > 0 && state.mixed.stroke) return;
+          onChangeOutline(next > 0 ? outlineHex : null, next);
         }}
-        disabled={selectionTextReadOnly}
-        title={readOnlyNote ?? undefined}
-        aria-label={t("pdfTextEditor.toolbar.fontSize", "Font size")}
-        data-testid="pdf-editor-font-size"
-        style={NO_SHRINK}
+        disabled={state.strokeWidth === null}
+        aria-label={t(
+          "pdfTextEditor.toolbar.outlineWidth",
+          "Outline width (0 = none)",
+        )}
+        data-testid="pdf-editor-outline-width"
       />
-      <ColorInput
-        size={inputSize}
-        w={touch ? (fillPickerOpen ? 150 : 96) : fillPickerOpen ? 116 : 74}
-        withEyeDropper={false}
-        styles={{
-          section: { pointerEvents: "none" },
-          input: {
-            color: fillPickerOpen ? undefined : "transparent",
-            transition: "width 120ms ease-out",
-          },
-        }}
-        value={fillDraft ?? fillHex}
-        fixOnBlur={false}
-        onChange={(next) => {
-          if (fillFocusedRef.current) setFillDraft(next);
-          if (!next) return;
-          const rgb = parseCssColor(next);
-          if (!rgb) return;
-          if (
-            state.fill &&
-            rgb.r === state.fill.r &&
-            rgb.g === state.fill.g &&
-            rgb.b === state.fill.b
-          ) {
-            return;
-          }
-          onChangeFill(next);
-        }}
-        onChangeEnd={() =>
-          window.requestAnimationFrame(() => setFillPickerOpen(false))
-        }
-        onFocus={() => {
-          fillFocusedRef.current = true;
-          setFillDraft(fillHex);
-          setFillPickerOpen(true);
-        }}
-        onClick={() => setFillPickerOpen(true)}
-        onBlur={() => {
-          fillFocusedRef.current = false;
-          setFillDraft(null);
-          setFillPickerOpen(false);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" || event.key === "Enter") {
-            setFillPickerOpen(false);
-          }
-        }}
-        popoverProps={{
-          withinPortal: !inPopover,
-          opened: fillPickerOpen,
-          onChange: setFillPickerOpen,
-          transitionProps: { transition: "fade", duration: 0 },
-        }}
-        aria-expanded={fillPickerOpen}
-        aria-label={t("pdfTextEditor.toolbar.fontColour", "Font colour")}
-        data-testid="pdf-editor-colour"
-        style={NO_SHRINK}
-      />
-      <Popover position="bottom-start" withinPortal={!inPopover} shadow="md">
-        <Popover.Target>
-          <Tooltip
-            label={
-              readOnlyNote ??
-              t(
-                "pdfTextEditor.toolbar.advancedColourTooltip",
-                "Advanced colour (glyph outline)",
-              )
-            }
-          >
-            <Button
-              variant={outlineWidth > 0 ? "primary" : "tertiary"}
-              accent={outlineWidth > 0 ? "default" : "neutral"}
-              size={buttonSize}
-              disabled={selectionTextReadOnly}
-              aria-label={t(
-                "pdfTextEditor.toolbar.advancedColour",
-                "Advanced colour",
-              )}
-              data-testid="pdf-editor-colour-advanced"
-              style={NO_SHRINK}
-              leftSection={<Icon name="sliders-horizontal" size={20} />}
-            />
-          </Tooltip>
-        </Popover.Target>
-        <Popover.Dropdown>
-          <Group gap="xs" align="center" wrap="nowrap">
-            <ColorInput
-              size="xs"
-              w={132}
-              value={outlineHex}
-              onChange={(next) => {
-                if (!next || !parseCssColor(next)) return;
-                onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
-              }}
-              aria-label={t(
-                "pdfTextEditor.toolbar.outlineColour",
-                "Outline colour",
-              )}
-              data-testid="pdf-editor-outline-colour"
-            />
-            <NumberInput
-              size="xs"
-              w={76}
-              min={0}
-              max={12}
-              step={0.25}
-              decimalScale={2}
-              value={outlineWidth}
-              onChange={(value) => {
-                const next = typeof value === "number" ? value : Number(value);
-                if (!Number.isFinite(next) || next < 0) return;
-                if (next > 0 && state.mixed.stroke) return;
-                onChangeOutline(next > 0 ? outlineHex : null, next);
-              }}
-              disabled={state.strokeWidth === null}
-              aria-label={t(
-                "pdfTextEditor.toolbar.outlineWidth",
-                "Outline width (0 = none)",
-              )}
-              data-testid="pdf-editor-outline-width"
-            />
-          </Group>
-        </Popover.Dropdown>
-      </Popover>
+    </Group>
+  );
+  const toggles = (
+    <>
       <Tooltip
         label={toggleTooltip(
           BOLD_TEXTS,
@@ -383,17 +398,17 @@ export function FormatGroup({
           leftSection={<Icon name="italic" size={20} />}
         />
       </Tooltip>
-      <Menu shadow="md" position="bottom-start" withinPortal={!inPopover}>
-        <Menu.Target>
-          <Tooltip
-            label={
-              readOnlyNote ??
-              t(
-                "pdfTextEditor.toolbar.changeCaseTooltip",
-                "Change case (text runs only)",
-              )
-            }
-          >
+      <Menu shadow="md" position={menuPosition} withinPortal={!inPopover}>
+        <Tooltip
+          label={
+            readOnlyNote ??
+            t(
+              "pdfTextEditor.toolbar.changeCaseTooltip",
+              "Change case (text runs only)",
+            )
+          }
+        >
+          <Menu.Target>
             <Button
               variant="tertiary"
               accent="neutral"
@@ -404,9 +419,9 @@ export function FormatGroup({
               style={NO_SHRINK}
               leftSection={<Icon name="type" size={20} />}
             />
-          </Tooltip>
-        </Menu.Target>
-        <Menu.Dropdown>
+          </Menu.Target>
+        </Tooltip>
+        <Menu.Dropdown {...selectionBarMenuProps}>
           <Menu.Item
             data-testid="pdf-editor-change-case-upper"
             onClick={() => onChangeCase("upper")}
@@ -433,6 +448,164 @@ export function FormatGroup({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
+    </>
+  );
+
+  if (compact) {
+    const fontName = state.mixed.fontFamily
+      ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
+      : (scanFont?.label ?? fontFamily);
+    const swatch = fillPending ?? fillHex;
+    return (
+      <>
+        <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
+          <Tooltip
+            label={
+              readOnlyNote ??
+              (fontName
+                ? t("pdfTextEditor.selectionBar.fontNamed", {
+                    defaultValue: "Font: {{name}}",
+                    name: fontName,
+                  })
+                : t("pdfTextEditor.fontPicker.label", "Font family"))
+            }
+          >
+            <Popover.Target>
+              <Button
+                variant="tertiary"
+                accent="neutral"
+                size={buttonSize}
+                disabled={selectionTextReadOnly}
+                aria-label={t("pdfTextEditor.fontPicker.label", "Font family")}
+                data-testid="pdf-editor-font-menu"
+                style={NO_SHRINK}
+                leftSection={<Icon name="case-sensitive" size={20} />}
+              />
+            </Popover.Target>
+          </Tooltip>
+          <Popover.Dropdown {...selectionBarMenuProps}>
+            <Group gap="xs" wrap="nowrap">
+              {fontPicker}
+              {weightSelect}
+            </Group>
+          </Popover.Dropdown>
+        </Popover>
+        <Tooltip
+          label={
+            readOnlyNote ?? t("pdfTextEditor.toolbar.fontSize", "Font size")
+          }
+        >
+          {sizeInput}
+        </Tooltip>
+        <Popover position={dropdownPosition} withinPortal shadow="md" trapFocus>
+          <Tooltip
+            label={
+              readOnlyNote ??
+              t("pdfTextEditor.toolbar.fontColour", "Font colour")
+            }
+          >
+            <Popover.Target>
+              <Button
+                variant={outlineWidth > 0 ? "secondary" : "tertiary"}
+                accent="neutral"
+                size={buttonSize}
+                disabled={selectionTextReadOnly}
+                aria-label={t(
+                  "pdfTextEditor.toolbar.fontColour",
+                  "Font colour",
+                )}
+                data-testid="pdf-editor-colour-menu"
+                style={NO_SHRINK}
+                leftSection={
+                  <span
+                    aria-hidden
+                    style={{
+                      display: "block",
+                      width: "1rem",
+                      height: "1rem",
+                      borderRadius: "50%",
+                      background: swatch,
+                      border: "0.0625rem solid var(--c-border-strong)",
+                    }}
+                  />
+                }
+              />
+            </Popover.Target>
+          </Tooltip>
+          <Popover.Dropdown {...selectionBarMenuProps}>
+            <Stack gap="xs" w={220}>
+              <ColorPicker
+                format="hex"
+                size="sm"
+                fullWidth
+                saturationLabel={t(
+                  "colorPicker.saturation",
+                  "Saturation and brightness",
+                )}
+                hueLabel={t("colorPicker.hue", "Hue")}
+                value={swatch}
+                onChange={(next) => {
+                  fillPendingRef.current = next;
+                  setFillPending(next);
+                }}
+                onChangeEnd={(next) => {
+                  requestAnimationFrame(() => {
+                    const picked = fillPendingRef.current ?? next;
+                    fillPendingRef.current = null;
+                    setFillPending(null);
+                    applyFill(picked);
+                  });
+                }}
+              />
+              {fillInput}
+              <Divider />
+              <Text size="xs" fw={500}>
+                {t("pdfTextEditor.selectionBar.outline", "Outline")}
+              </Text>
+              {outlineControls}
+            </Stack>
+          </Popover.Dropdown>
+        </Popover>
+        {toggles}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {fontPicker}
+      {weightSelect}
+      {sizeInput}
+      {fillInput}
+      <Popover position="bottom-start" withinPortal={!inPopover} shadow="md">
+        <Tooltip
+          label={
+            readOnlyNote ??
+            t(
+              "pdfTextEditor.toolbar.advancedColourTooltip",
+              "Advanced colour (glyph outline)",
+            )
+          }
+        >
+          <Popover.Target>
+            <Button
+              variant={outlineWidth > 0 ? "primary" : "tertiary"}
+              accent={outlineWidth > 0 ? "default" : "neutral"}
+              size={buttonSize}
+              disabled={selectionTextReadOnly}
+              aria-label={t(
+                "pdfTextEditor.toolbar.advancedColour",
+                "Advanced colour",
+              )}
+              data-testid="pdf-editor-colour-advanced"
+              style={NO_SHRINK}
+              leftSection={<Icon name="sliders-horizontal" size={20} />}
+            />
+          </Popover.Target>
+        </Tooltip>
+        <Popover.Dropdown>{outlineControls}</Popover.Dropdown>
+      </Popover>
+      {toggles}
     </>
   );
 }

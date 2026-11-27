@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Selecting text set in an embedded or subset face left the font picker showing
@@ -57,6 +60,7 @@ test.describe("PDF text editor - document font recognition", () => {
     await page.locator(`[data-testid="pdf-editor-run-${run!.id}"]`).click();
     await page.waitForTimeout(400);
 
+    await openFormatMenu(page, "font");
     const picker = page.getByTestId("pdf-editor-font-family");
     await expect(picker).toBeVisible();
     await expect(
@@ -80,6 +84,7 @@ test.describe("PDF text editor - document font recognition", () => {
 
     // The recognised face must be listed - that is the recognition - and the
     // entry must be inert, since we hold no bytes to actually re-emit with.
+    await openFormatMenu(page, "font");
     await page.getByTestId("pdf-editor-font-family").click();
     await page.waitForTimeout(400);
     const entry = page

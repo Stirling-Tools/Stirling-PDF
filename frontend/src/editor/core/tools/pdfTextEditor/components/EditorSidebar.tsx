@@ -6,6 +6,7 @@ import { CreateNewPdfButton } from "@editor/components/createPdf/CreateNewPdfBut
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import { EditorPanelTools } from "@editor/tools/pdfTextEditor/components/EditorPanelTools";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import {
@@ -46,6 +47,8 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
   initialTab?: SidebarTab;
+  /** Desktop: the panel's head shows the insert tools, and the selection bar carries the image tools. */
+  desktop?: boolean;
 }
 
 export type SidebarTab = "selected" | "document";
@@ -67,6 +70,7 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrBlockedReason,
   onRemovePassword,
   initialTab = "selected",
+  desktop = false,
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
@@ -77,7 +81,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     selection.shapeIds.length > 0 ||
     selection.formFieldId !== null;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
-
   // Picking something on the page is a request to see its properties, so the
   // panel follows. Clearing does NOT yank the tab back - a user who opened
   // Document then clicked bare page should stay where they were.
@@ -106,12 +109,9 @@ export const EditorSidebar = memo(function EditorSidebar({
       onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
       data-testid="pdf-editor-sidebar-status"
     >
-      <Group
-        gap={0}
-        wrap="nowrap"
-        px="xs"
+      <Box
         // Sticky for the same reason the footer is: the outer ScrollArea owns
-        // the scrolling, so the tabs must hold themselves in place.
+        // the scrolling, so the tools and tabs must hold themselves in place.
         style={{
           position: "sticky",
           top: 0,
@@ -120,15 +120,18 @@ export const EditorSidebar = memo(function EditorSidebar({
           borderBottom: "1px solid var(--mantine-color-default-border)",
         }}
       >
-        <Tabs.List style={{ flex: 1, borderBottom: "none" }}>
-          <Tabs.Tab value="selected" data-testid="pdf-editor-tab-selected">
-            {t("pdfTextEditor.inspector.tabSelected", "Selected")}
-          </Tabs.Tab>
-          <Tabs.Tab value="document" data-testid="pdf-editor-tab-document">
-            {t("pdfTextEditor.inspector.tabDocument", "Document")}
-          </Tabs.Tab>
-        </Tabs.List>
-      </Group>
+        {desktop && <EditorPanelTools store={store} state={state} />}
+        <Group gap={0} wrap="nowrap" px="xs">
+          <Tabs.List style={{ flex: 1, borderBottom: "none" }}>
+            <Tabs.Tab value="selected" data-testid="pdf-editor-tab-selected">
+              {t("pdfTextEditor.inspector.tabSelected", "Selected")}
+            </Tabs.Tab>
+            <Tabs.Tab value="document" data-testid="pdf-editor-tab-document">
+              {t("pdfTextEditor.inspector.tabDocument", "Document")}
+            </Tabs.Tab>
+          </Tabs.List>
+        </Group>
+      </Box>
 
       <LanguagesInUse.Provider value={state.languagesInUse}>
         <Box>
@@ -144,6 +147,7 @@ export const EditorSidebar = memo(function EditorSidebar({
                 canUngroup={canUngroup}
                 onGroup={onGroup}
                 onUngroup={onUngroup}
+                showImageTools={!desktop}
               />
             ) : (
               <NothingSelected
@@ -193,7 +197,7 @@ function NothingSelected(props: ScanHintProps) {
         <Text size="xs" c="dimmed" ta="center">
           {t(
             "pdfTextEditor.inspector.nothingSelectedHint",
-            "Click any text, image or shape on the page to edit it here.",
+            "Click any text, image or shape on the page to edit it, or add something new with Insert above.",
           )}
         </Text>
         <ScanHint {...props} />

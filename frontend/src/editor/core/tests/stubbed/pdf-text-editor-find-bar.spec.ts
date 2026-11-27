@@ -9,6 +9,10 @@ const SAMPLE_PDF = path.join(
   "../test-fixtures/sample.pdf",
 );
 
+/** The viewer's bottom-bar button, which opens the editor's own find while it is open. */
+const findButton = (page: Page) =>
+  page.getByRole("button", { name: "Find & replace" });
+
 async function openFind(page: Page): Promise<void> {
   await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -17,25 +21,23 @@ async function openFind(page: Page): Promise<void> {
   // The first page's render holds the main thread, and a cold worker's
   // can outlast the click's wait for the button to stop moving.
   await waitForEditorReady(page, 60_000);
-  await page.getByTestId("pdf-editor-open-find").click();
+  await findButton(page).click();
   await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
 }
 
 test.describe("PDF text editor - find bar", () => {
-  test("the toolbar's search button opens AND closes the bar", async ({
+  test("the bottom bar's find button opens AND closes the bar", async ({
     page,
   }) => {
     test.setTimeout(120_000);
     await openFind(page);
-    const search = page.getByTestId("pdf-editor-open-find");
-    await expect(search).toHaveAttribute("aria-pressed", "true");
+    const search = findButton(page);
 
     await search.click();
     await expect(
       page.getByTestId("pdf-editor-find-bar"),
-      "re-clicking search must put the find bar away",
+      "re-clicking find must put the find bar away",
     ).toBeHidden();
-    await expect(search).toHaveAttribute("aria-pressed", "false");
 
     await search.click();
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
@@ -50,7 +52,7 @@ test.describe("PDF text editor - find bar", () => {
     await expect(firstPage).toBeVisible({ timeout: 60_000 });
     await waitForEditorReady(page, 60_000);
     const before = await firstPage.boundingBox();
-    await page.getByTestId("pdf-editor-open-find").click();
+    await findButton(page).click();
     await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
     const after = await firstPage.boundingBox();
     expect(before).not.toBeNull();
@@ -58,17 +60,14 @@ test.describe("PDF text editor - find bar", () => {
     expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(1);
   });
 
-  test("the bar hangs beneath the toolbar's search button", async ({
-    page,
-  }) => {
+  test("the bar sits above the bottom bar's find button", async ({ page }) => {
     test.setTimeout(120_000);
     await openFind(page);
-    const button = await page.getByTestId("pdf-editor-open-find").boundingBox();
+    const button = await findButton(page).boundingBox();
     const bar = await page.getByTestId("pdf-editor-find-bar").boundingBox();
     expect(button).not.toBeNull();
     expect(bar).not.toBeNull();
-    expect(Math.abs(bar!.x - button!.x)).toBeLessThanOrEqual(1);
-    expect(bar!.y).toBeGreaterThanOrEqual(button!.y + button!.height);
+    expect(bar!.y + bar!.height).toBeLessThanOrEqual(button!.y);
   });
 
   test("replace stays tucked away until asked for", async ({ page }) => {

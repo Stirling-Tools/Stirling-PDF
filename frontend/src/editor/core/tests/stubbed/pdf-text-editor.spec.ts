@@ -1,6 +1,7 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import {
+  openFormatMenu,
   openInTextEditor,
   scrollToEditorPage,
 } from "@editor/tests/helpers/pdf-text-editor";
@@ -66,6 +67,7 @@ async function gotoEditor(page: Page) {
 
 /** Change the selected run's font family through the real toolbar dropdown. */
 async function selectFontFamily(page: Page, optionLabel: string) {
+  await openFormatMenu(page, "font");
   await page.getByTestId("pdf-editor-font-family").click();
   await page.getByRole("option", { name: optionLabel, exact: true }).click();
 }
@@ -82,6 +84,7 @@ async function setBold(page: Page, on: boolean) {
 /** Put the selected text in Helvetica Bold: the family from the list, then the Bold toggle. */
 async function selectHelveticaBold(page: Page) {
   await selectFontFamily(page, "Helvetica");
+  await openFormatMenu(page, "font");
   await expect(page.getByTestId("pdf-editor-font-family")).toHaveValue(
     "Helvetica",
   );
@@ -237,7 +240,7 @@ test.describe("PDF text editor - selection + properties", () => {
     await loadSamplePdf(page);
 
     const fontSize = page.getByTestId("pdf-editor-font-size");
-    const colour = page.getByTestId("pdf-editor-colour");
+    const colour = page.getByTestId("pdf-editor-colour-menu");
 
     // Before selection the inspector has nothing to act on, so the type
     // controls are absent rather than present-but-greyed.
@@ -2567,7 +2570,8 @@ test.describe("PDF text editor - colour", () => {
 
     // Mantine's ColorInput stamps the testid on the wrapper, not the underlying
     // <input>.
-    const colourInput = page.getByLabel("Font colour").first();
+    await openFormatMenu(page, "colour");
+    const colourInput = page.getByTestId("pdf-editor-colour");
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#ff0000"); // theme-allow-color test input value
     await colourInput.press("Enter");
@@ -2633,7 +2637,8 @@ test.describe("PDF text editor - delete + multi-select", () => {
 
     // After a multi-select with two different fills, the colour input is null
     // (mixed).
-    const colourInput = page.getByLabel("Font colour").first();
+    await openFormatMenu(page, "colour");
+    const colourInput = page.getByTestId("pdf-editor-colour");
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#00aa00"); // theme-allow-color test input value
     await colourInput.press("Enter");
@@ -2698,7 +2703,8 @@ test.describe("PDF text editor - font family", () => {
 
     const fontIdBefore = await readFontId(runId);
 
-    const family = page.getByLabel("Font family").first();
+    await openFormatMenu(page, "font");
+    const family = page.getByTestId("pdf-editor-font-family");
     await expect(family).toBeEnabled();
     await family.click();
     // Mantine Select dropdown - pick "Helvetica" option by visible text.
@@ -2802,7 +2808,8 @@ test.describe("PDF text editor - bold/italic", () => {
     await firstRun.click();
     // First we must swap to a base-14 font (Helvetica) since the source PDF's
     // runs use unknown families that the bold flip doesn't know how to map.
-    const family = page.getByLabel("Font family").first();
+    await openFormatMenu(page, "font");
+    const family = page.getByTestId("pdf-editor-font-family");
     await family.click();
     await page
       .getByRole("option", { name: /^Helvetica$/i })
@@ -3007,9 +3014,9 @@ test.describe("PDF text editor - add text box", () => {
     expect(before).toBeGreaterThan(0);
 
     await page.getByTestId("pdf-editor-add-text").click();
-    // The mode toggle changes the button label.
-    await expect(page.getByTestId("pdf-editor-add-text")).toContainText(
-      /click page to add text/i,
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
 
     // Click somewhere on page 0. The click handler converts to PDF
@@ -3019,8 +3026,9 @@ test.describe("PDF text editor - add text box", () => {
 
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
     // Mode resets back to select after the insertion.
-    await expect(page.getByTestId("pdf-editor-add-text")).toHaveText(
-      "Add text",
+    await expect(page.getByTestId("pdf-editor-add-text")).toHaveAttribute(
+      "aria-pressed",
+      "false",
     );
   });
 });

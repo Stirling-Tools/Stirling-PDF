@@ -13,10 +13,40 @@ import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTe
 import { InsertTableCommand } from "@editor/tools/pdfTextEditor/commands/InsertTableCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import { SetLockCommand } from "@editor/tools/pdfTextEditor/commands/SetLockCommand";
+import {
+  editorContextMenu,
+  type ContextMenuEvent,
+  type TableHit,
+} from "@editor/tools/pdfTextEditor/store/contextMenu";
+import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 const cache = new WeakMap<EditorStore, PageViewHandlers>();
+
+/** The cell of an editable table under a page point, if any. */
+function tableCellAt(
+  store: EditorStore,
+  at: { pageIndex: number; x: number; y: number },
+): TableHit | undefined {
+  const page = store.getState().pages.find((p) => p.pageIndex === at.pageIndex);
+  for (const table of page?.tables ?? []) {
+    const col = table.colEdges.findIndex(
+      (edge, i) =>
+        i < table.cols && at.x >= edge && at.x < table.colEdges[i + 1],
+    );
+    // Rows run top to bottom, so their edges fall in y.
+    const row = table.rowEdges.findIndex(
+      (edge, i) =>
+        i < table.rows && at.y <= edge && at.y > table.rowEdges[i + 1],
+    );
+    if (col >= 0 && row >= 0) {
+      return { pageIndex: at.pageIndex, tableId: table.id, row, col };
+    }
+  }
+  return undefined;
+}
 
 /**
  * The page views' handlers, made once per store: PageView is memoised, so a
@@ -42,7 +72,10 @@ function createHandlers(store: EditorStore) {
     },
     onSelectRunText: (runId: string, range: TextRange | null) =>
       store.selection.setTextRange(runId, range),
-    onSelectImage: (imageId: string) => store.selection.selectImage(imageId),
+    onSelectImage: (imageId: string, extend: boolean) => {
+      if (extend) store.selection.toggleImage(imageId);
+      else store.selection.selectImage(imageId);
+    },
     onSelectFormField: (annotationId: string) =>
       store.selection.selectFormField(annotationId),
     onSelectShape: (shapeId: string, extend: boolean) => {
@@ -147,6 +180,76 @@ function createHandlers(store: EditorStore) {
     ) => {
       store.dispatch(
         new SetImageTransformCommand({ pageIndex, imageId, nextBounds }),
+      );
+    },
+    onPageContextMenu: (
+      pageIndex: number,
+      pageX: number,
+      pageY: number,
+      event: ContextMenuEvent,
+    ) => {
+      if (!editorContextMenu.hasHost() || reviewMode.get().reviewing) return;
+      const target = event.target as Element;
+      // Inside the text being typed the browser's menu stays: it alone offers
+      // spelling corrections.
+      const editable = target.closest('[contenteditable="true"]');
+      const pressed = editorContextMenu.focusedAtPress();
+      const focused = pressed === undefined ? document.activeElement : pressed;
+      if (editable && focused && editable.contains(focused)) return;
+      event.preventDefault();
+      const at = { pageIndex, x: pageX, y: pageY };
+      const where = {
+        clientX: event.clientX,
+        clientY: event.clientY,
+        table: tableCellAt(store, at),
+      };
+      const badge = target
+        .closest(".pdf-editor-lock-zone")
+        ?.querySelector<HTMLElement>('[data-testid^="pdf-editor-unlock-"]');
+      if (badge) {
+        const id = badge.dataset.testid!.slice("pdf-editor-unlock-".length);
+        const page = store.document?.page(pageIndex);
+        const isImage = !!page?.images.some((image) => image.id === id);
+        editorContextMenu.open({
+          kind: "locked",
+          clientX: where.clientX,
+          clientY: where.clientY,
+          pageIndex,
+          target: isImage ? { imageId: id } : { runId: id },
+        });
+        return;
+      }
+      // Right-clicking an object acts on it: select it unless it already is.
+      const selection = store.selection.value;
+      const run = target.closest<HTMLElement>("[data-run-id]");
+      const image = target.closest<HTMLElement>(
+        '[data-testid^="pdf-editor-image-"]',
+      );
+      const shape = target.closest<HTMLElement>(
+        '[data-testid^="pdf-editor-shape-"]',
+      );
+      if (run) {
+        const id = run.dataset.runId!;
+        if (!selection.runIds.includes(id)) store.selection.selectOne(id);
+      } else if (image) {
+        const id = image.dataset.testid!.slice("pdf-editor-image-".length);
+        if (!selection.imageIds.includes(id)) store.selection.selectImage(id);
+      } else if (shape) {
+        const id = shape.dataset.testid!.slice("pdf-editor-shape-".length);
+        if (!selection.shapeIds.includes(id)) store.selection.selectShape(id);
+      } else {
+        store.selection.clear();
+        editorContextMenu.open({ kind: "page", ...where, at });
+        return;
+      }
+      editorContextMenu.open({ kind: "objects", ...where, at });
+    },
+    onUnlock: (
+      pageIndex: number,
+      target: { runId: string } | { imageId: string },
+    ) => {
+      store.dispatch(
+        new SetLockCommand({ pageIndex, ...target, locked: false }),
       );
     },
     onFirstVisible: (pageIndex: number) => ensurePageRead(store, pageIndex),
