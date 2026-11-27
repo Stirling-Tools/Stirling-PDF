@@ -45,6 +45,23 @@ vi.mock("@editor/auth/supabase/supabaseClient", () => ({
 vi.mock("@processor/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
+vi.mock("@processor/api/billing", () => ({
+  fetchWallet: vi.fn(async () => ({ teamId: 1, team: { usersInUse: 4 } })),
+  refreshWalletCache: vi.fn(async () => {}),
+}));
+const checkout = vi.hoisted(() => ({ openCheckout: vi.fn() }));
+vi.mock("@editor/contexts/CheckoutContext", () => ({
+  useCheckoutOptional: () => ({
+    openCheckout: checkout.openCheckout,
+    isLoading: false,
+  }),
+}));
+vi.mock("@editor/portal/seatManagement", async () => ({
+  useSeatManagement:
+    // oxlint-disable-next-line no-restricted-imports -- exercise the SaaS seam in the processor test project
+    (await import("../../../editor/saas/portal/seatManagement"))
+      .useSeatManagement,
+}));
 
 // Force the SaaS flavor: the portal vitest project resolves @editor to proprietary,
 // so redirect the two flavor seams to their real SaaS implementations.
@@ -84,6 +101,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 beforeEach(() => {
   resetTeamSaasStore();
+  checkout.openCheckout.mockClear();
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
@@ -113,6 +131,12 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     // Pending-invitations panel (manageInvitations capability) from /{teamId}/invitations.
     expect(screen.getByText("Pending invitations")).toBeInTheDocument();
     expect(screen.getByText("sam.lee@acme.com")).toBeInTheDocument();
+    expect(screen.getByText("6 seats remaining")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Add seats" }));
+    expect(checkout.openCheckout).toHaveBeenCalledWith(
+      "server",
+      expect.objectContaining({ combinedChoose: true }),
+    );
   });
 
   it("offers team-scope removal, not org deletion", async () => {
@@ -305,6 +329,9 @@ describe("SaaS ownership through the current Users page", () => {
       REFETCH_WAIT,
     );
     expect(owner()).toBe(2);
+    expect(
+      screen.queryByRole("button", { name: "Add seats" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "Member" })).toBeVisible();
     expect(screen.queryAllByRole("textbox", { name: /Role for/ })).toHaveLength(
       0,

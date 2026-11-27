@@ -76,7 +76,7 @@ export function ComparePlansModal({
         name: t("portal.billing.compare.teamName", "Team"),
         price: t(
           "portal.billing.compare.teamPrice",
-          "$99/mo per {{users}} users",
+          "$1 per user/month or $10 per user/year",
           {
             users: USERS_PER_BLOCK,
           },
@@ -109,7 +109,10 @@ export function ComparePlansModal({
                 users,
               })
             : t("portal.billing.compare.freeUsersUnknown", "A small team"),
-        team: t("portal.billing.compare.teamUsers", "100 per block"),
+        team: t(
+          "portal.billing.compare.teamUsers",
+          "Free allowance plus individual paid seats",
+        ),
         enterprise: t("portal.billing.compare.enterpriseUsers", "No ceiling"),
       },
       {

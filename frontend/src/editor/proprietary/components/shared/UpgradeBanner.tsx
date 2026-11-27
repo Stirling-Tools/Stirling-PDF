@@ -334,7 +334,7 @@ const UpgradeBanner: React.FC = () => {
           title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Get the most out of Stirling PDF with {{users}} users, PDF text editing, and advanced features",
+            "Add users for $1 per user/month, with PDF text editing and advanced features",
             { users: USERS_PER_BLOCK },
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}

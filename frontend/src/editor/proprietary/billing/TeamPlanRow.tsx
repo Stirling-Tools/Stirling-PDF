@@ -160,19 +160,20 @@ export function TeamPlanRow({
             )
           : t(
               "portal.billing.team.midFree",
-              "The Team plan covers {{users}} users",
+              "Add users for $1 per user/month",
               {
                 users: USERS_PER_BLOCK,
               },
             )
         : processorActive
           ? t("portal.billing.team.midIncluded", "Included with your Team base")
-          : t("portal.billing.team.midPrice", "$99/mo per {{users}} users", {
-              users: USERS_PER_BLOCK,
-            });
+          : t(
+              "portal.billing.team.purchasedCapacity",
+              "Free allowance plus purchased seats",
+            );
 
   const door = onAddCapacity
-    ? t("portal.billing.team.addCapacity", "Add capacity")
+    ? t("portal.billing.team.addSeats", "Add seats")
     : undefined;
   const name = t("portal.billing.team.rowName", "Users");
   const details = wallet.team.breakdown ? (

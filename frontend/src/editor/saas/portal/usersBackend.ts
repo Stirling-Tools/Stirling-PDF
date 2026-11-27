@@ -1,5 +1,6 @@
 import type { UsersBackend } from "@processor/api/usersBackend";
 import { apiClient } from "@processor/api/http";
+import { fetchWallet, refreshWalletCache } from "@processor/api/billing";
 import { tryGetPortalQueryClient } from "@processor/queryClient";
 import { qk } from "@processor/queries/keys";
 import {
@@ -61,16 +62,11 @@ interface InvitationDTO {
 /** No last-activity signal on the team endpoints, so the column reads a dash. */
 const NO_ACTIVITY = "-";
 
-/** Mirrors `UserLicenseSettingsService.DEFAULT_USER_LIMIT`; keep the two in step. */
-const FREE_USER_ALLOWANCE = 5;
-
-/**
- * Users the team is allowed, or null when `maxSeats` holds no purchased allowance. Must agree with
- * `SaasTeamExtensions.licensedUsers()`: a team on the free allowance has no limit to show, and the
- * unlimited sentinel is never a number.
- */
+/** Free teams have a finite allowance; only an explicit unlimited entitlement has no limit. */
 function normalizeSeatLimit(max: number | null | undefined): number | null {
-  if (!max || max <= FREE_USER_ALLOWANCE || max >= 2147483647) return null;
+  if (max === null || max === 2147483647) return null;
+  if (max === undefined || !Number.isSafeInteger(max) || max < 0)
+    throw new Error("Team allowance could not be resolved");
   return max;
 }
 
@@ -186,8 +182,15 @@ export const usersBackend: UsersBackend = {
     const invitations = (invitationDtos ?? [])
       .filter((i) => i.status === "PENDING" && !isExpired(i.expiresAt))
       .map(toInvitation);
+    const wallet = await fetchWallet();
+    if (
+      wallet.teamId !== team.teamId ||
+      !Number.isSafeInteger(wallet.team.usersInUse) ||
+      wallet.team.usersInUse < 0
+    )
+      throw new Error("Team capacity could not be resolved");
     const seatLimit = normalizeSeatLimit(team.maxSeats);
-    const seatsUsed = team.seatsUsed ?? members.length;
+    const seatsUsed = wallet.team.usersInUse;
 
     return {
       summary: {
@@ -243,6 +246,7 @@ export const usersBackend: UsersBackend = {
       method: "POST",
       body: { teamId: tid, email },
     });
+    await refreshWalletCache().catch(() => {});
     return { successCount: 1, failureCount: 0 };
   },
 
@@ -261,11 +265,13 @@ export const usersBackend: UsersBackend = {
       `/api/v1/team/${member.teamId}/members/${member.id}`,
       { method: "DELETE" },
     );
+    await refreshWalletCache().catch(() => {});
   },
 
   async cancelInvitation(invitationId: number): Promise<void> {
     await apiClient.local.json(`/api/v1/team/invitations/${invitationId}`, {
       method: "DELETE",
     });
+    await refreshWalletCache().catch(() => {});
   },
 };

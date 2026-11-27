@@ -4,9 +4,62 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { CapacityStage } from "@editor/components/shared/stripeCheckout/stages/CapacityStage";
+import { PlanSelectionStage } from "@editor/components/shared/stripeCheckout/stages/PlanSelectionStage";
+import type { PlanTier } from "@editor/services/licenseService";
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
+  useTranslation: () => ({
+    t: (_key: string, fallback: string, values?: Record<string, unknown>) =>
+      fallback.replace(/\{\{(\w+)\}\}/g, (_, key) => String(values?.[key])),
+  }),
 }));
+
+it("preserves fractional seat prices in the period picker and renewal amount", () => {
+  const monthly: PlanTier = {
+    id: "selfhosted:teamseat:monthly",
+    lookupKey: "selfhosted:teamseat:monthly",
+    name: "Team",
+    price: 1.39,
+    currency: "CAD",
+    period: "/month",
+    userBlockSize: 1,
+    features: [],
+    highlights: [],
+  };
+  render(
+    <MantineProvider>
+      <CapacityStage
+        selectedPlan={monthly}
+        serverQuantity={7}
+        setServerQuantity={() => {}}
+        onContinue={() => {}}
+        capacity={{
+          freeUsers: 5,
+          legacyUsers: 0,
+          quantity: 0,
+          maxQuantity: 999999,
+        }}
+        periodPicker={
+          <PlanSelectionStage
+            compact
+            minimumSeats={1}
+            savings={null}
+            onSelectPlan={() => {}}
+            planGroup={{
+              tier: "server",
+              name: "Team",
+              features: [],
+              highlights: [],
+              monthly,
+              yearly: null,
+            }}
+          />
+        }
+      />
+    </MantineProvider>,
+  );
+  expect(screen.getByText("CAD1.39/mo per user")).toBeInTheDocument();
+  expect(screen.getByText(/Renews at CAD9.73\/mo/)).toBeInTheDocument();
+});
 it("allows a reduction at renewal even when current usage exceeds the future allowance", () => {
   render(
     <MantineProvider>
@@ -25,6 +78,64 @@ it("allows a reduction at renewal even when current usage exceeds the future all
     screen.getByRole("button", { name: "Review change in Stripe" }),
   ).toBeEnabled();
 });
+
+it.each([
+  [0, 12, 7],
+  [100, 112, 7],
+])(
+  "prices only the paid seats beyond free and legacy capacity",
+  async (legacyUsers, total, paid) => {
+    const user = userEvent.setup();
+    const onContinue = vi.fn();
+    const selectedPlan: PlanTier = {
+      id: "selfhosted:teamseat:monthly",
+      lookupKey: "selfhosted:teamseat:monthly",
+      name: "Team",
+      price: 1,
+      currency: "$",
+      period: "month",
+      userBlockSize: 1,
+      features: [],
+      highlights: [],
+    };
+    function Picker() {
+      const [quantity, setQuantity] = useState(1);
+      return (
+        <CapacityStage
+          selectedPlan={selectedPlan}
+          serverQuantity={quantity}
+          setServerQuantity={setQuantity}
+          capacity={{
+            freeUsers: 5,
+            legacyUsers,
+            quantity: 0,
+            maxQuantity: 999999,
+          }}
+          onContinue={() => onContinue(quantity)}
+        />
+      );
+    }
+    render(
+      <MantineProvider>
+        <Picker />
+      </MantineProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Custom" }));
+    const input = screen.getByRole("textbox", { name: "Number of users" });
+    await user.clear(input);
+    await user.type(input, String(total));
+    expect(input).toHaveValue(String(total));
+    expect(document.querySelector(".team-capacity__covered")).toHaveTextContent(
+      String(total),
+    );
+    expect(screen.getByText("$7.00")).toBeInTheDocument();
+    expect(screen.queryByText(/Rounds up/)).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Continue to payment" }),
+    );
+    expect(onContinue).toHaveBeenCalledWith(paid);
+  },
+);
 
 it("shows the new recurring total without inventing the adjustment charge", () => {
   render(
