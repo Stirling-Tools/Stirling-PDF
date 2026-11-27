@@ -1250,19 +1250,6 @@ class Style(ApiModel):
     )
 
 
-class RedactionArea(ApiModel):
-    """
-    Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
-    """
-
-    color: str | None = Field(None, description="The color used to redact the specified area.")
-    height: float | None = Field(None, description="The height of the area to be redacted.")
-    page: int | None = Field(None, description="The page on which the area should be redacted.")
-    width: float | None = Field(None, description="The width of the area to be redacted.")
-    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
-    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
-
-
 class RemoveBlanksParams(ApiModel):
     """
     This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF Type:SIMO
@@ -1841,25 +1828,6 @@ class RedactExecuteParams(ApiModel):
     )
 
 
-class RedactParams(ApiModel):
-    """
-    Removes covered page content from selected areas and wipes selected whole pages. An affected page may be rasterized if native region removal cannot safely clear it. convertPDFToImage=true rasterizes every output page. Input:PDF Output:PDF Type:SISO
-    """
-
-    convert_pdf_to_image: bool = Field(
-        False,
-        description="Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.",
-    )
-    page_numbers: str | None = Field(
-        None, description="Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas."
-    )
-    page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
-    redactions: list[RedactionArea] = Field(
-        ...,
-        description="Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points",
-    )
-
-
 class Model(
     RootModel[
         CbrToPdfParams
@@ -1930,7 +1898,6 @@ class Model(
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
-        | RedactParams
         | RedactExecuteParams
         | RemoveCertSignParams
         | RemovePasswordParams
@@ -2007,7 +1974,6 @@ class Model(
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
-        | RedactParams
         | RedactExecuteParams
         | RemoveCertSignParams
         | RemovePasswordParams
@@ -2085,7 +2051,6 @@ type ParamToolModel = (
     | AddPasswordParams
     | AddWatermarkParams
     | AutoRedactParams
-    | RedactParams
     | RedactExecuteParams
     | RemoveCertSignParams
     | RemovePasswordParams
@@ -2164,7 +2129,6 @@ class ToolEndpoint(StrEnum):
     ADD_PASSWORD = "/api/v1/security/add-password"
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
-    REDACT = "/api/v1/security/redact"
     REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_CERT_SIGN = "/api/v1/security/remove-cert-sign"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
@@ -2241,7 +2205,6 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
-    ToolEndpoint.REDACT: RedactParams,
     ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_CERT_SIGN: RemoveCertSignParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,

@@ -609,53 +609,6 @@ export interface IntegrationPurviewReadLabelRequest {
   connectionId: string;
 }
 export type ListAttachmentsRequest = Record<string, never>;
-export interface ManualRedactPdfRequest {
-  /**
-   * Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.
-   */
-  convertPDFToImage?: boolean;
-  /**
-   * Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas.
-   */
-  pageNumbers?: string;
-  /**
-   * The color used to fully redact certain pages
-   */
-  pageRedactionColor?: string;
-  /**
-   * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
-   */
-  redactions: RedactionArea[];
-}
-/**
- * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
- */
-export interface RedactionArea {
-  /**
-   * The color used to redact the specified area.
-   */
-  color?: string;
-  /**
-   * The height of the area to be redacted.
-   */
-  height?: number;
-  /**
-   * The page on which the area should be redacted.
-   */
-  page?: number;
-  /**
-   * The width of the area to be redacted.
-   */
-  width?: number;
-  /**
-   * The left edge point of the area to be redacted.
-   */
-  x?: number;
-  /**
-   * The top edge point of the area to be redacted.
-   */
-  y?: number;
-}
 export interface MergeMultiplePagesRequest {
   /**
    * Boolean for if you wish to add border around the pages
@@ -1701,7 +1654,6 @@ export type ToolEndpoint =
   | "/api/v1/security/cert-sign/sessions"
   | "/api/v1/security/cert-sign/validate-certificate"
   | "/api/v1/security/get-info-on-pdf"
-  | "/api/v1/security/redact"
   | "/api/v1/security/redact-execute"
   | "/api/v1/security/remove-cert-sign"
   | "/api/v1/security/remove-password"
@@ -1805,7 +1757,6 @@ export interface ToolApiParams {
   "/api/v1/security/cert-sign/sessions": SecurityCertSignSessionsRequest;
   "/api/v1/security/cert-sign/validate-certificate": SecurityCertSignValidateCertificateRequest;
   "/api/v1/security/get-info-on-pdf": SecurityGetInfoOnPdfRequest;
-  "/api/v1/security/redact": ManualRedactPdfRequest;
   "/api/v1/security/redact-execute": RedactExecuteRequest;
   "/api/v1/security/remove-cert-sign": SecurityRemoveCertSignRequest;
   "/api/v1/security/remove-password": RemovePasswordRequest;
@@ -1910,7 +1861,6 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/cert-sign/sessions",
   "/api/v1/security/cert-sign/validate-certificate",
   "/api/v1/security/get-info-on-pdf",
-  "/api/v1/security/redact",
   "/api/v1/security/redact-execute",
   "/api/v1/security/remove-cert-sign",
   "/api/v1/security/remove-password",

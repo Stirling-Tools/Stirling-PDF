@@ -342,10 +342,10 @@ class AiWorkflowServiceTest {
 
     @Test
     void parameterListOfStructuredObjectsIsJsonEncodedAsSingleField() throws IOException {
-        // Endpoints like /security/redact bind a List<StructuredObject> from a single JSON form
-        // field via a property editor. The plan executor must pre-serialize such lists rather
-        // than splitting them into repeated form fields.
-        String redactEndpoint = "/api/v1/security/redact";
+        // Endpoints like /security/redact-execute bind a List<StructuredObject> from a single
+        // JSON form field via a property editor. The plan executor must pre-serialize such lists
+        // rather than splitting them into repeated form fields.
+        String redactEndpoint = "/api/v1/security/redact-execute";
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
@@ -354,8 +354,7 @@ class AiWorkflowServiceTest {
                   "summary":"Redact areas",
                   "steps":[
                     {"tool":"%s","parameters":{
-                      "redactions":[{"page":1,"x":10,"y":20,"width":100,"height":50},{"page":2,"x":5,"y":15,"width":80,"height":30}],
-                      "convertPDFToImage":false
+                      "imageBoxes":[{"pageIndex":1,"x1":10,"y1":20,"x2":100,"y2":50},{"pageIndex":2,"x1":5,"y1":15,"x2":80,"y2":30}]
                     }}
                   ]
                 }
@@ -376,18 +375,12 @@ class AiWorkflowServiceTest {
 
         // The structured-list field must be serialized as ONE JSON-string entry, not multiple
         // entries.
-        List<Object> redactionsValues = body.get("redactions");
-        assertNotNull(redactionsValues);
-        assertEquals(1, redactionsValues.size());
+        List<Object> imageBoxValues = body.get("imageBoxes");
+        assertNotNull(imageBoxValues);
+        assertEquals(1, imageBoxValues.size());
         assertEquals(
-                "[{\"page\":1,\"x\":10,\"y\":20,\"width\":100,\"height\":50},{\"page\":2,\"x\":5,\"y\":15,\"width\":80,\"height\":30}]",
-                redactionsValues.get(0));
-
-        // Primitive fields keep the original behavior (single value, not JSON-wrapped).
-        List<Object> convertPDFToImage = body.get("convertPDFToImage");
-        assertNotNull(convertPDFToImage);
-        assertEquals(1, convertPDFToImage.size());
-        assertEquals(false, convertPDFToImage.get(0));
+                "[{\"pageIndex\":1,\"x1\":10,\"y1\":20,\"x2\":100,\"y2\":50},{\"pageIndex\":2,\"x1\":5,\"y1\":15,\"x2\":80,\"y2\":30}]",
+                imageBoxValues.get(0));
     }
 
     @Test
