@@ -1,0 +1,54 @@
+.stamp-guide-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.stamp-guide-surface {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.stamp-guide-surface--placing {
+  cursor: crosshair;
+}
+
+.stamp-guide-box {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: auto;
+  cursor: move;
+  touch-action: none;
+  background: color-mix(in srgb, white 85%, transparent);
+  border: 2px solid var(--c-primary);
+  border-radius: 2px;
+}
+
+.stamp-guide-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.stamp-guide-box--ghost {
+  pointer-events: none;
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.stamp-guide-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 2px solid white;
+  cursor: nwse-resize;
+  touch-action: none;
+}

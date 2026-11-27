@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { PolicyPiiField } from "@editor/components/policies/PolicyPiiField";
+import { RedactPresetSelect } from "@editor/components/tools/redact/RedactPresetSelect";
+import { selectedPresetIds } from "@editor/components/tools/redact/redactWords";
+import {
+  presetIdOfPattern,
+  presetPatterns,
+  type RedactPresetId,
+} from "@editor/data/redactPresets";
 import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 interface PolicyRedactConfigProps {
@@ -11,7 +17,7 @@ interface PolicyRedactConfigProps {
 /**
  * Redact configuration for a policy — reduced to just the PII type picker. The
  * runtime params are fixed (mode automatic, regex on, flatten-to-image on so the
- * redacted text is truly removed) and normalised once on mount; the dropdown
+ * redacted text is truly removed) and normalised once on mount; the picker
  * only chooses which PII patterns are redacted.
  */
 export function PolicyRedactConfig({
@@ -19,7 +25,7 @@ export function PolicyRedactConfig({
   onChange,
   disabled,
 }: PolicyRedactConfigProps) {
-  // Lock the non-PII params once on mount (empty deps); the dropdown manages the
+  // Lock the non-PII params once on mount (empty deps); the picker manages the
   // pattern list and preserves these via its spread.
   useEffect(() => {
     if (
@@ -36,10 +42,26 @@ export function PolicyRedactConfig({
     }
   }, []);
 
+  // Custom entries stay as stored: they are already regexes, since a policy
+  // always runs with Use Regex on.
+  const handleChange = (ids: RedactPresetId[]) => {
+    onChange({
+      ...parameters,
+      mode: "automatic",
+      useRegex: true,
+      wordsToRedact: [
+        ...presetPatterns(ids),
+        ...parameters.wordsToRedact.filter(
+          (w) => presetIdOfPattern(w) === undefined,
+        ),
+      ],
+    });
+  };
+
   return (
-    <PolicyPiiField
-      parameters={parameters}
-      onChange={onChange}
+    <RedactPresetSelect
+      value={selectedPresetIds(parameters)}
+      onChange={handleChange}
       disabled={disabled}
     />
   );

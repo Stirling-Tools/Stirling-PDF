@@ -2,7 +2,6 @@ import { lazy, useMemo } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@editor/constants/links";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
@@ -27,6 +26,7 @@ import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useA
 import { removePasswordOperationConfig } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
 import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
 import { repairOperationConfig } from "@editor/hooks/tools/repair/useRepairOperation";
+import { archivePdfOperationConfig } from "@editor/hooks/tools/archivePdf/useArchivePdfOperation";
 import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "@editor/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
@@ -450,22 +450,12 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       checkAccessibility: {
         icon: <Icon name="universal-access" size="1.5rem" />,
-        // The accessibility-editing build replaces the report with the tool that also fixes tags.
-        name: ACCESSIBILITY_EDITING
-          ? t("home.checkAccessibility.titleWithReview", "PDF accessibility")
-          : t("home.checkAccessibility.title", "Check PDF accessibility"),
-        component: ACCESSIBILITY_EDITING
-          ? lazy(() => import("@editor/tools/PdfAccessibility"))
-          : lazy(() => import("@editor/tools/CheckAccessibility")),
-        description: ACCESSIBILITY_EDITING
-          ? t(
-              "home.checkAccessibility.descWithReview",
-              "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
-            )
-          : t(
-              "home.checkAccessibility.desc",
-              "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
-            ),
+        name: t("home.checkAccessibility.title", "PDF accessibility"),
+        component: lazy(() => import("@editor/tools/PdfAccessibility")),
+        description: t(
+          "home.checkAccessibility.desc",
+          "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
+        ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         maxFiles: -1,
@@ -988,6 +978,25 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(repairOperationConfig),
         synonyms: getSynonyms(t, "repair"),
         automationSettings: null,
+      },
+      archivePdf: {
+        icon: <Icon name="archive" size="1.5rem" />,
+        name: t("home.archivePdf.title", "Prepare for Archive (PDF/A)"),
+        component: lazy(() => import("@editor/tools/ArchivePdf")),
+        description: t(
+          "home.archivePdf.desc",
+          "Convert PDFs to the PDF/A archival standard for long-term preservation",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["pdf-to-pdfa"],
+        operationConfig: asRegistryConfig(archivePdfOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@editor/components/tools/archivePdf/ArchivePdfSettings"),
+        ),
+        synonyms: getSynonyms(t, "archivePdf"),
       },
       scannerImageSplit: {
         icon: <Icon name="table-columns-split" size="1.5rem" />,

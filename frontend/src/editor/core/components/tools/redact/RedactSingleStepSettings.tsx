@@ -2,7 +2,7 @@ import { Stack, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 import RedactModeSelector from "@editor/components/tools/redact/RedactModeSelector";
-import WordsToRedactInput from "@editor/components/tools/redact/WordsToRedactInput";
+import RedactWordsSettings from "@editor/components/tools/redact/RedactWordsSettings";
 import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
 
 interface RedactSingleStepSettingsProps {
@@ -34,10 +34,9 @@ const RedactSingleStepSettings = ({
         <>
           <Divider />
 
-          {/* Words to Redact */}
-          <WordsToRedactInput
-            wordsToRedact={parameters.wordsToRedact}
-            onWordsChange={(words) => onParameterChange("wordsToRedact", words)}
+          <RedactWordsSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
             disabled={disabled}
           />
 

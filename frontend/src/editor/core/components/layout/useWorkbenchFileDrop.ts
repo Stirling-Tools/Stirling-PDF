@@ -5,9 +5,9 @@ import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
 import { alert } from "@editor/components/toast";
 
-// One drag state shared by every surface given these handlers (the workbench
-// and the file sidebar), so the overlay the workbench draws stays up while the
-// pointer moves from one to the other. Every child the pointer crosses fires its
+// One drag state shared by every surface given these handlers (the workbench,
+// the file sidebar and the tool panel), so the overlay the workbench draws stays
+// up while the pointer moves between them. Every child the pointer crosses fires its
 // own enter/leave pair, so a depth count, not the last event, says whether the
 // drag is still over any of them.
 let dragDepth = 0;

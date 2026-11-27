@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
@@ -130,9 +129,7 @@ export function useTextAccessibility(
     const doc = store.document;
     const ids = new Set(selection.runIds);
     const selected =
-      ACCESSIBILITY_EDITING &&
-      selection.imageIds.length === 0 &&
-      selection.shapeIds.length === 0
+      selection.imageIds.length === 0 && selection.shapeIds.length === 0
         ? state.pages.flatMap((page) => page.runs).filter((r) => ids.has(r.id))
         : [];
     if (!doc || selected.length === 0) {
@@ -462,7 +459,6 @@ function textLanguageTargets(
   selection: SelectionState,
 ): LanguageTarget[] | null {
   if (
-    !ACCESSIBILITY_EDITING ||
     selection.runIds.length === 0 ||
     selection.imageIds.length > 0 ||
     selection.shapeIds.length > 0

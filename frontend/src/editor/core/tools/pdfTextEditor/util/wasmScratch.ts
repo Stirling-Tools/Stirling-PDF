@@ -102,6 +102,7 @@ export const SCRATCH = {
   kernOriginY: key(),
   kernFontSize: key(),
   kernGlyphWidth: key(),
+  documentPageSize: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */

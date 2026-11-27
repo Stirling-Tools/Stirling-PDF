@@ -59,6 +59,7 @@ import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
 import { ClearRecentsDialog } from "@editor/components/shared/ClearRecentsDialog";
+import { useFileSources } from "@editor/components/shared/useFileSources";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -244,6 +245,7 @@ function LibraryHeader({
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
   const createPdf = useCreatePdfMenu();
+  const { sources, pickers } = useFileSources(onAddFiles);
   return (
     <div
       className="file-sidebar-section-header"
@@ -292,12 +294,15 @@ function LibraryHeader({
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Label>{t("fileSidebar.addFiles", "Add files")}</Menu.Label>
-          <RichMenuItem
-            icon={<Icon name="file-up" size={16} />}
-            label={t("fileSidebar.openFromComputer", "Open from computer")}
-            onClick={onAddFiles}
-            testId="pdf-library-add-from-computer"
-          />
+          {sources.map((source) => (
+            <RichMenuItem
+              key={source.key}
+              icon={<Icon name={source.icon} size={16} />}
+              label={source.menuLabel}
+              onClick={source.onClick}
+              testId={source.testId}
+            />
+          ))}
           {cloudPickers.map((picker) => (
             <RichMenuItem
               key={picker.id}
@@ -313,6 +318,7 @@ function LibraryHeader({
         </Menu.Dropdown>
       </Menu>
       {createPdf.dialogs}
+      {pickers}
     </div>
   );
 }

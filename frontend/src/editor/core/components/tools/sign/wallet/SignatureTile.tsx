@@ -56,7 +56,13 @@ export function SignatureTile({
           <Icon name="check" size={11} strokeWidth={3.2} />
         </span>
       </button>
-      <SignatureTileMenu label={label} actions={actions} disabled={disabled} />
+      {actions.length > 0 && (
+        <SignatureTileMenu
+          label={label}
+          actions={actions}
+          disabled={disabled}
+        />
+      )}
       <span className={styles.label}>
         <span className={styles.labelText}>{label}</span>
         {isDefault && (

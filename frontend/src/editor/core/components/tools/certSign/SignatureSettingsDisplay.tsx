@@ -90,7 +90,10 @@ const SignatureSettingsDisplay = ({
 
               <Group gap="xs" justify="space-between">
                 <Text size="xs" c="dimmed">
-                  {t("certSign.logoTitle", "Logo")}
+                  {t(
+                    "certSign.appearance.graphic.watermark",
+                    "Logo behind signature",
+                  )}
                 </Text>
                 <Group gap="xs">
                   {showLogo ? (
@@ -101,7 +104,7 @@ const SignatureSettingsDisplay = ({
                         style={{ color: "var(--mantine-color-green-6)" }}
                       />
                       <Badge size="sm" color="green" variant="light">
-                        {t("certSign.showLogo", "Show Logo")}
+                        {t("certSign.companyLogoShown", "Shown")}
                       </Badge>
                     </>
                   ) : (
@@ -112,7 +115,7 @@ const SignatureSettingsDisplay = ({
                         style={{ color: "var(--mantine-color-gray-6)" }}
                       />
                       <Badge size="sm" color="gray" variant="light">
-                        {t("certSign.noLogo", "No Logo")}
+                        {t("certSign.companyLogoHidden", "Not shown")}
                       </Badge>
                     </>
                   )}

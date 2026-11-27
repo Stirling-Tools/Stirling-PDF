@@ -8,6 +8,10 @@ import {
 import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
+import {
+  defaultToolParams,
+  toolParamsNeedConfiguring,
+} from "@editor/hooks/tools/shared/toolAutomation";
 
 interface UseAutomationFormProps {
   mode: AutomationMode;
@@ -40,13 +44,18 @@ export function useAutomationForm({
   );
 
   const getToolDefaultParameters = useCallback(
-    (operation: string): Record<string, unknown> => {
-      const config = toolRegistry[operation as ToolId]?.operationConfig;
-      if (config?.defaultParameters) {
-        return { ...config.defaultParameters };
-      }
-      return {};
-    },
+    (operation: string) => defaultToolParams(operation as ToolId, toolRegistry),
+    [toolRegistry],
+  );
+
+  const isToolConfigured = useCallback(
+    (tool: AutomationTool) =>
+      tool.operation !== "" &&
+      !toolParamsNeedConfiguring(
+        tool.operation as ToolId,
+        tool.parameters ?? {},
+        toolRegistry,
+      ),
     [toolRegistry],
   );
 
@@ -63,16 +72,10 @@ export function useAutomationForm({
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {
         const operation = typeof op === "string" ? op : op.operation;
-        const toolEntry = toolRegistry[operation as ToolId];
-        // If tool has no settingsComponent, it's automatically configured
-        const isConfigured =
-          mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
-
         return {
           id: `${operation}-${Date.now()}-${index}`,
           operation: operation,
           name: getToolName(operation),
-          configured: isConfigured,
           parameters:
             typeof op === "object"
               ? {
@@ -92,7 +95,6 @@ export function useAutomationForm({
           id: `tool-${index + 1}-${Date.now()}`,
           operation: "",
           name: t("automate.creation.tools.selectTool", "Select a tool..."),
-          configured: false,
           parameters: {},
         }),
       );
@@ -101,15 +103,10 @@ export function useAutomationForm({
   }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
 
   const addTool = (operation: string) => {
-    const toolEntry = toolRegistry[operation as ToolId];
-    // If tool has no settingsComponent, it's automatically configured
-    const isConfigured = !toolEntry?.automationSettings;
-
     const newTool: AutomationTool = {
       id: `${operation}-${Date.now()}`,
       operation,
       name: getToolName(operation),
-      configured: isConfigured,
       parameters: getToolDefaultParameters(operation),
     };
 
@@ -130,7 +127,7 @@ export function useAutomationForm({
   const hasUnsavedChanges = () => {
     return (
       automationName.trim() !== "" ||
-      selectedTools.some((tool) => tool.operation !== "" || tool.configured)
+      selectedTools.some((tool) => tool.operation !== "")
     );
   };
 
@@ -138,7 +135,7 @@ export function useAutomationForm({
     return (
       automationName.trim() !== "" &&
       selectedTools.length > 0 &&
-      selectedTools.every((tool) => tool.configured && tool.operation !== "")
+      selectedTools.every(isToolConfigured)
     );
   };
 
@@ -156,6 +153,7 @@ export function useAutomationForm({
     updateTool,
     hasUnsavedChanges,
     canSaveAutomation,
+    isToolConfigured,
     getToolName,
     getToolDefaultParameters,
   };

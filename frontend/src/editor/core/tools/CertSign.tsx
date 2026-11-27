@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack } from "@mantine/core";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
@@ -10,11 +10,13 @@ import HardwareCertificateSettings from "@editor/components/tools/certSign/Hardw
 import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
 import { useCertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { useCertSignOperation } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { useCertSignStampPlacement } from "@editor/hooks/tools/certSign/useCertSignStampPlacement";
 import { useCertificateTypeTips } from "@editor/components/tooltips/useCertificateTypeTips";
 import { useSignatureAppearanceTips } from "@editor/components/tooltips/useSignatureAppearanceTips";
 import { useSignModeTips } from "@editor/components/tooltips/useSignModeTips";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import type { HardwareCertificateInfo } from "@editor/services/hardwareSigningService";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -44,6 +46,29 @@ const CertSign = (props: BaseToolProps) => {
     base.params.parameters.signMode,
     base.params.updateParameter,
   ]);
+
+  const singleFile =
+    base.selectedFiles.length === 1 ? base.selectedFiles[0] : null;
+  const signingFileId = singleFile?.fileId ?? null;
+  const placedFor = useRef(signingFileId);
+  useEffect(() => {
+    if (placedFor.current === signingFileId) return;
+    placedFor.current = signingFileId;
+    if (base.hasResults) return;
+    const { fieldName, stampBox } = base.params.parameters;
+    if (fieldName) base.params.updateParameter("fieldName", undefined);
+    if (stampBox) base.params.updateParameter("stampBox", undefined);
+  }, [signingFileId, base.hasResults, base.params]);
+
+  const [deviceCertificate, setDeviceCertificate] =
+    useState<HardwareCertificateInfo | null>(null);
+  const stampPlacement = useCertSignStampPlacement({
+    file: singleFile,
+    parameters: base.params.parameters,
+    onParameterChange: base.params.updateParameter,
+    active: !base.hasResults,
+    deviceCertificate,
+  });
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -139,6 +164,7 @@ const CertSign = (props: BaseToolProps) => {
                   parameters={base.params.parameters}
                   onParameterChange={base.params.updateParameter}
                   disabled={base.endpointLoading}
+                  onChosenCertificateChange={setDeviceCertificate}
                 />
               ),
             },
@@ -157,6 +183,8 @@ const CertSign = (props: BaseToolProps) => {
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
+            placement={singleFile ? stampPlacement : undefined}
+            preview={stampPlacement.preview}
           />
         ),
       },
@@ -167,7 +195,10 @@ const CertSign = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid:
+        base.params.validateParameters() &&
+        (base.params.parameters.signMode !== "AUTO" ||
+          !!base.params.parameters.expectedCertificateSha256),
     },
     review: {
       isVisible: base.hasResults,

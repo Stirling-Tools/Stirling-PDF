@@ -20,7 +20,6 @@ import ConvertFromWebSettings from "@editor/components/tools/convert/ConvertFrom
 import ConvertFromEmailSettings from "@editor/components/tools/convert/ConvertFromEmailSettings";
 import ConvertFromCbzSettings from "@editor/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@editor/components/tools/convert/ConvertToCbzSettings";
-import ConvertToPdfaSettings from "@editor/components/tools/convert/ConvertToPdfaSettings";
 import ConvertToPdfUaSettings from "@editor/components/tools/convert/ConvertToPdfUaSettings";
 import ConvertToPdfxSettings from "@editor/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@editor/components/tools/convert/ConvertFromCbrSettings";
@@ -220,10 +219,6 @@ const ConvertSettings = ({
       downloadHtml: false,
       includeAllRecipients: false,
     });
-    onParameterChange("pdfaOptions", {
-      outputFormat: "pdfa-2b",
-      strict: false,
-    });
     onParameterChange("pdfxOptions", {
       outputFormat: "pdfx",
     });
@@ -283,10 +278,6 @@ const ConvertSettings = ({
       maxAttachmentSizeMB: 10,
       downloadHtml: false,
       includeAllRecipients: false,
-    });
-    onParameterChange("pdfaOptions", {
-      outputFormat: "pdfa-2b",
-      strict: false,
     });
     onParameterChange("pdfxOptions", {
       outputFormat: "pdfx",
@@ -428,19 +419,6 @@ const ConvertSettings = ({
             <ConvertToCbzSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
-              disabled={disabled}
-            />
-          </>
-        )}
-
-      {/* PDF to PDF/A options */}
-      {parameters.fromExtension === "pdf" &&
-        parameters.toExtension === "pdfa" && (
-          <>
-            <ConvertToPdfaSettings
-              parameters={parameters}
-              onParameterChange={onParameterChange}
-              selectedFiles={selectedFiles}
               disabled={disabled}
             />
           </>

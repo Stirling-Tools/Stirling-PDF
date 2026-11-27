@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, waitFor } from "storybook/test";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 /** Reproduces the redaction "Mode" picker (Automatic / Manual). */
@@ -26,7 +27,14 @@ function ModeDemo({ disabled }: { disabled?: boolean }) {
       value={value}
       onChange={setValue}
       options={[
-        { value: "automatic", label: "Automatic", disabled },
+        {
+          value: "automatic",
+          label: "Automatic",
+          disabled,
+          tooltip: disabled
+            ? "Upload files to use automatic redaction"
+            : undefined,
+        },
         { value: "manual", label: "Manual", disabled },
       ]}
     />
@@ -39,4 +47,22 @@ export const RedactionMode: Story = { render: () => <ModeDemo /> };
 /** Both options disabled (no files) — the selected segment must STILL be legible. */
 export const DisabledOptions: Story = {
   render: () => <ModeDemo disabled />,
+};
+
+/** A label behind a tooltip must fit the track like any other: shrink when narrow, recover when wide. */
+export const DisabledOptionsResized: Story = {
+  render: () => (
+    <div data-testid="track" style={{ width: "7rem" }}>
+      <ModeDemo disabled />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const fontSize = (text: string) =>
+      getComputedStyle(canvas.getByText(text)).fontSize;
+
+    await waitFor(() => expect(fontSize("Automatic")).not.toBe("14px"));
+
+    canvas.getByTestId("track").style.width = "22rem";
+    await waitFor(() => expect(fontSize("Automatic")).toBe("14px"));
+  },
 };

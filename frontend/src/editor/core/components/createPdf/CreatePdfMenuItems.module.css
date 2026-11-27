@@ -3,6 +3,10 @@
   border-radius: var(--radius-md);
 }
 
+.item [data-position="left"] {
+  margin-inline-end: 0.875rem;
+}
+
 .chip {
   display: inline-flex;
   flex-shrink: 0;

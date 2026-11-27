@@ -79,7 +79,6 @@ export const buildConvertFormData = (
     imageOptions,
     htmlOptions,
     emailOptions,
-    pdfaOptions,
     pdfUaOptions,
     pdfxOptions,
     cbrOptions,
@@ -139,9 +138,6 @@ export const buildConvertFormData = (
       "includeAllRecipients",
       emailOptions.includeAllRecipients.toString(),
     );
-  } else if (fromExtension === "pdf" && toExtension === "pdfa") {
-    formData.append("outputFormat", pdfaOptions.outputFormat);
-    formData.append("strict", String(!!pdfaOptions.strict));
   } else if (fromExtension === "pdf" && toExtension === "pdfua") {
     formData.append("profile", pdfUaOptions.profile);
     formData.append("language", pdfUaOptions.language);
@@ -215,8 +211,8 @@ export const createFileFromResponse = (
 ): File => {
   const [originalName] = splitFileName(originalFileName);
 
-  // Map pdfa, pdfx and pdfua to pdf since they all result in PDF files
-  if (["pdfa", "pdfx", "pdfua"].includes(targetExtension)) {
+  // PDF/X and PDF/UA are PDF files
+  if (["pdfx", "pdfua"].includes(targetExtension)) {
     targetExtension = "pdf";
   }
 
@@ -263,10 +259,8 @@ export const convertProcessor = async (
   const processedFiles: File[] = [];
   let firstFailure: unknown;
 
-  // Map PDF/X to use PDF/A endpoint
-  const actualToExtension =
-    parameters.toExtension === "pdfx" ? "pdfa" : parameters.toExtension;
-  let endpoint = getEndpointUrl(parameters.fromExtension, actualToExtension);
+  const { toExtension } = parameters;
+  let endpoint = getEndpointUrl(parameters.fromExtension, toExtension);
 
   if (!endpoint) {
     throw new Error("Unsupported conversion format");
@@ -275,37 +269,29 @@ export const convertProcessor = async (
   let requestConfig = {
     ...requestOptions,
     responseType: "blob" as const,
-    endpointName: getEndpointName(parameters.fromExtension, actualToExtension),
+    endpointName: getEndpointName(parameters.fromExtension, toExtension),
   };
 
-  // Convert-specific routing logic: decide batch vs individual processing
-  // For PDF/X, we want to treat it similar to PDF/A (separate processing)
-  const isSeparateProcessing = shouldProcessFilesSeparately(selectedFiles, {
-    ...parameters,
-    toExtension: actualToExtension, // Use the mapped extension for decision logic
-  });
+  const isSeparateProcessing = shouldProcessFilesSeparately(
+    selectedFiles,
+    parameters,
+  );
 
   if (isSeparateProcessing || parameters.fromExtension === "any") {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
     for (const file of selectedFiles) {
       try {
         const fileParameters = parametersForFile(parameters, file);
-        if (
-          fileParameters.fromExtension === "pdf" &&
-          actualToExtension === "pdf"
-        ) {
+        if (fileParameters.fromExtension === "pdf" && toExtension === "pdf") {
           processedFiles.push(file);
           continue;
         }
-        endpoint = getEndpointUrl(
-          fileParameters.fromExtension,
-          actualToExtension,
-        );
+        endpoint = getEndpointUrl(fileParameters.fromExtension, toExtension);
         requestConfig = {
           ...requestConfig,
           endpointName: getEndpointName(
             fileParameters.fromExtension,
-            actualToExtension,
+            toExtension,
           ),
         };
         const formData = buildConvertFormData(parameters, [file]);
@@ -317,7 +303,7 @@ export const convertProcessor = async (
           response.data,
           response.headers,
           file.name,
-          actualToExtension === "pdfa" ? "pdfx" : parameters.toExtension,
+          toExtension,
         );
 
         processedFiles.push(convertedFile);
@@ -343,7 +329,7 @@ export const convertProcessor = async (
       response.data,
       response.headers,
       baseFilename,
-      actualToExtension === "pdfa" ? "pdfx" : parameters.toExtension,
+      toExtension,
     );
     processedFiles.push(convertedFile);
   }
@@ -375,8 +361,7 @@ export const convertEndpointFor = (
   toExtension: string,
 ): ToolEndpoint | undefined => {
   if (!fromExtension || !toExtension) return undefined;
-  const actualTo = toExtension === "pdfx" ? "pdfa" : toExtension;
-  const url = getEndpointUrl(fromExtension, actualTo);
+  const url = getEndpointUrl(fromExtension, toExtension);
   return url && isToolEndpoint(url) ? url : undefined;
 };
 
@@ -420,7 +405,6 @@ type ConvertStepBody<E extends ToolEndpoint> = Partial<
 type ConvertOptionReaders = {
   [E in ToolEndpoint]?: (
     body: ConvertStepBody<E>,
-    toExtension: string,
   ) => Partial<ConvertParameters>;
 };
 
@@ -453,9 +437,9 @@ const FIT_OPTION_VALUES = [
 /**
  * How each convert endpoint's stored options map back into the tool's parameter groups, keyed by the
  * endpoint the step targets. Only endpoints carrying configurable options appear; the rest are fully
- * described by their from/to pair. `/api/v1/convert/pdf/pdfa` backs both PDF/A and PDF/X, so its
- * reader takes the target extension to tell them apart. Groups a reader omits fall back to defaults
- * via the merge in deserializeToolStep.
+ * described by their from/to pair. Convert only reaches `/api/v1/convert/pdf/pdfa` for PDF/X; its
+ * PDF/A profiles belong to the Prepare for Archive tool. Groups a reader omits fall back to defaults via the
+ * merge in deserializeToolStep.
  */
 const CONVERT_OPTION_READERS: ConvertOptionReaders = {
   "/api/v1/convert/pdf/img": (body) => ({
@@ -512,21 +496,12 @@ const CONVERT_OPTION_READERS: ConvertOptionReaders = {
       includeAllRecipients: asFlag(body.includeAllRecipients),
     },
   }),
-  "/api/v1/convert/pdf/pdfa": (body, toExtension) =>
-    toExtension === "pdfx"
-      ? {
-          pdfxOptions: {
-            outputFormat:
-              body.outputFormat ?? defaultParameters.pdfxOptions.outputFormat,
-          },
-        }
-      : {
-          pdfaOptions: {
-            outputFormat:
-              body.outputFormat ?? defaultParameters.pdfaOptions.outputFormat,
-            strict: asFlag(body.strict),
-          },
-        },
+  "/api/v1/convert/pdf/pdfa": (body) => ({
+    pdfxOptions: {
+      outputFormat:
+        body.outputFormat ?? defaultParameters.pdfxOptions.outputFormat,
+    },
+  }),
   "/api/v1/convert/pdf/ua": (body) => ({
     pdfUaOptions: {
       profile: body.profile ?? defaultParameters.pdfUaOptions.profile,
@@ -600,7 +575,7 @@ export const convertFromApiParams = (
   return {
     fromExtension,
     toExtension,
-    ...(readOptions ? readOptions(body, toExtension) : {}),
+    ...(readOptions ? readOptions(body) : {}),
   };
 };
 
@@ -626,10 +601,7 @@ export const useConvertOperation = (parameters?: ConvertParameters) => {
     if (!parameters?.fromExtension || !parameters?.toExtension)
       return undefined;
 
-    // Map PDF/X to use PDF/A endpoint (same as in convertProcessor)
-    const actualToExtension =
-      parameters.toExtension === "pdfx" ? "pdfa" : parameters.toExtension;
-    return getEndpointName(parameters.fromExtension, actualToExtension);
+    return getEndpointName(parameters.fromExtension, parameters.toExtension);
   }, [parameters?.fromExtension, parameters?.toExtension]);
 
   // Check if current conversion will use cloud

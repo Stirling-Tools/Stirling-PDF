@@ -38,8 +38,8 @@ describe("convertUtils", () => {
       expect(getEndpointName("pdf", "html")).toBe("pdf-to-html");
       expect(getEndpointName("pdf", "xml")).toBe("pdf-to-xml");
 
-      // PDF to PDF/A
-      expect(getEndpointName("pdf", "pdfa")).toBe("pdf-to-pdfa");
+      // PDF/X shares the PDF/A endpoint
+      expect(getEndpointName("pdf", "pdfx")).toBe("pdf-to-pdfa");
 
       // Office Documents to PDF
       expect(getEndpointName("docx", "pdf")).toBe("file-to-pdf");
@@ -124,8 +124,8 @@ describe("convertUtils", () => {
       expect(getEndpointUrl("pdf", "html")).toBe("/api/v1/convert/pdf/html");
       expect(getEndpointUrl("pdf", "xml")).toBe("/api/v1/convert/pdf/xml");
 
-      // PDF to PDF/A
-      expect(getEndpointUrl("pdf", "pdfa")).toBe("/api/v1/convert/pdf/pdfa");
+      // PDF/X shares the PDF/A endpoint
+      expect(getEndpointUrl("pdf", "pdfx")).toBe("/api/v1/convert/pdf/pdfa");
 
       // Office Documents to PDF
       expect(getEndpointUrl("docx", "pdf")).toBe("/api/v1/convert/file/pdf");
@@ -205,8 +205,8 @@ describe("convertUtils", () => {
       expect(isConversionSupported("pdf", "html")).toBe(true);
       expect(isConversionSupported("pdf", "xml")).toBe(true);
 
-      // PDF to PDF/A
-      expect(isConversionSupported("pdf", "pdfa")).toBe(true);
+      // PDF/A has its own tool
+      expect(isConversionSupported("pdf", "pdfa")).toBe(false);
 
       // Office Documents to PDF
       expect(isConversionSupported("docx", "pdf")).toBe(true);

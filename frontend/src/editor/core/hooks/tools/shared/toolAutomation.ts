@@ -4,9 +4,9 @@
  * shape and the backend step contract (endpoint + backend parameters).
  *
  * This is core behaviour shared by every surface that composes or replays tool operations against
- * the backend engine (portal pipelines today; backend-executed automations and AI plans later),
- * so the "is this tool usable, and how" decision lives with the tools rather than in any one
- * feature. It builds on each tool's `operationConfig` mappers (`toApiParams` / `fromApiParams`),
+ * the backend engine (portal pipelines, the Automate tool; AI plans later), so the "is this tool
+ * usable, and how" decision lives with the tools rather than in any one feature. It builds on
+ * each tool's `operationConfig` mappers (`toApiParams` / `fromApiParams`),
  * keeping the frontend<->backend parameter mapping single-sourced in the tools.
  */
 
@@ -338,10 +338,84 @@ export function stepNeedsConfiguring(
 ): boolean {
   if (step.toolId === null) return false;
   const config = registry[step.toolId]?.operationConfig;
-  if (!config || !config.validateParams) return false;
+  if (!config) return false;
   // Stored supporting files satisfy their field just as a fresh pick would, so validate against the
   // sentinel-injected params rather than the bare ones (which drop the file on reload).
-  return !config.validateParams(withStoredFileSentinels(step, config));
+  return toolParamsNeedConfiguring(
+    step.toolId,
+    withStoredFileSentinels(step, config),
+    registry,
+  );
+}
+
+/**
+ * The parameters a tool starts from, as its own editor panel does: its `operationConfig` defaults,
+ * or none. A fresh object, so the caller may edit it.
+ */
+export function defaultToolParams(
+  toolId: ToolId,
+  registry: Partial<ToolRegistry>,
+): ErasedToolParams {
+  return { ...(registry[toolId]?.operationConfig?.defaultParameters ?? {}) };
+}
+
+/**
+ * These parameters over the tool's defaults, as a fresh object. A field set to `undefined` keeps
+ * its default: mappers and older stored automations carry missing fields that way.
+ */
+export function paramsOverDefaults(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): ErasedToolParams {
+  return {
+    ...defaultToolParams(toolId, registry),
+    ...Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined),
+    ),
+  };
+}
+
+/**
+ * True if these parameters, merged over the tool's defaults, fail the tool's `validateParams` - the
+ * predicate its own Run button uses - or make it throw. False for a tool that declares no predicate
+ * or is not in the registry, since there is nothing to judge it by. Never throws, so it is safe to
+ * call during render on stored or imported parameters.
+ */
+export function toolParamsNeedConfiguring(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): boolean {
+  const config = registry[toolId]?.operationConfig;
+  if (!config?.validateParams) return false;
+  try {
+    return !config.validateParams(paramsOverDefaults(toolId, params, registry));
+  } catch {
+    // Validators assume the field types their own panel writes; an imported or stored value of
+    // another type (e.g. `pages: null` reaching `.trim()`) means the step needs reconfiguring.
+    return true;
+  }
+}
+
+/**
+ * The backend step for a tool's frontend parameters (merged over its defaults), or null when the
+ * tool has no backend form: no `toApiParams` mapper, or no endpoint these parameters resolve to.
+ */
+export function toolApiStep(
+  toolId: ToolId,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): ToolApiStep | null {
+  const config = registry[toolId]?.operationConfig;
+  if (!config?.toApiParams) return null;
+  const merged = paramsOverDefaults(toolId, params, registry);
+  const operation = resolveEndpoint(config, merged);
+  if (!operation) return null;
+  return {
+    operation,
+    parameters: config.toApiParams(merged) as Record<string, unknown>,
+  };
 }
 
 /**
@@ -384,11 +458,10 @@ export function newWorkingToolStep(
   tool: ExecutableTool,
   registry: Partial<ToolRegistry>,
 ): KnownToolStep {
-  const config = registry[tool.toolId]?.operationConfig;
   return {
     toolId: tool.toolId,
     operation: tool.endpoint,
-    params: { ...(config?.defaultParameters ?? {}) },
+    params: defaultToolParams(tool.toolId, registry),
     support: tool.support,
   };
 }
@@ -449,7 +522,8 @@ function withFileParameters(
 /**
  * Find the registry tool for a stored step's endpoint: exact match for static endpoints, else
  * membership in a dynamic tool's declared `endpoints` set (replaying its function can't recover a
- * frontend-only routing field). Replay is only the fallback when no set is declared.
+ * frontend-only routing field). Replay is only the fallback when no set is declared. A static match
+ * whose `claimsStoredStep` rejects the step yields to a dynamic owner of the same endpoint.
  */
 function findToolByEndpoint(
   step: ToolApiStep,
@@ -471,7 +545,10 @@ function findToolByEndpoint(
     }
   }
   if (staticMatches.length > 0) {
-    return disambiguateStaticMatches(staticMatches, step.parameters);
+    const match = disambiguateStaticMatches(staticMatches, step.parameters);
+    const declined =
+      match[1].operationConfig?.claimsStoredStep?.(step.parameters) === false;
+    if (!declined || !dynamic) return match;
   }
   return dynamic;
 }
@@ -521,22 +598,10 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  // Mappers echo missing stored fields as explicit `undefined`, which would
-  // clobber the default underneath; strip those so defaults always win.
   const mapped = config?.fromApiParams
-    ? Object.fromEntries(
-        Object.entries(
-          config.fromApiParams(step.parameters as never) as Record<
-            string,
-            unknown
-          >,
-        ).filter(([, value]) => value !== undefined),
-      )
+    ? config.fromApiParams(step.parameters)
     : {};
-  const params: ErasedToolParams = {
-    ...(config?.defaultParameters ?? {}),
-    ...mapped,
-  };
+  const params = paramsOverDefaults(toolId, mapped, registry);
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

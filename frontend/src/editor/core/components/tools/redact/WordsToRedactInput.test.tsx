@@ -15,7 +15,8 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("WordsToRedactInput", () => {
-  const mockOnWordsChange = vi.fn();
+  const mockOnAddWord = vi.fn();
+  const mockOnRemoveWord = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,7 +27,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -52,7 +54,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -63,7 +66,7 @@ describe("WordsToRedactInput", () => {
     fireEvent.change(input, { target: { value: "TestWord" } });
     action(input, addButton);
 
-    expect(mockOnWordsChange).toHaveBeenCalledWith(["TestWord"]);
+    expect(mockOnAddWord).toHaveBeenCalledWith("TestWord");
   });
 
   test("should not add empty word", () => {
@@ -71,7 +74,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -80,7 +84,7 @@ describe("WordsToRedactInput", () => {
 
     fireEvent.click(addButton);
 
-    expect(mockOnWordsChange).not.toHaveBeenCalled();
+    expect(mockOnAddWord).not.toHaveBeenCalled();
   });
 
   test("should not add duplicate word", () => {
@@ -88,7 +92,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={["Existing"]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -99,7 +104,7 @@ describe("WordsToRedactInput", () => {
     fireEvent.change(input, { target: { value: "Existing" } });
     fireEvent.click(addButton);
 
-    expect(mockOnWordsChange).not.toHaveBeenCalled();
+    expect(mockOnAddWord).not.toHaveBeenCalled();
   });
 
   test("should trim whitespace when adding word", () => {
@@ -107,7 +112,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -118,7 +124,7 @@ describe("WordsToRedactInput", () => {
     fireEvent.change(input, { target: { value: "  TestWord  " } });
     fireEvent.click(addButton);
 
-    expect(mockOnWordsChange).toHaveBeenCalledWith(["TestWord"]);
+    expect(mockOnAddWord).toHaveBeenCalledWith("TestWord");
   });
 
   test("should remove word when x button is clicked", () => {
@@ -126,7 +132,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={["Word1", "Word2"]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -134,7 +141,7 @@ describe("WordsToRedactInput", () => {
     const removeButtons = screen.getAllByText("×");
     fireEvent.click(removeButtons[0]);
 
-    expect(mockOnWordsChange).toHaveBeenCalledWith(["Word2"]);
+    expect(mockOnRemoveWord).toHaveBeenCalledWith(0);
   });
 
   test("should clear input after adding word", () => {
@@ -142,7 +149,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -174,7 +182,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={[]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
         />
       </TestWrapper>,
     );
@@ -192,7 +201,8 @@ describe("WordsToRedactInput", () => {
       <TestWrapper>
         <WordsToRedactInput
           wordsToRedact={["Word1"]}
-          onWordsChange={mockOnWordsChange}
+          onAddWord={mockOnAddWord}
+          onRemoveWord={mockOnRemoveWord}
           disabled={true}
         />
       </TestWrapper>,

@@ -15,6 +15,19 @@
   width: 100%;
 }
 
+/* Stands in for innerLabel when a tooltip wraps the label. An inline wrapper
+ * gives FitText no width to measure, and a content-sized one never resizes
+ * when the track widens, so it fills the segment as a flex box. */
+.tooltipTarget {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.tooltipTarget > * {
+  min-width: 0;
+}
+
 /* Icon-over-label segments need two lines, so the track drops the fixed control
  * height (set inline by SegmentedControl, hence !important). */
 .withIcons:global(.mantine-SegmentedControl-root) {

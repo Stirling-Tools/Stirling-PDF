@@ -48,6 +48,7 @@ import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay"
 import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
 import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
 import { useReviewConformanceClaimBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewConformanceClaimBridge";
+import { ReopenLostDocumentButton } from "@editor/tools/pdfTextEditor/components/ReopenLostDocumentButton";
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
@@ -846,6 +847,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
               <PermissionsPasswordButton
                 file={sourceFileId ? selectors.getFile(sourceFileId) : null}
                 onVerified={(file) => void load(file)}
+              />
+              <ReopenLostDocumentButton
+                lost={state.documentLost}
+                file={sourceFileId ? selectors.getFile(sourceFileId) : null}
+                onReopen={(file) => void load(file)}
               />
             </Stack>
           </Alert>

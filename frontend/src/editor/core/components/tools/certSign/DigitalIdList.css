@@ -1,32 +1,3 @@
-.digital-id-card {
-  padding: 8px 10px;
-  border: 1px solid var(--c-border-strong);
-  border-radius: var(--mantine-radius-sm);
-  background: var(--c-surface);
-}
-
-.digital-id-card[data-checked] {
-  border-color: var(--c-primary);
-  box-shadow: inset 0 0 0 1px var(--c-primary);
-  background: var(--c-primary-subtle);
-}
-
-.digital-id-card:not([data-disabled]):hover {
-  border-color: var(--c-primary);
-}
-
-.digital-id-card[data-disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.digital-id-name {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 .digital-id-location {
   display: inline-flex;
   vertical-align: -2px;

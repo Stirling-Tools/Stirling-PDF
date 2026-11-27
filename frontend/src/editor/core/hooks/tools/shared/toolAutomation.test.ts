@@ -13,11 +13,15 @@ import {
 import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   activeFileFields,
+  defaultToolParams,
   deserializeToolStep,
   extractStepFiles,
   getExecutableTools,
+  paramsOverDefaults,
   serializeToolStep,
   stepNeedsConfiguring,
+  toolApiStep,
+  toolParamsNeedConfiguring,
   type WorkingToolStep,
 } from "@editor/hooks/tools/shared/toolAutomation";
 import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
@@ -31,6 +35,8 @@ import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useA
 import { changePermissionsOperationConfig } from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { convertOperationConfig } from "@editor/hooks/tools/convert/useConvertOperation";
 import { defaultParameters as convertDefaults } from "@editor/hooks/tools/convert/useConvertParameters";
+import { archivePdfOperationConfig } from "@editor/hooks/tools/archivePdf/useArchivePdfOperation";
+import { defaultParameters as archivePdfDefaults } from "@editor/hooks/tools/archivePdf/useArchivePdfParameters";
 import { overlayPdfsOperationConfig } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
 import { defaultParameters as overlayDefaults } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 import { certSignOperationConfig } from "@editor/hooks/tools/certSign/useCertSignOperation";
@@ -498,6 +504,84 @@ describe("convert (format-routed custom tool)", () => {
   });
 });
 
+describe("archive PDF (shares the PDF/A endpoint with convert)", () => {
+  const PDFA = "/api/v1/convert/pdf/pdfa";
+  const sharedRegistry: Partial<ToolRegistry> = {
+    convert: entry({
+      name: "Convert",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(convertOperationConfig),
+    }),
+    archivePdf: entry({
+      name: "Prepare for Archive (PDF/A)",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(archivePdfOperationConfig),
+    }),
+  };
+
+  test("round-trips its own step", () => {
+    const step: WorkingToolStep = {
+      toolId: "archivePdf" as ToolId,
+      operation: PDFA,
+      params: { ...archivePdfDefaults, outputFormat: "pdfa-3a", strict: true },
+      support: "editable",
+    };
+    const api = serializeToolStep(step, sharedRegistry);
+    expect(api).toEqual({
+      operation: PDFA,
+      parameters: { outputFormat: "pdfa-3a", strict: true },
+    });
+
+    const back = deserializeToolStep(api, sharedRegistry);
+    expect(back.toolId).toBe("archivePdf");
+    expect(back.params).toMatchObject({
+      outputFormat: "pdfa-3a",
+      strict: true,
+    });
+  });
+
+  test("reopens a PDF/A step saved from convert, string flags and all", () => {
+    const back = deserializeToolStep(
+      {
+        operation: PDFA,
+        parameters: {
+          fromExtension: "pdf",
+          toExtension: "pdfa",
+          outputFormat: "pdfa-1",
+          strict: "true",
+        },
+      },
+      sharedRegistry,
+    );
+    expect(back.toolId).toBe("archivePdf");
+    expect(back.params).toMatchObject({ outputFormat: "pdfa-1", strict: true });
+  });
+
+  test("reads the backend's shorthand profile names", () => {
+    const back = deserializeToolStep(
+      { operation: PDFA, parameters: { outputFormat: "pdfa-3" } },
+      sharedRegistry,
+    );
+    expect(back.params).toMatchObject({ outputFormat: "pdfa-3b" });
+  });
+
+  test("leaves PDF/X steps with convert", () => {
+    const back = deserializeToolStep(
+      {
+        operation: PDFA,
+        parameters: {
+          fromExtension: "pdf",
+          toExtension: "pdfx",
+          outputFormat: "pdfx-3",
+        },
+      },
+      sharedRegistry,
+    );
+    expect(back.toolId).toBe("convert");
+    expect(back.params).toMatchObject({ toExtension: "pdfx" });
+  });
+});
+
 describe("supporting files", () => {
   const fileRegistry: Partial<ToolRegistry> = {
     overlayPdfs: entry({
@@ -660,5 +744,67 @@ describe("supporting files", () => {
     expect(activeFileFields(step({ certFile: "asset:x" }), registry)).toEqual([
       "certFile",
     ]);
+  });
+});
+
+describe("tool-id keyed helpers", () => {
+  test("defaultToolParams is a fresh copy of the tool's defaults, or empty", () => {
+    const params = defaultToolParams("compress", registry);
+    expect(params).toEqual(compressDefaults);
+    expect(params).not.toBe(compressOperationConfig.defaultParameters);
+    expect(defaultToolParams("extractPages", registry)).toEqual({});
+  });
+
+  test("toolParamsNeedConfiguring judges params over the tool's defaults", () => {
+    expect(toolParamsNeedConfiguring("compress", {}, registry)).toBe(false);
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: "" },
+        registry,
+      ),
+    ).toBe(true);
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: "2" },
+        registry,
+      ),
+    ).toBe(false);
+  });
+
+  test("paramsOverDefaults keeps a default under an undefined field", () => {
+    expect(
+      paramsOverDefaults("compress", { compressionLevel: undefined }, registry),
+    ).toEqual(compressDefaults);
+  });
+
+  test("toolParamsNeedConfiguring flags params its validator throws on", () => {
+    expect(
+      toolParamsNeedConfiguring(
+        "compress",
+        { compressionMethod: "filesize", fileSizeValue: null },
+        registry,
+      ),
+    ).toBe(true);
+  });
+
+  test("toolParamsNeedConfiguring has nothing to judge without a predicate or a tool", () => {
+    expect(toolParamsNeedConfiguring("repair", {}, registry)).toBe(false);
+    expect(toolParamsNeedConfiguring("merge", {}, registry)).toBe(false);
+  });
+
+  test("toolApiStep maps frontend params to the endpoint's backend fields", () => {
+    expect(
+      toolApiStep("compress", { compressionLevel: 9 }, registry),
+    ).toMatchObject({
+      operation: "/api/v1/misc/compress-pdf",
+      parameters: { optimizeLevel: 9 },
+    });
+  });
+
+  test("toolApiStep is null for a tool with no backend form", () => {
+    expect(toolApiStep("changeMetadata", {}, registry)).toBeNull();
+    expect(toolApiStep("extractPages", {}, registry)).toBeNull();
   });
 });

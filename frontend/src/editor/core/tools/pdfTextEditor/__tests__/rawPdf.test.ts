@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   fromLatin1,
   toLatin1,
@@ -219,6 +219,22 @@ describe("RawPdf streams and pages", () => {
     expect(pdf?.pageNumbers()).toEqual([4]);
   });
 
+  it("follows a /Kids array written as a reference", async () => {
+    const pdf = await RawPdf.parse(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids 3 0 R /Count 2 >>" },
+          { num: 3, body: "[4 0 R 5 0 R]" },
+          { num: 4, body: "<< /Type /Page /Parent 2 0 R >>" },
+          { num: 5, body: "<< /Type /Page /Parent 2 0 R >>" },
+        ],
+        1,
+      ),
+    );
+    expect(pdf?.pageNumbers()).toEqual([4, 5]);
+  });
+
   it("inherits /Resources from an ancestor page-tree node", async () => {
     const pdf = await RawPdf.parse(
       buildClassicPdf(
@@ -346,6 +362,31 @@ describe("RawPdf.numberTreeEntry", () => {
     expect(pdf.numberTreeEntry(5, "ParentTree", 99)?.span.text).toBe(
       "[1099 0 R]",
     );
+  });
+
+  it("reads a node's /Nums once, however many keys are looked up", async () => {
+    const nums = Array.from({ length: 500 }, (_, i) => `${i} ${i + 1000} 0 R`);
+    const pdf = await treePdf(
+      { num: 5, body: "<< /ParentTree 6 0 R >>" },
+      { num: 6, body: `<< /Nums [${nums.join(" ")}] >>` },
+    );
+    const valueSpan = vi.spyOn(pdf, "valueSpan");
+    for (let key = 0; key < 500; key++) {
+      expect(pdf.numberTreeEntry(5, "ParentTree", key)?.span.text).toBe(
+        `${key + 1000} 0 R`,
+      );
+    }
+    expect(valueSpan.mock.calls.filter(([, k]) => k === "Nums")).toHaveLength(
+      1,
+    );
+  });
+
+  it("takes the first value of a key written twice", async () => {
+    const pdf = await treePdf({
+      num: 5,
+      body: "<< /ParentTree << /Nums [2 [8 0 R] 2 [9 0 R]] >> >>",
+    });
+    expect(pdf.numberTreeEntry(5, "ParentTree", 2)?.span.text).toBe("[8 0 R]");
   });
 
   it("returns null when the holder has no such tree", async () => {

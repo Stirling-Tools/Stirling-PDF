@@ -8,6 +8,7 @@ import {
   areaContains,
   type LinkAnnotation,
 } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import {
   SCRATCH,
   scratchPtr,
@@ -89,7 +90,9 @@ function coveredCharacters(
       const leaf = leafOf.get(ptr);
       if (!leaf || untrusted.has(ptr)) continue;
       if (m.FPDFText_IsGenerated(textPage, i) === 1) continue;
-      const char = String.fromCodePoint(m.FPDFText_GetUnicode(textPage, i));
+      const char = String.fromCodePoint(
+        drawnCodePoint(m.FPDFText_GetUnicode(textPage, i)),
+      );
       const at = nextMatch(leaf.text, read.get(ptr) ?? 0, char);
       if (at === null) {
         untrusted.add(ptr);

@@ -5,6 +5,7 @@ export interface HardwareCertificateInfo {
   alias: string;
   source: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11" | "SERVER";
   subject: string;
+  displaySubject: string;
   issuer: string;
   subjectCommonName: string;
   issuerCommonName: string;
@@ -16,6 +17,8 @@ export interface HardwareCertificateInfo {
   notYetValid: boolean;
   /** True on a smart card or security key, false on this device, null when the source cannot tell. */
   onToken?: boolean | null;
+  /** SHA-256 fingerprint, lowercase hex; sent back so signing refuses any other certificate. */
+  sha256?: string;
 }
 
 export interface Pkcs11LibraryInfo {

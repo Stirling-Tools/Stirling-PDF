@@ -62,6 +62,19 @@ export interface ParentTreeArray {
   items: ValueSpan[] | null;
 }
 
+interface NumberTreeNode {
+  /** Each key's first value, by the key as written, spanning the node's object body. */
+  values: Map<string, ValueSpan>;
+  kids: NumberTreeKid[];
+}
+
+interface NumberTreeKid {
+  num: number;
+  /** The kid's /Limits, NaN when it has no readable pair. */
+  lo: number;
+  hi: number;
+}
+
 interface ObjectSource {
   /** Generation the file declares for this object; almost always 0. */
   gen: number;
@@ -85,6 +98,11 @@ export class RawPdf {
   private readonly objects: Map<number, ObjectSource>;
   private readonly bodyCache = new Map<number, string | null>();
   private pageNums: number[] | null = null;
+  /**
+   * Number-tree nodes by `objNum:nodeStart`, each read once: one flat /Nums can
+   * hold an entry per annotation, and re-reading it per lookup is quadratic.
+   */
+  private readonly numberTreeNodes = new Map<string, NumberTreeNode | null>();
   /** Highest object number the file has ever used, across all revisions. */
   private highestObj: number;
 
@@ -425,36 +443,12 @@ export class RawPdf {
       if (seen.has(objNum)) return null;
       seen.add(objNum);
     }
-    const body = this.objectBody(objNum);
-    if (!body) return null;
-    const node = body.slice(nodeStart);
+    const node = this.numberTreeNode(objNum, nodeStart);
+    if (!node) return null;
+    const span = node.values.get(String(key));
+    if (span) return { objNum, span: { ...span } };
 
-    const nums = this.valueSpan(node, "Nums");
-    const pairs = nums ? arrayItems(nums.text) : null;
-    if (nums && pairs) {
-      for (let i = 0; i + 1 < pairs.length; i += 2) {
-        if (pairs[i].text !== String(key)) continue;
-        const value = pairs[i + 1];
-        const at = nodeStart + nums.start;
-        return {
-          objNum,
-          span: {
-            start: at + value.start,
-            end: at + value.end,
-            text: value.text,
-          },
-        };
-      }
-    }
-
-    const kids = this.resolve(node, "Kids");
-    for (const m of kids?.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
-      const kidNum = parseInt(m[1], 10);
-      const kid = this.objectBody(kidNum);
-      const limits = kid ? this.resolve(kid, "Limits") : null;
-      const [lo, hi] = (limits ? arrayItems(limits.trim()) : null)?.map((b) =>
-        Number(b.text),
-      ) ?? [NaN, NaN];
+    for (const { num, lo, hi } of node.kids) {
       // /Limits is only an index; without both bounds, search the kid anyway.
       if (
         Number.isInteger(lo) &&
@@ -462,10 +456,56 @@ export class RawPdf {
         (key < lo || key > hi)
       )
         continue;
-      const found = this.searchNumberTree(kidNum, 0, key, seen, depth + 1);
+      const found = this.searchNumberTree(num, 0, key, seen, depth + 1);
       if (found) return found;
     }
     return null;
+  }
+
+  private numberTreeNode(
+    objNum: number,
+    nodeStart: number,
+  ): NumberTreeNode | null {
+    const id = `${objNum}:${nodeStart}`;
+    const cached = this.numberTreeNodes.get(id);
+    if (cached !== undefined) return cached;
+    const body = this.objectBody(objNum);
+    const node = body ? this.readNumberTreeNode(body, nodeStart) : null;
+    this.numberTreeNodes.set(id, node);
+    return node;
+  }
+
+  private readNumberTreeNode(body: string, nodeStart: number): NumberTreeNode {
+    const node = body.slice(nodeStart);
+    const values = new Map<string, ValueSpan>();
+    const nums = this.valueSpan(node, "Nums");
+    const pairs = nums ? arrayItems(nums.text) : null;
+    if (nums && pairs) {
+      const at = nodeStart + nums.start;
+      for (let i = 0; i + 1 < pairs.length; i += 2) {
+        const value = pairs[i + 1];
+        if (values.has(pairs[i].text)) continue;
+        values.set(pairs[i].text, {
+          start: at + value.start,
+          end: at + value.end,
+          text: value.text,
+        });
+      }
+    }
+
+    const kids: NumberTreeKid[] = [];
+    const refs = this.resolve(node, "Kids");
+    for (const m of refs?.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
+      const num = parseInt(m[1], 10);
+      const kid = this.objectBody(num);
+      const limits = kid ? this.resolve(kid, "Limits") : null;
+      const [lo = NaN, hi = NaN] =
+        (limits ? arrayItems(limits.trim()) : null)?.map((b) =>
+          Number(b.text),
+        ) ?? [];
+      kids.push({ num, lo, hi });
+    }
+    return { values, kids };
   }
 
   /** Where a top-level object's dictionary, stream payload and `endobj` sit in `src`; null when it has no offset. */
@@ -594,12 +634,12 @@ export class RawPdf {
         out.push(num);
         return;
       }
-      const kids = this.valueSpan(body, "Kids");
-      if (!kids) {
+      if (!this.valueSpan(body, "Kids")) {
         if (type === null) out.push(num);
         return;
       }
-      for (const m of kids.text.matchAll(/(\d+)\s+\d+\s+R/g)) {
+      const kids = this.resolve(body, "Kids") ?? "";
+      for (const m of kids.matchAll(/(\d+)\s+\d+\s+R/g)) {
         visit(parseInt(m[1], 10), depth + 1);
       }
     };

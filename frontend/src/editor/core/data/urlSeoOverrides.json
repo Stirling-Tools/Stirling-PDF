@@ -35,10 +35,6 @@
     "title": "PDF to XML Converter",
     "description": "Convert PDF documents into structured XML. Free, fast, and private."
   },
-  "/pdf-to-pdfa": {
-    "title": "PDF to PDF/A Converter",
-    "description": "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private."
-  },
   "/img-to-pdf": {
     "title": "Image to PDF Converter",
     "description": "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private."
@@ -182,6 +178,14 @@
   "/repair": {
     "title": "Repair PDF",
     "description": "Repair corrupted or damaged PDF files"
+  },
+  "/archive-pdf": {
+    "title": "Convert PDF to PDF/A",
+    "description": "Convert PDFs to the PDF/A archival standard for long-term preservation"
+  },
+  "/pdf-to-pdfa": {
+    "title": "Convert PDF to PDF/A",
+    "description": "Convert PDFs to the PDF/A archival standard for long-term preservation"
   },
   "/compare": {
     "title": "Compare PDF Files",

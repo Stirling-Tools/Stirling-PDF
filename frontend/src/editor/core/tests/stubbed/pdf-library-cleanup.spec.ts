@@ -64,8 +64,6 @@ test.describe("PDF Library cleanup", () => {
     await page.goto("/editor");
     await page.getByTestId("pdf-library-add-files").click();
     await expect(page.getByTestId("google-drive-button")).toBeVisible();
-    await expect(
-      page.getByTestId("pdf-library-add-from-computer"),
-    ).toBeVisible();
+    await expect(page.getByTestId("add-files-from-computer")).toBeVisible();
   });
 });

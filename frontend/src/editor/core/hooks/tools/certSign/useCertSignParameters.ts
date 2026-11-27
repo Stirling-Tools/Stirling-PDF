@@ -1,8 +1,11 @@
 import { BaseParameters } from "@editor/types/parameters";
+import type { PdfBox } from "@editor/services/signatureFieldLayout";
 import {
   useBaseParameters,
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
+
+export type StampGraphic = "NAME" | "IMAGE" | "NONE";
 
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
@@ -31,13 +34,28 @@ export interface CertSignParameters extends BaseParameters {
   pkcs11LibraryPath?: string;
   pkcs11Slot?: number;
 
+  /** Fingerprint of the certificate the user reviewed (server or digital ID); sent at signing only. */
+  expectedCertificateSha256?: string;
+  /** The chosen keychain ID was on a security key, so a copy elsewhere must not sign. */
+  requireToken?: boolean;
+
   // Signature appearance options
   showSignature: boolean;
   reason: string;
   location: string;
   name: string;
   pageNumber: number;
-  showLogo: boolean;
+  /** Beside the details: the name, the signer's own image, or nothing. */
+  stampGraphic: StampGraphic;
+  /** The signer's image (a handwritten signature, a seal) for the IMAGE graphic. */
+  signatureImage?: File;
+  /** The server's signature logo faded behind the whole stamp. */
+  showWatermark: boolean;
+  showCertificateDetails: boolean;
+  /** An empty signature field to sign into; it brings its own page and box. */
+  fieldName?: string;
+  /** Box on pageNumber in PDF user space; unset leaves the server's default corner. */
+  stampBox?: PdfBox;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -49,7 +67,9 @@ export const defaultParameters: CertSignParameters = {
   location: "",
   name: "",
   pageNumber: 1,
-  showLogo: true,
+  stampGraphic: "NAME",
+  showWatermark: true,
+  showCertificateDetails: false,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
@@ -59,6 +79,14 @@ export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
 export function validateCertSignParameters(
   params: CertSignParameters,
 ): boolean {
+  if (
+    params.showSignature &&
+    params.stampGraphic === "IMAGE" &&
+    !params.signatureImage
+  ) {
+    return false;
+  }
+
   // Auto mode (server certificate) - no additional validation needed
   if (params.signMode === "AUTO") {
     return true;

@@ -25,6 +25,8 @@ export interface ToolStepProps {
   isVisible?: boolean;
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
+  /** A control shown beside the chevron while the step is open. */
+  headerAction?: React.ReactNode;
   children?: React.ReactNode;
   helpText?: string;
   showNumber?: boolean;
@@ -75,6 +77,7 @@ const ToolStep = ({
   isVisible = true,
   isCollapsed = false,
   onCollapsedClick,
+  headerAction,
   children,
   helpText,
   showNumber,
@@ -123,25 +126,17 @@ const ToolStep = ({
             {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
           </Flex>
 
-          {isCollapsed ? (
+          <Flex align="center" gap="xs">
+            {!isCollapsed && headerAction}
             <Icon
-              name="chevron-right"
+              name={isCollapsed ? "chevron-right" : "chevron-down"}
               size="1.2rem"
               style={{
                 color: "var(--mantine-color-dimmed)",
                 opacity: onCollapsedClick ? 1 : 0.5,
               }}
             />
-          ) : (
-            <Icon
-              name="chevron-down"
-              size="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-                opacity: onCollapsedClick ? 1 : 0.5,
-              }}
-            />
-          )}
+          </Flex>
         </Flex>
 
         {!isCollapsed && (

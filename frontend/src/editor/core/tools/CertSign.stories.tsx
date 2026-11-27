@@ -54,6 +54,7 @@ const certificate = (
   alias,
   source: "WINDOWS_STORE",
   subject: `CN=${alias}`,
+  displaySubject: `CN=${alias}`,
   issuer: "CN=Example Issuing CA",
   subjectCommonName: alias,
   issuerCommonName: "Example Issuing CA",
@@ -134,14 +135,20 @@ async function uploadP12(context: PlayContext) {
   await choose(context, "PKCS12");
   const panel = await uploadToPanel(context, "valid-test.p12");
   await panel.findByLabelText("Certificate Password", undefined, STAGE_TIMEOUT);
-  await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
+  await panel.findByRole(
+    "switch",
+    { name: "Show signature on page" },
+    STAGE_TIMEOUT,
+  );
   return panel;
 }
 
 async function showVisibleSignature(context: PlayContext) {
-  await uploadP12(context);
-  const panel = await choose(context, "Visible");
-  await panel.findByText("Signature Details", undefined, STAGE_TIMEOUT);
+  const panel = await uploadP12(context);
+  await userEvent.click(
+    panel.getByRole("switch", { name: "Show signature on page" }),
+  );
+  await panel.findByText("Beside the details", undefined, STAGE_TIMEOUT);
   return panel;
 }
 
@@ -292,14 +299,23 @@ export const VisibleSignature: Story = {
 export const VisibleSignatureDetails: Story = {
   play: async (context) => {
     const panel = await showVisibleSignature(context);
-    await userEvent.type(panel.getByLabelText("Reason"), "Approval");
-    await userEvent.type(panel.getByLabelText("Location"), "London");
-    await userEvent.type(panel.getByLabelText("Name"), "Jane Signer");
-    const page = panel.getByLabelText("Page Number");
-    await userEvent.clear(page);
-    await userEvent.type(page, "2");
-    await choose(context, "No Logo");
-    await waitFor(() => expect(page).toHaveValue("2"));
+    for (const [detail, value] of [
+      ["Reason", "Approval"],
+      ["Location", "London"],
+      ["Signer name", "Jane Signer"],
+    ]) {
+      await userEvent.click(panel.getByRole("button", { name: detail }));
+      await userEvent.type(
+        await panel.findByRole("textbox", { name: detail }),
+        value,
+      );
+    }
+    const logo = panel.getByRole("switch", { name: "Logo behind signature" });
+    await userEvent.click(logo);
+    await waitFor(() => expect(logo).not.toBeChecked());
+    await expect(panel.getByRole("textbox", { name: "Reason" })).toHaveValue(
+      "Approval",
+    );
   },
 };
 
@@ -331,7 +347,11 @@ export const ServerCertificate: Story = {
     await waitFor(() =>
       expect(panel.queryByRole("radio", { name: "PKCS12" })).toBeNull(),
     );
-    await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
+    await panel.findByRole(
+      "switch",
+      { name: "Show signature on page" },
+      STAGE_TIMEOUT,
+    );
   },
 };
 
@@ -382,9 +402,10 @@ export const WindowsCertificatesExpired: Story = {
   play: async (context) => {
     const panel = await windowsCertificateSelected(context);
     await press(context, "Show 2 expired");
+    await panel.findByText("Old Signing Key");
     await expect(
-      await panel.findByRole("radio", { name: /^Old Signing Key/ }),
-    ).toBeDisabled();
+      panel.queryByRole("radio", { name: /^Old Signing Key/ }),
+    ).toBeNull();
   },
 };
 
@@ -457,8 +478,10 @@ export const UsbTokenCustomDriver: Story = {
 export const UsbTokenCertificates: Story = {
   parameters: withDevice(),
   play: async (context) => {
-    const panel = await listTokenCertificates(context);
+    const panel = await chooseUsbToken(context);
+    await userEvent.type(panel.getByLabelText("PIN"), "123456");
     await userEvent.type(panel.getByLabelText("Slot (optional)"), "0");
+    await press(context, "Show digital IDs");
     await panel.findByRole(
       "radio",
       { name: /^Jane Signer \(token\)/ },
@@ -478,7 +501,11 @@ export const UsbTokenCertificateChosen: Story = {
         STAGE_TIMEOUT,
       ),
     );
-    await panel.findByRole("radio", { name: "Visible" }, STAGE_TIMEOUT);
+    await panel.findByRole(
+      "switch",
+      { name: "Show signature on page" },
+      STAGE_TIMEOUT,
+    );
   },
 };
 

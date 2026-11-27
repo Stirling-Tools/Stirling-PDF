@@ -189,7 +189,7 @@ The tests use realistic endpoint availability data based on your current server 
 1. **EML conversions**: Should be disabled in FROM dropdown
 2. **PDF → Office**: PDF to Word/PowerPoint should be disabled
 3. **PDF → Web**: PDF to HTML/XML should be disabled
-4. **PDF → PDF/A**: Should be disabled
+4. **PDF → PDF/X**: Should be disabled
 
 ### Error Scenarios
 1. **Corrupted files**: Should show helpful error messages

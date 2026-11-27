@@ -46,6 +46,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SignatureLogoStore;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -66,6 +67,7 @@ class CertSignControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private HardwareKeyStoreService hardwareKeyStoreService;
+    @Mock private SignatureLogoStore signatureLogoStore;
     @Mock private HttpServletRequest httpRequest;
 
     @InjectMocks private CertSignController certSignController;

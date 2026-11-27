@@ -1,12 +1,6 @@
-import {
-  Stack,
-  Text,
-  TextInput,
-  NumberInput,
-  Switch,
-  Group,
-} from "@mantine/core";
-import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import { Stack, Text, TextInput, NumberInput, Group } from "@mantine/core";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/ui/Tooltip";
@@ -66,20 +60,10 @@ const SignatureSettingsInput = ({
         </Tooltip>
       </Group>
 
-      <ButtonSelector
-        ariaLabel={t("certSign.appearance.visibility", "Visibility")}
-        value={value.showSignature ? "visible" : "invisible"}
-        onChange={(next) => handleChange("showSignature", next === "visible")}
-        options={[
-          {
-            value: "invisible",
-            label: t("certSign.appearance.invisible", "Invisible"),
-          },
-          {
-            value: "visible",
-            label: t("certSign.appearance.visible", "Visible"),
-          },
-        ]}
+      <ToggleSwitch
+        checked={value.showSignature || false}
+        onChange={(checked) => handleChange("showSignature", checked)}
+        label={t("certSign.appearance.showOnPage", "Show signature on page")}
         disabled={disabled}
       />
 
@@ -131,20 +115,22 @@ const SignatureSettingsInput = ({
             disabled={disabled}
             size="xs"
           />
-          <Switch
-            label={t("certSign.showLogo", "Show Stirling PDF Logo")}
+          <Checkbox
+            label={t(
+              "certSign.appearance.graphic.watermark",
+              "Logo behind signature",
+            )}
             checked={value.showLogo || false}
             onChange={(event) =>
               handleChange("showLogo", event.currentTarget.checked)
             }
             disabled={disabled}
-            size="sm"
           />
         </Stack>
       )}
 
       <Group gap="xs" wrap="nowrap" align="center">
-        <Switch
+        <Checkbox
           label={t(
             "certSign.collab.sessionCreation.includeSummaryPage",
             "Include Signature Summary Page",
@@ -154,7 +140,6 @@ const SignatureSettingsInput = ({
             handleChange("includeSummaryPage", event.currentTarget.checked)
           }
           disabled={disabled}
-          size="sm"
         />
         <Tooltip
           content={t(

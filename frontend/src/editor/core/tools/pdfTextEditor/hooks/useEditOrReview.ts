@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
@@ -34,9 +33,9 @@ export function useEditOrReview() {
   return { startReview, startEditing };
 }
 
-/** Whether the review can run here: accessibility editing is on, and the card has room beside the pages. */
+/** Whether the review can run here: the card has room beside the pages. */
 export function useReviewAvailable(): boolean {
-  return ACCESSIBILITY_EDITING && !useIsMobile();
+  return !useIsMobile();
 }
 
 /** Ends the review whenever another tool than the accessibility one is picked. Mount once. */

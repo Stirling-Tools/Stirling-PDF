@@ -43,7 +43,6 @@ fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "Not saved to disk"
 fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "File saved to disk"
-fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
 font = "Font"
 fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
@@ -1244,6 +1243,18 @@ label = "Regenerate on Startup"
 description = "Number of days the certificate will be valid"
 label = "Certificate Validity (days)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
 securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory, server file storage and the pipeline watched folders are always off-limits, and folder access is always disabled in hosted (SaaS) mode."
@@ -2073,6 +2084,46 @@ description = "A free, private PDF editor you can run on any infrastructure."
 [appBanner]
 dismiss = "Dismiss"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
@@ -2411,6 +2462,7 @@ title = "Suggested"
 
 [automate.sequence]
 finish = "Finish"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Run Automation"
 running = "Running Automation..."
 signInToRun = "Sign in to run automations."
@@ -2751,15 +2803,13 @@ chooseJksFile = "Choose JKS File"
 chooseP12File = "Choose PKCS12 File"
 choosePfxFile = "Choose PFX File"
 choosePrivateKey = "Choose Private Key File"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Declined"
 fetchFailed = "Failed to load signing data"
 finalized = "Finalized"
 location = "Location"
 locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
-logoTitle = "Logo"
-name = "Name"
-nameInfo = "Your name, stored in the signature's details. The visible signature shows the name on the certificate instead."
-noLogo = "No Logo"
 pageNumber = "Page Number"
 pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Certificate Password"
@@ -2771,7 +2821,6 @@ readyToFinalize = "Ready to finalize"
 reason = "Reason"
 reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Using server certificate - no files or password required"
-showLogo = "Show Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
 tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
 title = "Certificate Signing"
@@ -2779,12 +2828,45 @@ viewed = "Viewed"
 
 [certSign.appearance]
 invisible = "Invisible"
+showOnPage = "Show signature on page"
 stepTitle = "Signature Appearance"
 visibility = "Visibility"
 visible = "Visible"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Signature Details"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
@@ -2799,7 +2881,7 @@ title = "Invisible Signatures"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Shows signer name and date on the document"
 bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose which page to place the signature"
+bullet3 = "Sign into an empty signature field, or place and size the box on the page"
 bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"
@@ -3012,6 +3094,7 @@ failed = "An error occurred while processing signatures."
 [certSign.hardware]
 allExpired = "None of the digital IDs here can sign today."
 backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Other location…"
 digitalId = "Digital ID"
 driver = "Card software (PKCS#11)"
@@ -3033,6 +3116,7 @@ pin = "PIN"
 pkcs11Hint = "For cards your computer doesn't list. Choose the software that came with your card and enter its PIN."
 pkcs11LoadError = "Could not read the card. Check the PIN and card software."
 refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Select card software"
 serial = "Serial …{{serial}}"
 showExpired = "Show {{count}} expired"
@@ -3082,6 +3166,12 @@ serverCertUnavailable = "The server's signing certificate isn't available."
 signsAs = "Signs as"
 stepTitle = "Certificate source"
 upload = "Upload"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Update your username. You will be logged out after updating."
@@ -3301,14 +3391,12 @@ usage_limit_reached = "You've reached your usage limit. Check your plan options 
 
 [checkAccessibility]
 aboutRow = "About {{label}}"
-checking = "Checking..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
 fileFailed = "failed"
 noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
 retry = "Check again"
-submit = "Check accessibility"
 
 [checkAccessibility.category]
 altText = "Alternative text"
@@ -3530,19 +3618,7 @@ checking = "Checking {{current}} of {{total}}..."
 complete = "Check complete"
 
 [checkAccessibility.steps]
-results = "Results"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Which standard to check"
-
-[checkAccessibility.tooltip.ua1]
-text = "The first version of PDF/UA, published in 2012 as ISO 14289-1, for PDF 1.7 files."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "The newer version, published in 2024 as ISO 14289-2, for PDF 2.0 files. A PDF 1.7 file checked against it fails the rules that only apply to PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Annotation {{n}}"
@@ -4435,11 +4511,6 @@ multiple = "Multiple"
 optimizeForEbook = "Optimize PDF for ebook readers"
 optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Output"
-outputFormat = "Output Format"
-pdfaAccessibleFormat = "{{format}} (accessible)"
-pdfaDigitalSignatureWarning = "The PDF contains a digital signature. This will be removed in the next step."
-pdfaNote = "PDF/A-1b is more compatible, PDF/A-2b supports more features, PDF/A-3b supports embedded files."
-pdfaOptions = "PDF/A Options"
 pdfOptions = "PDF Options"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4467,8 +4538,6 @@ settings = "Settings"
 signInToUse = "Sign in to use"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
@@ -5123,15 +5192,20 @@ locked = "Locked"
 previewOf = "Preview of {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Add files"
 created = "Created"
 notIncludedInToolRun = "Not included in this tool run"
-selectFromWorkbench = "Add files to the workbench or "
-selectMultipleFromWorkbench = "Add at least {{count}} files to the workbench or "
 size = "File Size"
 title = "Files"
-upload = "Upload"
-uploadFiles = "Upload Files"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "No files available"
@@ -6010,6 +6084,11 @@ desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
+
 [home.autoFormDetection]
 desc = "Automatically detect form fields with AI and make your PDF fillable."
 tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
@@ -6060,11 +6139,9 @@ tags = "permissions,restrictions,rights,access control,allow,deny,printing,copyi
 title = "Change Permissions"
 
 [home.checkAccessibility]
-desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
-descWithReview = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
+desc = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
 tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
-title = "Check PDF accessibility"
-titleWithReview = "PDF accessibility"
+title = "PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."
@@ -7731,10 +7808,12 @@ title = "Discard unsaved changes?"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
 formLiftChangesDrawing = "Can't edit this: it is drawn as part of a group whose clipping or graphics settings the editor can't keep when it is changed."
 insertImage = "Could not insert the selected image."
 needsShaping = "The editor can't yet draw this script's joined letters and vowel signs correctly, so this change was not made."
+reopenLost = "Open again"
 replaceClippedImage = "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."
@@ -8557,17 +8636,6 @@ hideCategory = "Hide category"
 labelCount = "labels"
 sharedNote = "These labels are built in and shared across your whole team."
 showCategory = "Show category"
-
-[policies.pii]
-account = "Account numbers (labelled)"
-card = "Credit / debit cards"
-email = "Email addresses"
-fieldLabel = "PII to redact"
-iban = "IBANs"
-phone = "Phone numbers"
-placeholder = "Select PII types"
-routing = "US routing numbers (ABA)"
-ssn = "Social Security numbers"
 
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
@@ -12249,6 +12317,7 @@ colorLabel = "Box Color"
 convertPDFToImageLabel = "Convert PDF to PDF-Image"
 customPaddingLabel = "Custom Extra Padding"
 useRegexLabel = "Use Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Whole Word Search"
 
 [redact.auto.settings]
@@ -12279,6 +12348,16 @@ automaticDisabledTooltip = "Select files in the file manager to redact multiple 
 manual = "Manual"
 mode = "Mode"
 title = "Redaction Method"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
@@ -12333,19 +12412,6 @@ title = "Redaction Method"
 [redact.tooltip.mode.manual]
 text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted."
 title = "Manual Redaction"
-
-[redact.tooltip.words]
-bullet1 = "Add one word at a time"
-bullet2 = "Press Enter or click 'Add Another' to add"
-bullet3 = "Click × to remove words"
-
-[redact.tooltip.words.description]
-text = "Enter words or phrases to find and redact in your document. Each word will be searched for separately."
-title = "Text Matching"
-
-[redact.tooltip.words.examples]
-text = "Typical words to redact include: bank details, email addresses, or specific names."
-title = "Common Examples"
 
 [redact.tooltip.words.header]
 title = "Redaction Settings"
@@ -13784,6 +13850,10 @@ rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
 
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
+
 [signatureSettings.tooltip]
 header = "Signature Appearance Settings"
 
@@ -15123,9 +15193,11 @@ previewAlt = "Signature preview"
 
 [viewer.signatureField]
 badge = "Signature"
+clickToSign = "Click to sign here"
 fieldTitle = "Signature field: {{name}}"
 signed = "Signed"
 signedWithReason = "Signed: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Unsigned signature field: {{name}}"
 withTime = "{{label}} ({{time}})"
 

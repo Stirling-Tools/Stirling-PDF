@@ -36,25 +36,10 @@ export const useRedactWordsTips = (): SidebarTooltipContent => {
     },
     tips: [
       {
-        title: t("redact.tooltip.words.description.title", "Text Matching"),
+        title: t("redact.auto.wordsToRedact.title", "Words to Redact"),
         description: t(
-          "redact.tooltip.words.description.text",
-          "Enter words or phrases to find and redact in your document. Each word will be searched for separately.",
-        ),
-        bullets: [
-          t("redact.tooltip.words.bullet1", "Add one word at a time"),
-          t(
-            "redact.tooltip.words.bullet2",
-            "Press Enter or click 'Add Another' to add",
-          ),
-          t("redact.tooltip.words.bullet3", "Click × to remove words"),
-        ],
-      },
-      {
-        title: t("redact.tooltip.words.examples.title", "Common Examples"),
-        description: t(
-          "redact.tooltip.words.examples.text",
-          "Typical words to redact include: bank details, email addresses, or specific names.",
+          "redact.auto.wordsToRedact.info",
+          "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret.",
         ),
       },
     ],
