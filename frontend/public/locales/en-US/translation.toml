@@ -7749,7 +7749,7 @@ apply = "Apply"
 changeAll = "Change all"
 changeColour = "Change colour"
 changeFont = "Change font"
-changeFontHint = "Every text box in this font, on every page, changes to the one you pick. Locked text stays as it is."
+changeFontHint = "All text in this font will change. Locked text stays the same."
 colourUses_one = "{{hex}} · {{count}} text box"
 colourUses_other = "{{hex}} · {{count}} text boxes"
 colours = "Text colours"
@@ -7830,32 +7830,32 @@ weightSemibold = "Semibold"
 weightThin = "Thin"
 
 [pdfTextEditor.fonts]
-allPresent = "All letters & numbers present"
-coverageUnknown = "Which letters it has could not be read."
+allPresent = "Has every letter and number."
+coverageUnknown = "Couldn't check which letters it has."
 missing = "Missing: {{glyphs}}"
 title = "Fonts"
 
 [pdfTextEditor.fonts.compat]
-info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
-ok = "Every font includes the full alphabet and digits - type freely."
-warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
+info = "New letters you type may look slightly different."
+ok = "You can type any letter or number in these fonts."
+warnOther = "Some fonts are missing letters. Those will look slightly different when typed."
 
 [pdfTextEditor.fonts.pill]
-info = "Embedded"
-ok = "All glyphs"
-warn = "{{count}} with gaps"
+info = "Mostly ready"
+ok = "Ready"
+warn = "Missing letters"
 
 [pdfTextEditor.fonts.status.embedded]
-hint = "The whole font is stored in the PDF, so text you add draws in it."
-label = "Embedded"
+hint = "Included in this PDF. Anything you type will match."
+label = "Included"
 
 [pdfTextEditor.fonts.status.standard]
-hint = "One of the fonts every PDF reader has, so anything you type draws in it."
-label = "Standard"
+hint = "A common font. Anything you type will match."
+label = "Common"
 
 [pdfTextEditor.fonts.status.subset]
-hint = "Only the letters this PDF uses are stored. A letter it lacks is drawn in the closest matching font."
-label = "Subset"
+hint = "Only part of this font is included. Some letters you type may look different."
+label = "Partial"
 
 [pdfTextEditor.help]
 ariaLabel = "Keyboard shortcuts"

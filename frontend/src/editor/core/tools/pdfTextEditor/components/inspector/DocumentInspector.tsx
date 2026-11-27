@@ -264,29 +264,26 @@ function CoveragePill({ fonts }: { fonts: PageFont[] }) {
   const summary = {
     ok: {
       color: "green",
-      label: t("pdfTextEditor.fonts.pill.ok", "All glyphs"),
+      label: t("pdfTextEditor.fonts.pill.ok", "Ready"),
       hint: t(
         "pdfTextEditor.fonts.compat.ok",
-        "Every font includes the full alphabet and digits - type freely.",
+        "You can type any letter or number in these fonts.",
       ),
     },
     info: {
       color: "blue",
-      label: t("pdfTextEditor.fonts.pill.info", "Embedded"),
+      label: t("pdfTextEditor.fonts.pill.info", "Mostly ready"),
       hint: t(
         "pdfTextEditor.fonts.compat.info",
-        "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font.",
+        "New letters you type may look slightly different.",
       ),
     },
     warn: {
       color: "yellow",
-      label: t("pdfTextEditor.fonts.pill.warn", "{{count}} with gaps", {
-        count: withGaps.length,
-      }),
+      label: t("pdfTextEditor.fonts.pill.warn", "Missing letters"),
       hint: t(
         "pdfTextEditor.fonts.compat.warnOther",
-        "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font.",
-        { count: withGaps.length },
+        "Some fonts are missing letters. Those will look slightly different when typed.",
       ),
     },
   }[tone];
@@ -311,18 +308,18 @@ const FONT_STATUS: Record<
   { label: string; hint: string; color: string }
 > = {
   standard: {
-    label: "Standard",
-    hint: "One of the fonts every PDF reader has, so anything you type draws in it.",
+    label: "Common",
+    hint: "A common font. Anything you type will match.",
     color: "green",
   },
   embedded: {
-    label: "Embedded",
-    hint: "The whole font is stored in the PDF, so text you add draws in it.",
+    label: "Included",
+    hint: "Included in this PDF. Anything you type will match.",
     color: "blue",
   },
   subset: {
-    label: "Subset",
-    hint: "Only the letters this PDF uses are stored. A letter it lacks is drawn in the closest matching font.",
+    label: "Partial",
+    hint: "Only part of this font is included. Some letters you type may look different.",
     color: "yellow",
   },
 };
@@ -395,13 +392,13 @@ function FontStatusTag({ font, name }: { font: PageFont; name: string }) {
   const coverage = !known
     ? t(
         "pdfTextEditor.fonts.coverageUnknown",
-        "Which letters it has could not be read.",
+        "Couldn't check which letters it has.",
       )
     : missing.length > 0
       ? t("pdfTextEditor.fonts.missing", "Missing: {{glyphs}}", {
           glyphs: formatMissing(missing),
         })
-      : t("pdfTextEditor.fonts.allPresent", "All letters & numbers present");
+      : t("pdfTextEditor.fonts.allPresent", "Has every letter and number.");
   return (
     <Tooltip
       multiline
@@ -488,7 +485,7 @@ function FontChangeModal({
         <Text size="sm" c="dimmed">
           {t(
             "pdfTextEditor.document.changeFontHint",
-            "Every text box in this font, on every page, changes to the one you pick. Locked text stays as it is.",
+            "All text in this font will change. Locked text stays the same.",
           )}
         </Text>
         <FontFamilySelect
