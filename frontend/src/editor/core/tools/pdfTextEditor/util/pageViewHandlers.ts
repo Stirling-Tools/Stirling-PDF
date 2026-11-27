@@ -1,6 +1,9 @@
 import i18n from "i18next";
 import { alert } from "@editor/components/toast";
-import { readPageOnceVisible } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import {
+  ensurePageRead,
+  readPageOnceVisible,
+} from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import {
   scanBlockOffInk,
@@ -115,6 +118,8 @@ function createHandlers(store: EditorStore) {
     },
     onPageClick: (pageIndex: number, pageX: number, pageY: number) => {
       const { mode } = store.getState();
+      if (mode === "addTable" || mode === "addText")
+        ensurePageRead(store, pageIndex);
       if (mode === "addTable") {
         const cmd = new InsertTableCommand({
           pageIndex,

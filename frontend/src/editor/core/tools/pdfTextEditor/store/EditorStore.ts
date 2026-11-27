@@ -220,6 +220,10 @@ export class EditorStore {
     this.patch({ error, loading: false });
   }
 
+  reportError(error: string): void {
+    this.patch({ error });
+  }
+
   /** A load needs a password. */
   setPasswordRequired(file: File, retry: boolean): void {
     this._pendingPasswordFile = file;

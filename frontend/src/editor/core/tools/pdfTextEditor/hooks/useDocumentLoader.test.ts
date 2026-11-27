@@ -15,6 +15,7 @@ import {
 } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { pageViewHandlers } from "@editor/tools/pdfTextEditor/util/pageViewHandlers";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -163,7 +164,6 @@ describe("opening a document", () => {
       );
 
       readPageOnceVisible(store, 0);
-      await new Promise((resolve) => setTimeout(resolve, 0));
       expect(spy).not.toHaveBeenCalled();
 
       store.markFirstPageRendered();
@@ -171,6 +171,63 @@ describe("opening a document", () => {
         expect(store.getState().pages[0].runs.length).toBeGreaterThan(0),
       );
       await loading;
+    } finally {
+      spy.mockRestore();
+      store.dispose();
+    }
+  });
+
+  test("text added to a page before it is read keeps its run", async () => {
+    const store = new EditorStore();
+    try {
+      const loading = useDocumentLoader(store)(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        { timeout: 15_000 },
+      );
+      const handlers = pageViewHandlers(store);
+      handlers.onFirstVisible?.(0);
+      store.setMode("addText");
+      handlers.onPageClick?.(0, 72, 72);
+      const [insertedId] = store.selection.value.runIds;
+
+      store.markFirstPageRendered();
+      await loading;
+
+      const runs = store.document!.page(0).runs.map((run) => run.id);
+      expect(runs).toContain(insertedId);
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test("a failed text read leaves a later operation's loading flag alone", async () => {
+    const store = new EditorStore();
+    const spy = vi
+      .spyOn(PdfiumTextReader, "populate")
+      .mockImplementation(() => {
+        throw new Error("unreadable page");
+      });
+    try {
+      const loading = useDocumentLoader(store)(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        { timeout: 15_000 },
+      );
+      store.setLoading(true);
+      store.markFirstPageRendered();
+      await loading;
+
+      expect(store.getState().error).toBe("unreadable page");
+      expect(store.getState().loading).toBe(true);
     } finally {
       spy.mockRestore();
       store.dispose();

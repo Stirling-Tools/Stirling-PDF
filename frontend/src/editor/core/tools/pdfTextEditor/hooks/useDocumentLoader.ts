@@ -240,7 +240,7 @@ function readPage(
     PdfiumTextReader.populate(doc, page, store.groupingMode);
     return true;
   } catch (err) {
-    store.setError(err instanceof Error ? err.message : String(err));
+    store.reportError(err instanceof Error ? err.message : String(err));
     return false;
   }
 }
@@ -278,6 +278,27 @@ function readButUnpublished(
  * reader has loaded but not yet published is published here, so a lookup in
  * the store's snapshot right after this sees it.
  */
+export function ensurePageRead(store: EditorStore, pageIndex: number): void {
+  const doc = store.document;
+  if (!doc) return;
+  const page = doc.page(pageIndex);
+  if (page.loaded) {
+    if (!readButUnpublished(store.getState().pages[pageIndex], page)) return;
+  } else {
+    try {
+      // Lazy reads must surface failures like the eager path, not throw out of the observer.
+      PdfiumTextReader.populate(doc, page, store.groupingMode);
+    } catch (err) {
+      store.reportError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+  }
+  const next = store
+    .getState()
+    .pages.map((p) => (p.pageIndex === pageIndex ? readSnapshot(p, page) : p));
+  store.publishPages(next);
+}
+
 export function readPageOnceVisible(
   store: EditorStore,
   pageIndex: number,
@@ -290,25 +311,4 @@ export function readPageOnceVisible(
   void firstPagePainted(store).then(() => {
     if (store.document === doc) ensurePageRead(store, pageIndex);
   });
-}
-
-export function ensurePageRead(store: EditorStore, pageIndex: number): void {
-  const doc = store.document;
-  if (!doc) return;
-  const page = doc.page(pageIndex);
-  if (page.loaded) {
-    if (!readButUnpublished(store.getState().pages[pageIndex], page)) return;
-  } else {
-    try {
-      // Lazy reads must surface failures like the eager path, not throw out of the observer.
-      PdfiumTextReader.populate(doc, page, store.groupingMode);
-    } catch (err) {
-      store.setError(err instanceof Error ? err.message : String(err));
-      return;
-    }
-  }
-  const next = store
-    .getState()
-    .pages.map((p) => (p.pageIndex === pageIndex ? readSnapshot(p, page) : p));
-  store.publishPages(next);
 }
