@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
-  Field,
   PointsInput,
   Section,
   SectionLabel,
@@ -128,9 +127,7 @@ function SelectionHeader({
           });
   }
   return (
-    <Section tinted first>
-      {/* Doubles as the old sidebar's selection readout, moved from the very
-          bottom of the panel to the top where the user is already looking. */}
+    <Section first>
       <Text size="sm" fw={600} data-testid="pdf-editor-selection-count">
         {title}
       </Text>
@@ -253,68 +250,64 @@ function GeometrySection({
       <SectionLabel>
         {t("pdfTextEditor.inspector.geometry", "Position & size")}
       </SectionLabel>
-      <Stack gap="xs">
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field label={t("pdfTextEditor.inspector.x", "X")}>
-            <PointsInput
-              value={bounds.x}
-              onCommit={setX}
-              label={t("pdfTextEditor.inspector.x", "X")}
-              testId="pdf-editor-pos-x"
-            />
-          </Field>
-          <Field label={t("pdfTextEditor.inspector.y", "Y")}>
-            <PointsInput
-              value={bounds.y}
-              onCommit={setY}
-              label={t("pdfTextEditor.inspector.y", "Y")}
-              testId="pdf-editor-pos-y"
-            />
-          </Field>
-        </Group>
-        <Group gap="xs" wrap="nowrap" align="flex-end">
-          <Field
-            label={t("pdfTextEditor.inspector.width", "Width")}
-            hint={
-              isImage || !setWidth
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.widthHint",
-                    "Text re-wraps to fit the width.",
-                  )
-            }
-          >
+      <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+        <PointsInput
+          value={bounds.x}
+          onCommit={setX}
+          label={t("pdfTextEditor.inspector.x", "X")}
+          prefix={t("pdfTextEditor.inspector.x", "X")}
+          testId="pdf-editor-pos-x"
+        />
+        <PointsInput
+          value={bounds.y}
+          onCommit={setY}
+          label={t("pdfTextEditor.inspector.y", "Y")}
+          prefix={t("pdfTextEditor.inspector.y", "Y")}
+          testId="pdf-editor-pos-y"
+        />
+        <Tooltip
+          label={t(
+            "pdfTextEditor.inspector.widthHint",
+            "Text re-wraps to fit the width.",
+          )}
+          disabled={isImage || !setWidth}
+          multiline
+          w={200}
+        >
+          <div>
             <PointsInput
               value={bounds.width}
               onCommit={setWidth ?? (() => undefined)}
               min={1}
               disabled={!setWidth}
               label={t("pdfTextEditor.inspector.width", "Width")}
+              prefix={t("pdfTextEditor.inspector.widthShort", "W")}
               testId="pdf-editor-size-w"
             />
-          </Field>
-          <Field
-            label={t("pdfTextEditor.inspector.height", "Height")}
-            hint={
-              setHeight
-                ? undefined
-                : t(
-                    "pdfTextEditor.inspector.heightHint",
-                    "A text box's height follows its type size and line count.",
-                  )
-            }
-          >
+          </div>
+        </Tooltip>
+        <Tooltip
+          label={t(
+            "pdfTextEditor.inspector.heightHint",
+            "A text box's height follows its type size and line count.",
+          )}
+          disabled={!!setHeight}
+          multiline
+          w={200}
+        >
+          <div>
             <PointsInput
               value={bounds.height}
               onCommit={setHeight ?? (() => undefined)}
               min={1}
               disabled={!setHeight}
               label={t("pdfTextEditor.inspector.height", "Height")}
+              prefix={t("pdfTextEditor.inspector.heightShort", "H")}
               testId="pdf-editor-size-h"
             />
-          </Field>
-        </Group>
-      </Stack>
+          </div>
+        </Tooltip>
+      </SimpleGrid>
     </Section>
   );
 }

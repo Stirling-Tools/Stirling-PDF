@@ -57,9 +57,8 @@ async function selectOne(page: Page, id: string): Promise<void> {
   );
 }
 
-/** Switch to the Document tab, which owns the document-level preferences. */
+/** Wait for the document-level preferences in the sidebar. */
 async function openSettings(page: Page): Promise<void> {
-  await page.getByTestId("pdf-editor-tab-document").click();
   await expect(page.getByTestId("pdf-editor-view-settings")).toBeVisible();
 }
 
@@ -254,11 +253,10 @@ test.describe("PDF text editor - inspector layout", () => {
     await expect(addText).toHaveText("Add text");
   });
 
-  test("the Document tab lists the page fonts with a status badge", async ({
+  test("the sidebar lists the page fonts with a status badge", async ({
     page,
   }) => {
     await open(page, 0);
-    await page.getByTestId("pdf-editor-tab-document").click();
     const panel = page.getByTestId("pdf-editor-fonts-panel");
     await expect(panel).toBeVisible();
     // Collapsed by default: one headline row carrying an honest tone

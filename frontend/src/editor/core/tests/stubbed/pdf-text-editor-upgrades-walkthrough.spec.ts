@@ -102,7 +102,6 @@ test("rulers and guides can be switched on from the sidebar", async ({
   test.setTimeout(140_000);
   await openEditor(page);
 
-  await page.getByTestId("pdf-editor-tab-document").click();
   const toggle = page.getByTestId("pdf-editor-toggle-rulers");
   await expect(toggle).toBeVisible();
   await toggle.click();
@@ -141,9 +140,10 @@ test("the sidebar exposes the spellcheck control", async ({
 }) => {
   test.setTimeout(140_000);
   await openEditor(page);
-  await page.getByTestId("pdf-editor-tab-document").click();
   const control = page.getByTestId("pdf-editor-spellcheck");
   await expect(control).toBeVisible();
+  // The dictionary picker only shows while spellcheck is on.
+  await page.getByTestId("pdf-editor-spellcheck-toggle").click();
   await expect(
     page.getByTestId("pdf-editor-spellcheck-language"),
   ).toBeVisible();

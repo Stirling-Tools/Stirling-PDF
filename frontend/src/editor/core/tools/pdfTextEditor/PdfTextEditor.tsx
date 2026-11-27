@@ -50,6 +50,7 @@ import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/component
 import { useReviewLanguageBridge } from "@editor/tools/pdfTextEditor/hooks/useReviewLanguageBridge";
 import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
+import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
 import {
   EditorSidebar,
   type SidebarProps,
@@ -768,7 +769,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const ocrAvailable =
     panel.state.loading && !ocr.running ? null : ocr.available;
   const inspector = useMemo<
-    Omit<SidebarProps, "store" | "state" | "selection" | "initialTab">
+    Omit<SidebarProps, "store" | "state" | "selection">
   >(
     () => ({
       canGroup: panel.selection.runIds.length >= 2,
@@ -894,13 +895,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
       )}
       {state.hasDocument && (
-        <EditorPanelActions
-          compact={isMobile}
-          onSave={handleSave}
-          onDownload={handleDownload}
-          onOpenFind={onOpenFind}
-          onShowHelp={onShowHelp}
-        />
+        <ToolPanelFooter>
+          <EditorPanelActions
+            compact={isMobile}
+            onSave={handleSave}
+            onDownload={handleDownload}
+            onOpenFind={onOpenFind}
+            onShowHelp={onShowHelp}
+          />
+        </ToolPanelFooter>
       )}
     </Stack>
   );
