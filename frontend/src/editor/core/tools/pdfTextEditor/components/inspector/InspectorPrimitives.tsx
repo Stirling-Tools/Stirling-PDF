@@ -103,7 +103,9 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
 
 type LengthUnit = Extract<MeasurementUnit, "mm" | "in">;
 
-const DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
+export const LENGTH_DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
+
+export const LENGTH_STEP: Record<LengthUnit, number> = { mm: 1, in: 0.1 };
 
 export function lengthUnitFor(locales?: readonly string[]): LengthUnit {
   return localPaperSize<LengthUnit>("mm", "in", locales);
@@ -138,7 +140,7 @@ export function PointsInput({
   disabled?: boolean;
 }) {
   const perPoint = POINT_TO_UNIT[unit];
-  const decimals = DECIMALS[unit];
+  const decimals = LENGTH_DECIMALS[unit];
   const shown = Number((value * perPoint).toFixed(decimals));
   return (
     <NumberInput
@@ -157,7 +159,7 @@ export function PointsInput({
       min={min === undefined ? undefined : min * perPoint}
       decimalScale={decimals}
       fixedDecimalScale
-      step={unit === "in" ? 0.1 : 1}
+      step={LENGTH_STEP[unit]}
       value={shown}
       disabled={disabled}
       aria-label={label}

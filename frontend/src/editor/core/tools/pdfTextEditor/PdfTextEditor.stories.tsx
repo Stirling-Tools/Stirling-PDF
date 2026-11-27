@@ -20,6 +20,11 @@ import {
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import { __resetEditorStoreForTests } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import {
+  LENGTH_DECIMALS,
+  LENGTH_STEP,
+  lengthUnitFor,
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import {
   SPELLCHECK_AUTO,
   setSpellcheckPreference,
 } from "@editor/tools/pdfTextEditor/util/spellcheck";
@@ -191,13 +196,18 @@ function onCanvas(files?: readonly FixtureName[]) {
   } as const;
 }
 
-/** Steps a Position & size field up a point with the arrow key. */
+/** Steps a Position & size field up one step of the local length unit with the arrow key. */
 async function nudgeUp(context: PlayContext, label: string) {
+  const unit = lengthUnitFor();
   const input = bodyOf(context).getByRole("textbox", { name: label });
   const before = Number.parseFloat((input as HTMLInputElement).value);
   await userEvent.click(input);
   await userEvent.keyboard("{ArrowUp}");
-  await waitFor(() => expect(input).toHaveValue((before + 1).toFixed(1)));
+  await waitFor(() =>
+    expect(input).toHaveValue(
+      (before + LENGTH_STEP[unit]).toFixed(LENGTH_DECIMALS[unit]),
+    ),
+  );
 }
 
 export const Panel: Story = {
@@ -381,7 +391,9 @@ export const TextPositionCleared: Story = {
     await openPositionAndSize(context);
     const x = bodyOf(context).getByRole("textbox", { name: "X" });
     await userEvent.clear(x);
-    await waitFor(() => expect(x).toHaveValue("0.0"));
+    await waitFor(() =>
+      expect(x).toHaveValue((0).toFixed(LENGTH_DECIMALS[lengthUnitFor()])),
+    );
   },
 };
 
