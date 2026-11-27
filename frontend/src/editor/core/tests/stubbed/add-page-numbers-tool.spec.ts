@@ -30,4 +30,36 @@ test.describe("Add Page Numbers tool — config validation", () => {
     // After upload the run button should enable (default position selected)
     await expect(runBtn).toBeEnabled({ timeout: 5_000 });
   });
+
+  test("preview draws the number where it will be stamped", async ({
+    page,
+  }) => {
+    await page.goto("/add-page-numbers");
+    await page.waitForLoadState("domcontentloaded");
+    await uploadFiles(page, SAMPLE_PDF);
+
+    const label = page.getByTestId("page-number-preview-label");
+    await expect(label).toHaveText("1", { timeout: 5_000 });
+
+    const preview = page.getByTestId("page-number-preview-page");
+    await preview.getByRole("button", { name: "9", exact: true }).click();
+    await page.mouse.move(0, 0);
+
+    // Both boxes in one read, polled: the panel can still be scrolling or
+    // resizing after the click. Medium margin is 3.5% of the page; the range
+    // allows for font metrics.
+    const placement = () =>
+      label.evaluate((el) => {
+        const pageBox = el
+          .closest('[data-testid="page-number-preview-page"]')!
+          .getBoundingClientRect();
+        const box = el.getBoundingClientRect();
+        const right = (pageBox.right - box.right) / pageBox.width;
+        const bottom = (pageBox.bottom - box.bottom) / pageBox.height;
+        const ok =
+          right > 0.02 && right < 0.05 && bottom > 0.01 && bottom < 0.05;
+        return ok ? "bottom-right margin" : `right ${right}, bottom ${bottom}`;
+      });
+    await expect.poll(placement).toBe("bottom-right margin");
+  });
 });

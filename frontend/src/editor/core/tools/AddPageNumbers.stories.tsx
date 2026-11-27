@@ -8,7 +8,6 @@ import {
 import {
   findEnabled,
   openSelect,
-  openStep,
   openTooltip,
   type PlayContext,
   runToResults,
@@ -25,15 +24,15 @@ type Story = StoryObj<typeof meta>;
 
 /** A field's accessible name also carries its (i)'s text, so match the label as a prefix. */
 const PAGES_TO_NUMBER = /^Pages to Number/;
-const STARTING_NUMBER = /^Starting Number/;
+const STARTING_NUMBER = /^Start at/;
 const MARGIN = /^Margin/;
 const FONT_SIZE = /^Font Size/;
-const ZERO_PAD = /^Zero-pad Width/;
+const ZERO_PAD = /^Zero-pad/;
 const FONT_NAME = /^Font Name/;
 const CUSTOM_TEXT_FORMAT = /^Custom Text Format/;
 
+/** Every field sits in the one Settings step; wait for the last of them. */
 async function openCustomize(context: PlayContext) {
-  await openStep(context, "Appearance");
   await findEnabled(context, "textbox", FONT_SIZE);
 }
 
@@ -137,7 +136,7 @@ export const ZeroPadWidthTooltip: Story = {
 
 export const CustomTextFormatTooltip: Story = {
   play: openTooltip(
-    { info: /^Optional custom format for page numbers/ },
+    { info: /^Printed on each numbered page/ },
     { after: openCustomize },
   ),
 };
