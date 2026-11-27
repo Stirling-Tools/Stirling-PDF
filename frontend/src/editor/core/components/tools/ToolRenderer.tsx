@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
 import { BaseToolProps } from "@editor/types/tool";
 import { ToolId } from "@editor/types/toolId";
 import ToolLoadingFallback from "@editor/components/tools/ToolLoadingFallback";
@@ -17,13 +18,19 @@ const ToolRenderer = ({
 }: ToolRendererProps) => {
   const { t } = useTranslation();
   // Get the tool from context (instead of direct hook call)
-  const { toolRegistry } = useToolWorkflow();
+  const { toolRegistry, toolAvailability } = useToolWorkflow();
+  const { allTools } = useToolRegistry();
   const selectedTool =
     selectedToolKey in toolRegistry ? toolRegistry[selectedToolKey] : undefined;
 
   // Handle tools that only work in workbenches (read, multiTool)
   if (selectedTool && !selectedTool.component && selectedTool.workbench) {
     return null; // These tools render in their workbench, not in the sidebar
+  }
+
+  const pendingTool = allTools[selectedToolKey];
+  if (!selectedTool && pendingTool && !toolAvailability[selectedToolKey]) {
+    return <ToolLoadingFallback toolName={pendingTool.name} />;
   }
 
   if (!selectedTool || !selectedTool.component) {

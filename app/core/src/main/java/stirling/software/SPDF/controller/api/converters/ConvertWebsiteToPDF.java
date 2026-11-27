@@ -12,11 +12,9 @@ import java.util.regex.Pattern;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -66,68 +64,46 @@ public class ConvertWebsiteToPDF {
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
-        // Async jobs (MCP, pipelines) run off the request thread, where there is no request URL.
-        UriComponentsBuilder uriComponentsBuilder =
-                (RequestContextHolder.getRequestAttributes() != null
-                                ? ServletUriComponentsBuilder.fromCurrentContextPath()
-                                : UriComponentsBuilder.newInstance())
-                        .path("/url-to-pdf");
-        URI location = null;
-        HttpStatus status = HttpStatus.SEE_OTHER;
-
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
-            location =
-                    uriComponentsBuilder
-                            .queryParam("error", "error.endpointDisabled")
-                            .build()
-                            .toUri();
-        } else {
-            // Validate the URL format (relaxed: only invalid if BOTH checks fail)
-            boolean patternValid =
-                    RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
-            boolean generalValid = GeneralUtils.isValidURL(URL);
-            if (!patternValid && !generalValid) {
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.invalidUrlFormat")
-                                .build()
-                                .toUri();
-            } else if (!GeneralUtils.isURLReachable(URL)) {
-                // validate the URL is reachable
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.urlNotReachable")
-                                .build()
-                                .toUri();
-            }
+            return errorResponse(HttpStatus.FORBIDDEN, "URL to PDF is disabled on this server.");
+        }
+        if (URL == null || URL.isBlank()) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
+        }
+        URL = URL.trim();
+        boolean patternValid =
+                RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
+        boolean generalValid = GeneralUtils.isValidURL(URL);
+        if (!patternValid && !generalValid) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
         }
 
-        if (location != null) {
-            log.info("Redirecting to: {}", location.toString());
-            return ResponseEntity.status(status).location(location).build();
-        }
-
-        Path tempOutputFile = null;
-        Path tempHtmlInput = null;
+        WebAssets assets;
         try {
             // Public addresses only, for the page, every asset it links and every redirect hop.
-            WebAssets assets =
+            assets =
                     WebAssets.fetch(
                             URL,
                             WebAssets.Access.none()
                                     .network(true)
                                     .redirects(true)
                                     .privateAddresses(false));
+        } catch (IOException e) {
+            log.info("URL to PDF fetch refused or failed for {}: {}", URL, e.getMessage());
+            return errorResponse(
+                    HttpStatus.BAD_REQUEST, "The URL is not allowed or could not be reached.");
+        }
+
+        Path tempOutputFile = null;
+        Path tempHtmlInput = null;
+        try {
             String htmlContent = new String(assets.page(), StandardCharsets.UTF_8);
 
             if (containsDisallowedUriScheme(htmlContent)) {
-                URI rejectionLocation =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.disallowedUrlContent")
-                                .build()
-                                .toUri();
                 log.warn("Rejected URL to PDF conversion due to disallowed content references");
-                return ResponseEntity.status(status).location(rejectionLocation).build();
+                return errorResponse(
+                        HttpStatus.BAD_REQUEST,
+                        "The web page contains disallowed local file references.");
             }
 
             tempHtmlInput = Files.createTempFile("url_input_", ".html");
@@ -163,6 +139,12 @@ public class ConvertWebsiteToPDF {
                 }
             }
         }
+    }
+
+    private static ResponseEntity<ProblemDetail> errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(ProblemDetail.forStatusAndDetail(status, message));
     }
 
     private boolean containsDisallowedUriScheme(String htmlContent) {

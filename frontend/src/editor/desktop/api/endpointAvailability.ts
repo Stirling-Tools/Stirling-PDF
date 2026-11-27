@@ -173,10 +173,13 @@ async function resolveForEnvironment(
   }
 }
 
-/** Whether one endpoint is enabled, with the same SaaS optimism. */
+/** Whether one endpoint is enabled, with the same SaaS optimism - except
+ * url-to-pdf, which is opt-in and must honor its real enabled setting. */
 export async function resolveEndpointEnabled(
   endpoint: string,
 ): Promise<boolean> {
+  const requiresExplicitEnablement = endpoint === "url-to-pdf";
+
   if (
     requiresSignIn(endpoint) &&
     (await connectionModeService.getCurrentMode()) === "local"
@@ -184,10 +187,11 @@ export async function resolveEndpointEnabled(
     return false;
   if (await isLocalProcessingOnly())
     return (await resolveEndpointsAvailability([endpoint]))[endpoint].enabled;
+
   if (isSelfHostedOffline()) {
     // ConvertSettings already filters unsupported endpoints from the dropdown,
     // so a selected endpoint is supported locally by the time it reaches here.
-    return true;
+    return !requiresExplicitEnablement;
   }
 
   await ensureDependenciesReady();
@@ -198,9 +202,12 @@ export async function resolveEndpointEnabled(
       `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
       { suppressErrorToast: true },
     );
-    return response.data || saas;
+    return requiresExplicitEnablement
+      ? Boolean(response.data)
+      : response.data || saas;
   } catch (error) {
     if (isBackendNotReadyError(error)) throw error;
+    if (requiresExplicitEnablement) throw error;
     return saas;
   }
 }

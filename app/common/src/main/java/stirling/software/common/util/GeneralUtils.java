@@ -278,7 +278,7 @@ public class GeneralUtils {
             Urls.create(
                     urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | SecurityException e) {
             return false;
         }
     }
