@@ -282,9 +282,11 @@ function PageSetupPopover({
   position?: PopoverProps["position"];
   middlewares?: PopoverProps["middlewares"];
 }) {
+  const { t } = useTranslation();
   return (
     <ChangePopover
       opened={pageIndex !== null}
+      label={t("pdfTextEditor.pages.setupTitle", "Page setup")}
       width={PAGE_SETUP_WIDTH}
       anchor={anchor}
       position={position}
