@@ -33,6 +33,8 @@ export interface TrackPageTileProps {
   /** Vertical offset within the lane (0 in single-row mode; row top in wrap). */
   offsetY: number;
   selected: boolean;
+  /** More than one page is selected across all tracks. */
+  hasMultiSelection: boolean;
   dragging: boolean;
   /** Draw the insertion line on this tile's leading edge. */
   dropBefore: boolean;
@@ -46,9 +48,9 @@ export interface TrackPageTileProps {
   ) => void;
   /** Opens the track's page-view modal starting at this page. */
   onViewPage: (pageId: string) => void;
-  onRotate: (pageIds: string[], delta: number) => void;
-  onDelete: (pageIds: string[]) => void;
-  onDuplicate: (pageIds: string[]) => void;
+  onRotatePage: (pageId: string, delta: number) => void;
+  onDeletePage: (pageId: string) => void;
+  onDuplicatePage: (pageId: string) => void;
   /** Swaps the page with its neighbour: -1 left, 1 right. */
   onShift: (pageId: string, by: -1 | 1) => void;
 }
@@ -100,15 +102,16 @@ function TrackPageTileImpl({
   offsetX,
   offsetY,
   selected,
+  hasMultiSelection,
   dragging,
   dropBefore,
   dropAfterLast,
   thumbnails,
   onSelect,
   onViewPage,
-  onRotate,
-  onDelete,
-  onDuplicate,
+  onRotatePage,
+  onDeletePage,
+  onDuplicatePage,
   onShift,
 }: TrackPageTileProps) {
   const { t } = useTranslation();
@@ -144,6 +147,7 @@ function TrackPageTileImpl({
 
   const stop = (event: React.MouseEvent) => event.stopPropagation();
   const quarterTurn = page.rotation === 90 || page.rotation === 270;
+  const multiSelected = selected && hasMultiSelection;
 
   const hoverActions = useMemo<HoverAction[]>(
     () => [
@@ -159,42 +163,58 @@ function TrackPageTileImpl({
       {
         id: "rotate-left",
         icon: <Icon name="rotate-ccw" size={16} />,
-        label: t("pageTracks.rotateLeft", "Rotate left"),
+        label: multiSelected
+          ? t("pageTracks.rotateSelectedLeft", "Rotate selected pages left")
+          : t("pageTracks.rotateLeft", "Rotate left"),
         onClick: (event) => {
           event.stopPropagation();
-          onRotate([page.id], -90);
+          onRotatePage(page.id, -90);
         },
       },
       {
         id: "rotate-right",
         icon: <Icon name="rotate-cw" size={16} />,
-        label: t("pageTracks.rotateRight", "Rotate right"),
+        label: multiSelected
+          ? t("pageTracks.rotateSelectedRight", "Rotate selected pages right")
+          : t("pageTracks.rotateRight", "Rotate right"),
         onClick: (event) => {
           event.stopPropagation();
-          onRotate([page.id], 90);
+          onRotatePage(page.id, 90);
         },
       },
       {
         id: "duplicate",
         icon: <Icon name="copy-plus" size={16} />,
-        label: t("pageTracks.duplicate.page", "Duplicate page"),
+        label: multiSelected
+          ? t("pageTracks.duplicateSelected", "Duplicate selected pages")
+          : t("pageTracks.duplicate.page", "Duplicate page"),
         onClick: (event) => {
           event.stopPropagation();
-          onDuplicate([page.id]);
+          onDuplicatePage(page.id);
         },
       },
       {
         id: "delete",
         icon: <Icon name="trash" size={16} />,
-        label: t("pageTracks.delete.page", "Delete page"),
+        label: multiSelected
+          ? t("pageTracks.deleteSelected", "Delete selected pages")
+          : t("pageTracks.delete.page", "Delete page"),
         color: "var(--c-danger)",
         onClick: (event) => {
           event.stopPropagation();
-          onDelete([page.id]);
+          onDeletePage(page.id);
         },
       },
     ],
-    [t, onViewPage, onRotate, onDelete, onDuplicate, page.id],
+    [
+      t,
+      onViewPage,
+      onRotatePage,
+      onDeletePage,
+      onDuplicatePage,
+      page.id,
+      multiSelected,
+    ],
   );
 
   return (

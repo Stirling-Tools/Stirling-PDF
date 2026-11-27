@@ -256,6 +256,16 @@ describe("trackEditorReducer operations", () => {
     expect(ids(state, A)).toEqual([`${A}:2`, `${A}:3`, `${A}:1`]);
   });
 
+  it("deletes selected pages from every track", () => {
+    let state = twoTracks();
+    const removed = [pagesOf(state, A)[0].id, pagesOf(state, B)[1].id];
+    state = trackEditorReducer(state, { type: "delete", pageIds: removed });
+
+    expect(ids(state, A)).toEqual([`${A}:2`, `${A}:3`]);
+    expect(ids(state, B)).toEqual([`${B}:1`]);
+    expect(changedTrackIds(state)).toEqual([A, B]);
+  });
+
   it("empties a track without removing it, so save can close the file", () => {
     let state = twoTracks();
     state = trackEditorReducer(state, {
