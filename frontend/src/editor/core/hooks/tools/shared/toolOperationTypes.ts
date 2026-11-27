@@ -191,6 +191,17 @@ interface MultiFileToolBody<
   /** Prefix added to processed filename (e.g., 'merged_', 'split_') */
   filePrefix: string;
 
+  /**
+   * Extension to use when the response content cannot be identified at all
+   * (unknown MIME type and no recognized byte signature). Only declare this
+   * when the backend contract guarantees the output format: merge always
+   * returns a PDF (MergeController: produces ToolFormat.PDF) and so does
+   * create-portfolio (PortfolioController: produces ToolFormat.PDF). When
+   * absent, unidentified content keeps no extension instead of being
+   * mislabelled — see useToolOperation.
+   */
+  expectedOutputExtension?: string;
+
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
