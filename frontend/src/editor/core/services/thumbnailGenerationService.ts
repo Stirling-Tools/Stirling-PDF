@@ -31,6 +31,7 @@ interface ThumbnailGenerationOptions {
   quality?: number;
   batchSize?: number;
   parallelBatches?: number;
+  applyRotation?: boolean;
 }
 
 interface CachedThumbnail {
@@ -158,7 +159,7 @@ export class ThumbnailGenerationService {
       throw new Error("generateThumbnails: pageNumbers must not be empty");
     }
 
-    const { scale = 0.2, quality = 0.8 } = options;
+    const { scale = 0.2, quality = 0.8, applyRotation = false } = options;
 
     if (canRenderInWorker()) {
       try {
@@ -182,6 +183,7 @@ export class ThumbnailGenerationService {
       scale,
       quality,
       onProgress,
+      applyRotation,
     );
   }
 
@@ -251,6 +253,7 @@ export class ThumbnailGenerationService {
       total: number;
       thumbnails: ThumbnailResult[];
     }) => void,
+    applyRotation = false,
   ): Promise<ThumbnailResult[]> {
     const docPtr = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
@@ -269,7 +272,11 @@ export class ThumbnailGenerationService {
             docPtr,
             pageNumber - 1,
             scale,
-            { applyRotation: false, format: "jpeg", quality },
+            {
+              applyRotation,
+              format: "jpeg",
+              quality,
+            },
           );
           if (!thumbnail) {
             throw new Error(`Could not render page ${pageNumber}`);
