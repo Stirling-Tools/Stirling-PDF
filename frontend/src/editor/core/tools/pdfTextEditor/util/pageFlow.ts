@@ -135,14 +135,15 @@ export function flowPastBottom(
   const continued = following && continuationOn(doc, following, runId);
   if (following && continued) {
     if (continued.locked || continued.textReadOnly) return "none";
+    if (!prependOverflow(store, page, run, following, continued, split))
+      return "none";
     crossedRuns.delete(runId);
-    return prependOverflow(store, page, run, following, continued, split)
-      ? "moved"
-      : "none";
+    return "moved";
   }
   if (following && takesFlow(following)) {
-    crossedRuns.delete(runId);
-    return flowInto(store, page, run, following, split);
+    const result = flowInto(store, page, run, following, split);
+    if (result === "moved") crossedRuns.delete(runId);
+    return result;
   }
   if (!canAddPages(doc)) return "none";
   const outcome: { result: FlowResult } = { result: "none" };

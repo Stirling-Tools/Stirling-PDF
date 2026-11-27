@@ -8,6 +8,7 @@ import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetL
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { pageChangeCommand } from "@editor/tools/pdfTextEditor/util/documentChanges";
 import {
   bottomLimit,
   flowPastBottom,
@@ -464,4 +465,31 @@ test("one undo takes back overflow that pushed an existing continuation on to th
 
   expect(doc.page(0).findRun(runId)!.text).toBe(pushed);
   expect(carried()).toEqual(afterFirstFlow);
+});
+
+test("text a too-narrow page refused still flows once that page is gone", async () => {
+  const pdf = await PDFDocument.create();
+  pdf.addPage([400, 300]);
+  pdf.addPage([60, 300]);
+  const store = await storeWith(await pdf.save());
+  ensurePageRead(store, 1);
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 40,
+    y: 50,
+    text: "Line one",
+  });
+  store.dispatch(insert);
+  const runId = insert.insertedRunId!;
+
+  expect(edit(store, runId, "Line one\nLine two")).toBe("none");
+  expect(store.document!.page(0).findRun(runId)!.text).toBe(
+    "Line one\nLine two",
+  );
+
+  store.dispatch(
+    pageChangeCommand(store.document!, { kind: "deletePage", page: 1 }).command,
+  );
+  expect(edit(store, runId, "Line one\nLine two!")).toBe("moved");
+  expect(store.document!.page(0).findRun(runId)!.text).toBe("Line one");
 });

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -95,6 +95,17 @@ export function EditorContextMenu({ store, state, selection }: Props) {
   const controller = useToolbarController(store, state, selection);
 
   useEffect(() => editorContextMenu.attachHost(), []);
+
+  const openedOn = useMemo(
+    () => (request ? store.document : null),
+    [request, store],
+  );
+  useEffect(() => {
+    if (!request) return;
+    return store.subscribe(() => {
+      if (store.document !== openedOn) editorContextMenu.close();
+    });
+  }, [request, store, openedOn]);
 
   // A right press on something already selected keeps the whole selection for
   // the menu: each object's own press handling would select it alone, and a
