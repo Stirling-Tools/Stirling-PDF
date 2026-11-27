@@ -72,7 +72,10 @@ const BAR_CONTROLS = [
   "pdf-editor-colour-menu",
   "pdf-editor-bold",
   "pdf-editor-italic",
+  "pdf-editor-underline",
   "pdf-editor-change-case",
+  "pdf-editor-text-style",
+  "pdf-editor-paragraph-menu",
 ];
 /** In the font menu the bar opens. */
 const FONT_MENU_CONTROLS = ["pdf-editor-font-family", "pdf-editor-font-weight"];
@@ -222,34 +225,38 @@ test.describe("PDF text editor - Bold toggle", () => {
     );
   });
 
-  test("Bold is off with a reason for a font that has no bold face", async ({
+  test("Bold draws a bold for a font that has no bold face, and takes it off again", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
-    await runBox(page, await runId(page, "הטלפון")).click();
+    const line = await runId(page, "הטלפון");
+    const font = await fontIdOf(page, line);
+    await runBox(page, line).click();
 
     const bold = page.getByTestId("pdf-editor-bold");
-    await expect(bold).toBeDisabled();
-    await bold.hover();
-    await expect(page.getByRole("tooltip")).toContainText(
-      "No bold version of this font",
-    );
+    await expect(bold).toBeEnabled();
+    await bold.click();
+    await expect(bold).toHaveAttribute("aria-pressed", "true");
+    expect(await fontIdOf(page, line)).toBe(font);
+
+    await bold.click();
+    await expect(bold).toHaveAttribute("aria-pressed", "false");
+    expect(await fontIdOf(page, line)).toBe(font);
   });
 
-  test("Bold onto a subset that lacks some letters draws them in the closest match and says so", async ({
+  test("Bold onto a subset that lacks some letters draws the whole line in one lookalike bold", async ({
     page,
   }) => {
     await openEditor(page, COLOURED_PDF);
     const line = await runId(page, "Total due today");
-    const before = await fontIdOf(page, line);
     await runBox(page, line).click();
 
     await page.getByTestId("pdf-editor-bold").click();
 
+    await expect.poll(() => fontIdOf(page, line)).toMatch(/Helvetica-Bold$/);
     await expect(
       page.getByText(/drawn in the closest matching font/),
-    ).toBeVisible();
-    await expect.poll(() => fontIdOf(page, line)).not.toBe(before);
+    ).toHaveCount(0);
     expect((await runs(page)).find((r) => r.id === line)?.text).toBe(
       "Total due today  by card",
     );

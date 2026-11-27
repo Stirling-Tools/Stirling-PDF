@@ -1,6 +1,9 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openFormatMenu,
+  openInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 const PARAGRAPH_PDF = path.join(
@@ -72,6 +75,20 @@ async function selectRun(page: Page, runId: string) {
     );
   }, runId);
   await expect(page.getByTestId("pdf-editor-underline")).toBeVisible();
+}
+
+async function paragraphChoice(page: Page, testId: string) {
+  await openFormatMenu(page, "paragraph");
+  const choice = page.getByTestId(testId);
+  await choice.click();
+  await choice.press("Escape");
+  await expect(choice).toHaveCount(0);
+}
+
+async function clickPageCorner(page: Page) {
+  const area = page.getByTestId("pdf-editor-page-0");
+  const box = (await area.boundingBox())!;
+  await area.click({ position: { x: box.width - 3, y: box.height - 3 } });
 }
 
 async function blurPage(page: Page) {
@@ -167,8 +184,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
     const before = await runOnPage(page, "^Report title$");
 
     await selectRun(page, before.id);
-    await page.getByTestId("pdf-editor-text-align").click();
-    await page.getByTestId("pdf-editor-text-align-center").click();
+    await paragraphChoice(page, "pdf-editor-text-align-center");
     await expect
       .poll(async () => {
         const run = await runOnPage(page, "^Report title$");
@@ -203,8 +219,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
     await blurPage(page);
     const run = await runOnPage(page, "^Moving title$");
     await selectRun(page, run.id);
-    await page.getByTestId("pdf-editor-text-align").click();
-    await page.getByTestId("pdf-editor-text-align-center").click();
+    await paragraphChoice(page, "pdf-editor-text-align-center");
     await expect
       .poll(async () => {
         const r = await runOnPage(page, "^Moving title$");
@@ -350,8 +365,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
     await openEditor(page, PARAGRAPH_PDF);
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
-    await page.getByTestId("pdf-editor-list").click();
-    await page.getByTestId("pdf-editor-list-bullet").click();
+    await paragraphChoice(page, "pdf-editor-list-bullet");
     await expect
       .poll(async () => (await runOnPage(page, "First line")).text)
       .toMatch(/^• First line/);
@@ -446,20 +460,17 @@ test.describe("PDF text editor: paragraph formatting", () => {
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
-    await page.getByTestId("pdf-editor-list").click();
-    await page.getByTestId("pdf-editor-list-bullet").click();
+    await paragraphChoice(page, "pdf-editor-list-bullet");
     await expect
       .poll(async () => (await runOnPage(page, "First line")).text)
       .toMatch(/^• First line/);
 
-    await page.getByTestId("pdf-editor-list").click();
-    await page.getByTestId("pdf-editor-list-number").click();
+    await paragraphChoice(page, "pdf-editor-list-number");
     await expect
       .poll(async () => (await runOnPage(page, "First line")).text)
       .toMatch(/^1\. First line/);
 
-    await page.getByTestId("pdf-editor-list").click();
-    await page.getByTestId("pdf-editor-list-number").click();
+    await paragraphChoice(page, "pdf-editor-list-number");
     await expect
       .poll(async () => (await runOnPage(page, "First line")).text)
       .toMatch(/^First line/);
@@ -472,8 +483,7 @@ test.describe("PDF text editor: paragraph formatting", () => {
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
 
-    await page.getByTestId("pdf-editor-line-spacing").click();
-    await page.getByTestId("pdf-editor-line-spacing-2").click();
+    await paragraphChoice(page, "pdf-editor-line-spacing-2");
     await expect
       .poll(async () => {
         const run = await runOnPage(page, "^First line");
@@ -524,9 +534,7 @@ test.describe("PDF text editor: new text on any page", () => {
     await openEditor(page, SMALL_PAGE_PDF);
     const box = await addTextAt(page, 40, 40);
     await page.keyboard.type("A heading long enough to need two lines");
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 3, y: 3 } });
+    await clickPageCorner(page);
     const typed = await runOnPage(page, "^A heading");
     await selectRun(page, typed.id);
 
@@ -549,9 +557,7 @@ test.describe("PDF text editor: new text on any page", () => {
     await openEditor(page, SCANNED_PDF);
     await addTextAt(page, 60, 60);
     await page.keyboard.type("Approved");
-    await page
-      .getByTestId("pdf-editor-page-0")
-      .click({ position: { x: 3, y: 3 } });
+    await clickPageCorner(page);
     await expect
       .poll(async () => (await runOnPage(page, "^Approved$")).text)
       .toBe("Approved");
@@ -639,7 +645,7 @@ test.describe("PDF text editor: pages and form fields", () => {
   }) => {
     await openEditor(page, MANY_PAGES_PDF);
     await pageAction(page, "pdf-editor-page-setup");
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByTestId("pdf-editor-page-setup-panel");
     await expect(dialog.locator('input[value="portrait"]')).toBeChecked();
     await expect(dialog.locator('input[value="LETTER"]')).toBeChecked();
     await dialog.getByText("Landscape", { exact: true }).click();
@@ -651,6 +657,32 @@ test.describe("PDF text editor: pages and form fields", () => {
 
     await pageAction(page, "pdf-editor-page-setup");
     await expect(dialog.locator('input[value="landscape"]')).toBeChecked();
+  });
+
+  test("a right-click on bare page changes that page, not the one in view", async ({
+    page,
+  }) => {
+    await openEditor(page, MANY_PAGES_PDF);
+    const before = (await docShape(page))!.pages;
+    const firstPage = page.getByTestId("pdf-editor-page-0");
+    await firstPage.click({ button: "right", position: { x: 4, y: 4 } });
+    await expect(page.getByTestId("pdf-editor-context-menu")).toBeVisible();
+    await page.getByTestId("pdf-editor-page-duplicate").click();
+    await expect
+      .poll(async () => (await docShape(page))?.pages, { timeout: 30_000 })
+      .toBe(before + 1);
+
+    await firstPage.click({ button: "right", position: { x: 4, y: 4 } });
+    await page.getByTestId("pdf-editor-page-setup").click();
+    const setup = page.getByTestId("pdf-editor-page-setup-panel");
+    await expect(setup.locator('input[value="portrait"]')).toBeChecked();
+    await setup.getByText("Landscape", { exact: true }).click();
+    await page.getByTestId("pdf-editor-page-setup-apply").click();
+    await expect(setup).toHaveCount(0);
+    await expect
+      .poll(async () => (await pageSizes(page))[0], { timeout: 30_000 })
+      .toEqual([792, 612]);
+    expect((await pageSizes(page))[1]).toEqual([612, 792]);
   });
 
   test("Undo takes back a page change after the edits made since", async ({
@@ -703,8 +735,7 @@ test.describe("PDF text editor: pages and form fields", () => {
     const para = await runOnPage(page, "^First line");
     await selectRun(page, para.id);
     await page.getByTestId("pdf-editor-underline").click();
-    await page.getByTestId("pdf-editor-text-align").click();
-    await page.getByTestId("pdf-editor-text-align-center").click();
+    await paragraphChoice(page, "pdf-editor-text-align-center");
     const formats = () =>
       page.evaluate(() => {
         const store = (
@@ -753,7 +784,7 @@ test.describe("PDF text editor: pages and form fields", () => {
     await openEditor(page, PARAGRAPH_PDF);
     const before = (await pageSizes(page))[0];
     await pageAction(page, "pdf-editor-page-setup");
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByTestId("pdf-editor-page-setup-panel");
     await dialog.getByText("A3", { exact: true }).click();
     await dialog.getByText("Portrait", { exact: true }).click();
     await page.getByTestId("pdf-editor-page-setup-apply").click();
@@ -774,7 +805,7 @@ test.describe("PDF text editor: pages and form fields", () => {
     const count = (await pageSizes(page)).length;
     expect(count).toBeGreaterThan(1);
     await pageAction(page, "pdf-editor-page-setup");
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByTestId("pdf-editor-page-setup-panel");
     await dialog.getByText("Letter", { exact: true }).click();
     await dialog.getByText("Landscape", { exact: true }).click();
     await dialog.getByText("All pages", { exact: true }).click();
@@ -937,7 +968,7 @@ test.describe("PDF text editor: page actions on a longer document", () => {
       ratio: 0.5,
     });
     await pageAction(page, "pdf-editor-page-setup");
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByTestId("pdf-editor-page-setup-panel");
     await dialog.getByText("Landscape", { exact: true }).click();
     await dialog.getByText("This page", { exact: true }).click();
     await page.getByTestId("pdf-editor-page-setup-apply").click();
@@ -965,7 +996,7 @@ test.describe("PDF text editor: saving a written document", () => {
     await page.keyboard.type("Signed off");
     await blurPage(page);
     await page.getByTestId("pdf-editor-save").click();
-    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0, {
+    await expect(page.getByTestId("pdf-editor-save")).toBeDisabled({
       timeout: 30_000,
     });
 

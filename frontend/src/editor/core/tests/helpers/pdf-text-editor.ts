@@ -217,18 +217,23 @@ export async function setViewerZoom(
   await expect(input).toHaveValue(`${percent}%`);
 }
 
+const FORMAT_MENU_INSIDE = {
+  font: "pdf-editor-font-family",
+  colour: "pdf-editor-outline-width",
+  paragraph: "pdf-editor-line-spacing-1",
+} as const;
+
 /**
- * The selection bar keeps font family and weight behind its font button, and
- * fill and outline behind its colour swatch. Opens that menu unless it is
- * already showing, so a spec can reach the controls inside it.
+ * The selection bar keeps font family and weight behind its font button, fill
+ * and outline behind its colour swatch, and alignment, lists and line spacing
+ * behind its paragraph button. Opens that menu unless it is already showing,
+ * so a spec can reach the controls inside it.
  */
 export async function openFormatMenu(
   page: Page,
-  menu: "font" | "colour",
+  menu: keyof typeof FORMAT_MENU_INSIDE,
 ): Promise<void> {
-  const inside = page.getByTestId(
-    menu === "font" ? "pdf-editor-font-family" : "pdf-editor-outline-width",
-  );
+  const inside = page.getByTestId(FORMAT_MENU_INSIDE[menu]);
   if (await inside.isVisible()) return;
   await page.getByTestId(`pdf-editor-${menu}-menu`).click();
   await expect(inside).toBeVisible();
