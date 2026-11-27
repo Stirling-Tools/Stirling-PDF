@@ -4,6 +4,7 @@ import {
   Box,
   ColorPicker,
   Group,
+  Popover,
   ScrollArea,
   Stack,
   Text,
@@ -11,7 +12,8 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { Modal } from "@editor/ui/Modal";
 import ToolStep from "@editor/components/tools/shared/ToolStep";
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
@@ -134,27 +136,32 @@ function BlockHeading({
   );
 }
 
-/** A secondary button for a document-wide change. */
+/** One icon button for every document-wide change, named by its tooltip. */
 function ChangeButton({
-  children,
+  icon = "pencil",
+  label,
   onClick,
   testId,
 }: {
-  children: ReactNode;
+  icon?: IconName;
+  label: string;
   onClick: () => void;
   testId: string;
 }) {
   return (
-    <Button
-      size="sm"
-      variant="secondary"
-      accent="neutral"
-      onClick={onClick}
-      data-testid={testId}
-      style={{ flexShrink: 0, alignSelf: "flex-start" }}
-    >
-      {children}
-    </Button>
+    <Tooltip label={label} withArrow>
+      <ActionIcon
+        size="sm"
+        variant="secondary"
+        accent="neutral"
+        onClick={onClick}
+        aria-label={label}
+        data-testid={testId}
+        style={{ flexShrink: 0 }}
+      >
+        <Icon name={icon} size={16} />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
@@ -189,6 +196,7 @@ function FontsBlock({
   if (fonts.length === 0) return null;
   return (
     <Stack gap="xs" data-testid="pdf-editor-fonts-panel">
+      <Group justify="space-between" wrap="nowrap" gap="sm">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -223,8 +231,8 @@ function FontsBlock({
         </Text>
         <CoveragePill fonts={fonts} />
       </button>
-      {open && (
         <ChangeButton
+          label={t("pdfTextEditor.document.changeAllFonts", "Change all fonts")}
           onClick={() =>
             setTarget({
               fontName: null,
@@ -232,10 +240,8 @@ function FontsBlock({
             })
           }
           testId="pdf-editor-all-fonts"
-        >
-          {t("pdfTextEditor.document.changeAll", "Change all")}
-        </ChangeButton>
-      )}
+        />
+      </Group>
       {open && (
         <ScrollArea.Autosize
           mah={FONT_LIST_MAX_HEIGHT}
@@ -409,11 +415,10 @@ function FontRow({
         )}
       </Stack>
       <ChangeButton
+        label={t("pdfTextEditor.document.replaceFont", "Replace this font")}
         onClick={() => onReplace(name)}
         testId={`pdf-editor-replace-font-${font.key}`}
-      >
-        {t("pdfTextEditor.document.replace", "Replace")}
-      </ChangeButton>
+      />
     </Group>
   );
 }
@@ -533,8 +538,8 @@ function FontChangeModal({
   );
 }
 
-/** The most-used colours shown as swatches; more than this reads as noise. */
-const MAX_SWATCHES = 12;
+/** Swatches that fit one row beside the "+N" chip in the narrowest panel. */
+const ROW_SWATCHES = 6;
 
 /** A colour whose change is being picked: one in use, or with no hex, all text. */
 interface ColourTarget {
@@ -559,16 +564,27 @@ function ColoursBlock({
       const hex = toCssHex(run.fill).toLowerCase();
       counts.set(hex, (counts.get(hex) ?? 0) + 1);
     }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, MAX_SWATCHES);
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [pages]);
   if (colours.length === 0) return null;
+  // One row however many colours there are: the most used, then the rest
+  // behind a chip, so a document in hundreds of colours cannot spill.
+  const shown =
+    colours.length > ROW_SWATCHES + 1
+      ? colours.slice(0, ROW_SWATCHES)
+      : colours;
+  const rest = colours.slice(shown.length);
+  const pick = (hex: string, label: string) =>
+    setTarget({ fromHex: hex, initial: hex, label });
   return (
     <Stack gap="xs" data-testid="pdf-editor-document-colours">
       <BlockHeading
         action={
           <ChangeButton
+            label={t(
+              "pdfTextEditor.document.changeAllColours",
+              "Change all colours",
+            )}
             onClick={() =>
               setTarget({
                 fromHex: null,
@@ -577,22 +593,21 @@ function ColoursBlock({
               })
             }
             testId="pdf-editor-all-colours"
-          >
-            {t("pdfTextEditor.document.changeAll", "Change all")}
-          </ChangeButton>
+          />
         }
       >
         {t("pdfTextEditor.document.colours", "Text colours")}
       </BlockHeading>
-      <Group gap={8}>
-        {colours.map(([hex, count]) => (
+      <Group gap={8} wrap="nowrap">
+        {shown.map(([hex, count]) => (
           <ColourSwatch
             key={hex}
             hex={hex}
             count={count}
-            onPick={(label) => setTarget({ fromHex: hex, initial: hex, label })}
+            onPick={(label) => pick(hex, label)}
           />
         ))}
+        {rest.length > 0 && <MoreColours colours={rest} onPick={pick} />}
       </Group>
       <ColourChangeModal
         target={target}
@@ -600,6 +615,64 @@ function ColoursBlock({
         onApply={(next) => onRecolour(target?.fromHex ?? null, next)}
       />
     </Stack>
+  );
+}
+
+/** The colours that did not fit the row, behind a "+N" chip. */
+function MoreColours({
+  colours,
+  onPick,
+}: {
+  colours: [string, number][];
+  onPick: (hex: string, label: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [opened, setOpened] = useState(false);
+  const label = t("pdfTextEditor.document.moreColours", {
+    defaultValue: "{{count}} more colours",
+    count: colours.length,
+  });
+  return (
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      position="bottom-end"
+      shadow="md"
+      withinPortal
+      trapFocus
+    >
+      <Popover.Target>
+        <Button
+          size="sm"
+          variant="tertiary"
+          accent="neutral"
+          onClick={() => setOpened((o) => !o)}
+          aria-label={label}
+          title={label}
+          data-testid="pdf-editor-more-colours"
+          style={{ flexShrink: 0, borderRadius: "999px" }}
+        >
+          +{colours.length}
+        </Button>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <ScrollArea.Autosize mah="12rem" type="auto" offsetScrollbars>
+          <Group gap={8} w={232} data-testid="pdf-editor-more-colours-list">
+            {colours.map(([hex, count]) => (
+              <ColourSwatch
+                key={hex}
+                hex={hex}
+                count={count}
+                onPick={(swatchLabel) => {
+                  setOpened(false);
+                  onPick(hex, swatchLabel);
+                }}
+              />
+            ))}
+          </Group>
+        </ScrollArea.Autosize>
+      </Popover.Dropdown>
+    </Popover>
   );
 }
 
@@ -629,6 +702,7 @@ function ColourSwatch({
         style={{
           width: "1.5rem",
           height: "1.5rem",
+          flexShrink: 0,
           padding: 0,
           borderRadius: "50%",
           background: hex,
@@ -745,9 +819,12 @@ function LockedRow({
           })}
         </Text>
       </Group>
-      <ChangeButton onClick={onUnlockAll} testId="pdf-editor-unlock-all">
-        {t("pdfTextEditor.document.unlockAll", "Unlock all")}
-      </ChangeButton>
+      <ChangeButton
+        icon="lock-open"
+        label={t("pdfTextEditor.document.unlockAll", "Unlock all")}
+        onClick={onUnlockAll}
+        testId="pdf-editor-unlock-all"
+      />
     </Group>
   );
 }
