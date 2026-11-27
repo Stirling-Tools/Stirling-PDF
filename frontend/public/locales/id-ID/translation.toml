@@ -12,9 +12,11 @@ comingSoon = "Segera hadir"
 confirm = "Konfirmasi"
 confirmClose = "Konfirmasi Penutupan"
 confirmCloseCancel = "Batal"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Tutup File"
 confirmCloseDiscard = "Abaikan perubahan dan tutup"
 confirmCloseMessage = "Apakah Anda yakin ingin menutup file ini?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Simpan dan tutup"
 confirmCloseSaveFailed_one = "Tersimpan dengan kesalahan. {{count}} file tidak dapat disimpan."
 confirmCloseSaveFailed_other = "Disimpan dengan kesalahan. {{count}} file tidak dapat disimpan."
@@ -44,7 +46,6 @@ fileSavedToDisk = "File disimpan ke disk"
 filesSelected = "{{count}} berkas"
 font = "Jenis huruf"
 fontSizeTooltip = "Ukuran teks nomor halaman dalam poin. Angka yang lebih besar membuat teks lebih besar."
-fontTypeTooltip = "Keluarga font untuk nomor halaman. Pilih sesuai gaya dokumen Anda."
 green = "Hijau"
 help = "Bantuan"
 incorrectPasswordMessage = "Kata sandi saat ini salah."
@@ -249,9 +250,7 @@ image = "Unggah"
 text = "Teks"
 
 [addImage.step]
-createDesc = "Unggah gambar yang ingin Anda tambahkan"
 place = "Tempatkan gambar"
-placeDesc = "Klik pada PDF untuk menambahkan gambar Anda"
 
 [addImage.steps]
 configure = "Konfigurasi Gambar"
@@ -276,7 +275,7 @@ fontName = "Nama Fonta"
 fontSize = "Ukuran Fonta"
 numberPagesDesc = "mis., 1,3,5-8 atau biarkan kosong untuk semua halaman"
 pagePreviewAlt = "Pratinjau halaman"
-pagesAndStarting = "Halaman & Nomor Awal"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Posisi & Halaman"
 preview = "Pemilihan Posisi"
 previewDisclaimer = "Pratinjau bersifat perkiraan. Hasil akhir dapat berbeda karena metrik font PDF."
@@ -300,6 +299,7 @@ title = "Hasil Penomoran Halaman"
 
 [addPassword]
 desc = "Enkripsi dokumen PDF Anda dengan kata sandi."
+submit = "Add Password"
 tags = "enkripsi,kata sandi,kunci,amankan,lindungi,keamanan,enkripsi,pengamanan,rahasia,pribadi,batasi akses"
 title = "Tambahkan kata sandi"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Pratinjau stempel"
 tags = "stempel,tanda,segel,disetujui,ditolak,rahasia,alat stempel,stempel karet,stempel tanggal,stempel persetujuan,diterima,batal,salinan,asli"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Klik untuk memperluas"
 customColor = "Warna Teks Kustom"
 customDateDesc = "Format kustom"
 customPosition = "Seret stempel ke lokasi yang diinginkan di jendela pratinjau."
 dateDesc = "Tanggal saat ini"
 datetimeDesc = "Tanggal dan waktu digabungkan"
 dateTimeVars = "Tanggal & Waktu"
-dynamicVariables = "Variabel Dinamis"
 examples = "Contoh"
 filenameDesc = "Nama file tanpa ekstensi"
 filenameFullDesc = "Nama file dengan ekstensi"
@@ -365,6 +364,8 @@ noStampSelected = "Tidak ada stempel yang dipilih. Kembali ke Langkah 1."
 opacity = "Transparansi"
 otherVars = "Lainnya"
 pageNumberDesc = "Nomor halaman saat ini"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Informasi Halaman"
 position = "Posisi"
 positionAndFormatting = "Posisi & Pemformatan"
@@ -378,9 +379,10 @@ quickPosition = "Pilih posisi pada halaman untuk menempatkan stempel."
 rotation = "Rotasi"
 selectedImageAlt = "Gambar stempel yang dipilih"
 selectTemplate = "Pilih templat..."
+size = "Size"
 stampSetup = "Pengaturan Stempel"
 stampText = "Teks Stampel"
-stampTextDescription = "Gunakan variabel dinamis di bawah. Gunakan @@ untuk @ literal. Gunakan \\n untuk baris baru."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Jenis Stampel"
 submit = "Tambahkan Stempel"
 tags = "Tanda tangan, tambahkan gambar, posisikan gambar di tengah, air tinta, PDF, embedding, customisasi"
@@ -389,7 +391,6 @@ title = "Stampel PDF"
 totalPagesDesc = "Jumlah total halaman"
 useTemplate = "Gunakan Templat"
 uuidDesc = "Pengidentifikasi unik pendek (8 karakter)"
-variablesHelp = "Klik variabel apa pun untuk memasukkannya ke teks stempel Anda. Gunakan @@ untuk @ literal."
 yearMonthDayDesc = "Bagian tanggal individual"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Terjadi kesalahan saat menambahkan stempel ke PDF."
 
 [AddStampRequest.results]
 title = "Hasil Stempel"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Kustom"
@@ -410,6 +417,11 @@ legal-footer = "Footer Hukum"
 page-numbers = "Nomor Halaman"
 pageNumberFooter = "Footer Nomor Halaman"
 timestamp = "Stempel waktu"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Terapkan Teks"
@@ -462,9 +474,7 @@ image = "Unggah"
 text = "Teks"
 
 [addText.step]
-createDesc = "Masukkan teks yang ingin Anda tambahkan"
 place = "Tempatkan teks"
-placeDesc = "Klik pada PDF untuk menambahkan teks Anda"
 
 [addText.steps]
 configure = "Atur Teks"
@@ -1233,6 +1243,18 @@ label = "Buat Ulang saat Mulai"
 description = "Jumlah hari sertifikat akan berlaku"
 label = "Masa Berlaku Sertifikat (hari)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Direktori yang boleh dibaca dan ditulis oleh sumber folder dan output folder. Ini adalah batas keamanan: automations tidak pernah dapat diarahkan ke path server di luar daftar ini."
 securityNote = "Biarkan kosong untuk menonaktifkan sumber dan output folder sepenuhnya. Direktori konfigurasi milik Stirling selalu tidak boleh diakses."
@@ -1456,7 +1478,9 @@ label = "Nama Pengguna SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Klien mengirim kunci API Stirling di header X-API-KEY (atau Authorization: Bearer <key>). Kunci dipetakan ke pengguna Stirling pemiliknya - hanya akun yang telah disediakan yang dapat masuk, dan tindakan diaudit sebagai pengguna tersebut. Kelola kunci di Akun > Kunci API."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Ekspos alat PDF dan agen AI Stirling ke klien MCP melalui endpoint yang dilindungi OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Server MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Alat yang diizinkan"
 description = "Id operasi yang disembunyikan dari MCP (dipisahkan koma atau spasi), mis. add-password remove-password. Biarkan kosong untuk mengekspos semua alat yang diaktifkan."
 label = "Alat yang diblokir"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Saat nonaktif (default), tidak ada endpoint /mcp, metadata, atau MCP beans yang dimuat."
 label = "Aktifkan Server MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Masukkan OAuth issuer + resource ID Anda di atas, Simpan, lalu restart."
 step1ApiKey = "Buat kunci API di Akun > Kunci API (setiap pengguna menggunakan miliknya sendiri)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Di klien MCP Anda, tambahkan"
 step2b = "server yang menunjuk ke:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Klien otomatis menemukan OAuth dari:"
 step3ApiKey = "Kirim kunci dalam header"
 step3ApiKeyb = "(atau Authorization: Bearer <key>). Tidak ada OAuth atau penemuan metadata yang digunakan."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Setujui proses masuk; klien mencoba lagi dengan token. Alat muncul dikelompokkan: convert, pages, misc, security, ai."
 step4ApiKey = "Alat muncul dikelompokkan: convert, pages, misc, security, ai - dan setiap panggilan diaudit sebagai pemilik kunci."
 tip = "Tips: daftarkan resource ID sebagai audience yang diizinkan di IdP Anda. Diuji dengan MCP Inspector dan Claude Desktop."
 tipApiKey = "Tips: mode kunci API tidak memerlukan IdP eksternal - paling sederhana untuk self-host. Kunci dipetakan ke pengguna Stirling pemiliknya."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Hubungkan klien MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Ditemukan otomatis dari issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (kunci per pengguna Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth memerlukan IdP eksternal. Kunci API menggunakan kunci API per pengguna Stirling (X-API-KEY) - paling sederhana untuk self-host."
 label = "Mode autentikasi"
 oauth = "OAuth 2.1 (IdP eksternal)"
@@ -1515,6 +1563,18 @@ label = "ID Sumber Daya"
 [admin.settings.mcp.scopes]
 description = "Wajibkan mcp.tools.read untuk operasi baca dan mcp.tools.write untuk operasi tulis/AI."
 label = "Terapkan OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim yang dicocokkan dengan nama pengguna Stirling (mis. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Apakah Anda ingin membantu membuat Stirling PDF lebih baik?"
 tags = "anotasi,sorot,gambar,markup,komentar,catatan,tinjau,redline,umpan balik,alat markup,catatan tempel,bentuk,panah,kotak teks,freehand"
 
 [annotation]
-alignCenter = "Ratakan tengah"
-alignLeft = "Ratakan kiri"
-alignRight = "Ratakan kanan"
 annotationStyle = "Gaya anotasi"
 backgroundColor = "Warna latar"
 borderOff = "Bingkai: Nonaktif"
@@ -2016,18 +2073,61 @@ underline = "Garis bawah"
 undoDelete = "Urungkan"
 width = "Lebar"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Editor PDF gratis dan privat yang dapat Anda jalankan di infrastruktur apa pun."
 
 [appBanner]
 dismiss = "Tutup"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Tambahkan lampiran..."
 convertToPdfA3b = "Konversi ke PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b adalah format arsip yang memastikan pelestarian jangka panjang. Format ini memungkinkan penyematan format file apa pun sebagai lampiran. Konversi memerlukan Ghostscript dan mungkin memakan waktu lebih lama untuk file besar."
-convertToPdfA3bTooltipHeader = "Tentang Konversi PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Apa fungsinya"
 discardChanges = "Buang"
 downloadSingle = "Unduh lampiran"
 duplicateName = "Lampiran bernama '{{name}}' sudah ada."
@@ -2208,7 +2308,6 @@ guest = "Tamu"
 user = "Pengguna"
 
 [auto-rename]
-description = "Secara otomatis menemukan judul dari konten PDF Anda dan menggunakannya sebagai nama file."
 submit = "Ganti Nama Otomatis"
 tags = "deteksi otomatis, berbasis tajuk, atur, beri label ulang"
 title = "Ganti Nama Otomatis"
@@ -2218,21 +2317,6 @@ failed = "Terjadi kesalahan saat mengganti nama PDF secara otomatis."
 
 [auto-rename.results]
 title = "Hasil Ganti Nama Otomatis"
-
-[auto-rename.settings]
-title = "Tentang"
-
-[auto-rename.tooltip.description]
-title = "Fungsinya"
-
-[auto-rename.tooltip.header]
-title = "Cara Kerja Ganti Nama Otomatis"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Mencari teks yang tampak sebagai judul atau tajuk"
-bullet2 = "Membuat nama file yang bersih dan valid dari judul yang terdeteksi"
-bullet3 = "Mempertahankan nama asli jika tidak ditemukan judul yang sesuai"
-title = "Penggantian Nama Cerdas"
 
 [autoFormDetection]
 loading = "Mendeteksi bidang formulir..."
@@ -2327,6 +2411,9 @@ remove = "Hapus alat"
 selected = "Alat Terpilih"
 selectTool = "Pilih alat..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Batal"
 confirm = "Kembali"
@@ -2360,6 +2447,10 @@ title = "Jalankan Otomatisasi"
 [automate.selection]
 title = "Pilihan Otomatisasi"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Buat Otomatisasi Baru"
 
@@ -2371,6 +2462,7 @@ title = "Disarankan"
 
 [automate.sequence]
 finish = "Selesai"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Jalankan Otomatisasi"
 running = "Menjalankan Otomatisasi..."
 signInToRun = "Masuk untuk menjalankan otomatisasi."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Alur Kerja Keamanan"
 secureWorkflowDesc = "Mengamankan dokumen PDF dengan menghapus konten berpotensi berbahaya seperti JavaScript dan file tersemat, lalu menambahkan perlindungan kata sandi untuk mencegah akses tidak sah. Kata sandi diatur ke 'password' secara default."
 
 [autoRename]
-description = "Alat ini akan secara otomatis mengganti nama file PDF berdasarkan kontennya. Ini menganalisis dokumen untuk menemukan judul yang paling sesuai dari teks."
 tags = "deteksi otomatis,berbasis header,atur,label ulang,ganti nama otomatis,penggantian nama otomatis,ganti nama pintar,ganti nama berdasarkan konten,nama file,penamaan file,deteksi judul"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf, membagi, dokumen, organisasi"
 [autoSplitPDF]
 dividerDownload2 = "Unduh 'Pembagi Pembagi Otomatis (dengan instruksi).pdf'"
 duplexMode = "Mode Dupleks (Pemindaian depan dan belakang)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "Berbasis QR, pisahkan, pindai segmen, atur"
 title = "PDF Pisah Otomatis"
 
@@ -2528,9 +2620,6 @@ tooltip = "Menambahkan batas di sekitar setiap bagian halaman untuk membantu pem
 [bookletImposition.addGutter]
 label = "Tambahkan margin gutter"
 tooltip = "Menambahkan ruang margin dalam untuk penjilidan"
-
-[bookletImposition.advanced]
-toggle = "Opsi Lanjutan"
 
 [bookletImposition.doubleSided]
 label = "Pencetakan dua sisi"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Pilih File JKS"
 chooseP12File = "Pilih File PKCS12"
 choosePfxFile = "Pilih File PFX"
 choosePrivateKey = "Pilih File Kunci Privat"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Ditolak"
 fetchFailed = "Gagal memuat data penandatanganan"
 finalized = "Difinalisasi"
 location = "Lokasi"
-logoTitle = "Logo"
-name = "Nama"
-noLogo = "Tanpa Logo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Nomor Halaman"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Kata Sandi Sertifikat"
 passwordOptional = "Biarkan kosong jika tanpa kata sandi"
 pemCertificateLabel = "Sertifikat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Kunci privat (.pem / .key)"
 pending = "Tertunda"
 readyToFinalize = "Siap difinalisasi"
 reason = "Alasan"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Menggunakan sertifikat server - tidak perlu file atau kata sandi"
-showLogo = "Tampilkan Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} tanda tangan"
 tags = "autentikasi,PEM,P12,resmi,enkripsi,tanda tangan,sertifikat,PKCS12,JKS,server,manual,otomatis"
 title = "Penandatanganan Sertifikat"
@@ -2738,12 +2828,45 @@ viewed = "Dilihat"
 
 [certSign.appearance]
 invisible = "Tidak terlihat"
+showOnPage = "Show signature on page"
 stepTitle = "Tampilan Tanda Tangan"
 visibility = "Visibilitas"
 visible = "Terlihat"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Detail Tanda Tangan"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Tentang Tampilan Tanda Tangan"
@@ -2762,9 +2885,6 @@ bullet3 = "Pilih halaman tempat menaruh tanda tangan"
 bullet4 = "Dapat menyertakan logo opsional"
 text = "Menampilkan blok tanda tangan pada PDF dengan nama Anda, tanggal, dan detail opsional. Berguna ketika Anda ingin pembaca jelas melihat bahwa dokumen telah ditandatangani."
 title = "Tanda Tangan Terlihat"
-
-[certSign.certFiles]
-stepTitle = "File Sertifikat"
 
 [certSign.certType.tooltip.convert]
 text = "Konversi file Anda ke Java keystore (.jks) dengan keytool, lalu pilih JKS."
@@ -2786,6 +2906,7 @@ text = "Pilih format yang sesuai dengan file sertifikat Anda:"
 title = "Opsi mana yang harus saya gunakan?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Format Sertifikat"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Perangkat ini"
 [certSign.error]
 failed = "Terjadi kesalahan saat memproses tanda tangan."
 
-[certSign.format]
-pkcs11 = "Token USB"
-windowsStore = "Penyimpanan sertifikat Windows"
-
 [certSign.hardware]
-certificate = "Sertifikat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Path driver kustom…"
+digitalId = "Digital ID"
 driver = "Driver PKCS#11"
 driverPath = "Path pustaka driver"
 driverPathPlaceholder = "Path lengkap ke driver PKCS#11 Anda (.dll, .so atau .dylib)"
-expired = "kedaluwarsa"
-expires = "berlaku hingga"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Daftar sertifikat"
-loading = "Membaca sertifikat…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Tidak ditemukan sertifikat penandatanganan"
 noDriver = "Tidak ada driver PKCS#11 terdeteksi. Instal driver token Anda (mis. OpenSC), lalu buka kembali ini - atau masukkan path driver secara manual di bawah."
-notYetValid = "belum berlaku"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN Token"
 pkcs11Hint = "Pilih driver PKCS#11 untuk token Anda, masukkan PIN, lalu daftar sertifikat pada token."
 pkcs11LoadError = "Tidak dapat membaca sertifikat dari token. Periksa PIN dan driver."
-refresh = "Segarkan"
-selectCert = "Pilih sertifikat"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Pilih driver"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (opsional)"
-windowsHint = "Pilih sertifikat dari penyimpanan sertifikat Windows Anda. Penandatanganan menggunakan kunci pada kartu/token Anda - Windows akan meminta PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Tidak dapat membaca penyimpanan sertifikat Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Patokan umum"
 device = "Perangkat ini"
 noOtherSources = "Tidak ada sumber sertifikat lain yang tersedia."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Sumber sertifikat"
 upload = "Unggah"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Perbarui nama pengguna Anda. Anda akan keluar setelah memperbarui."
@@ -3069,7 +3205,6 @@ placeholder = "Pembuat dokumen"
 
 [changeMetadata.customFields]
 add = "Tambah Bidang"
-description = "Tambahkan bidang metadata kustom ke dokumen"
 key = "Kunci"
 keyPlaceholder = "Kunci kustom"
 remove = "Hapus"
@@ -3135,10 +3270,6 @@ bullet1 = "Tanggal Pembuatan: Kapan dokumen asli dibuat"
 bullet2 = "Tanggal Modifikasi: Kapan terakhir diubah"
 text = "Kapan dokumen dibuat dan diubah."
 title = "Bidang Tanggal"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Penghapusan metadata lengkap untuk memastikan privasi."
-title = "Hapus Metadata yang Ada"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Judul: Nama atau tajuk dokumen"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Anda telah mencapai batas penggunaan. Periksa opsi paket 
 
 [checkAccessibility]
 aboutRow = "Tentang {{label}}"
-checking = "Memeriksa..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Unduh laporan aksesibilitas"
 fileFailed = "gagal"
+noFiles = "Select a PDF to check it."
 pickFile = "Tampilkan hasil untuk"
-submit = "Periksa aksesibilitas"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Teks alternatif"
@@ -3286,10 +3417,17 @@ structure = "Tag memberi tahu pembaca layar bagian apa dari suatu halaman, seper
 [checkAccessibility.checks]
 label = "{{passed}} dari {{total}} pemeriksaan lulus"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Laporan aksesibilitas tidak dapat dibuat. Coba lagi."
 fileTitle = "File ini tidak dapat diperiksa"
 partial = "Beberapa file tidak dapat diperiksa."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Mendeklarasikan PDF/UA"
@@ -3312,6 +3450,21 @@ title = "File memiliki judul di metadatanya."
 [checkAccessibility.figures]
 summary_one = "{{count}} gambar memerlukan deskripsi (halaman {{pages}})"
 summary_other = "{{count}} gambar memerlukan deskripsi (halaman {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Berlaku untuk"
@@ -3465,19 +3618,7 @@ checking = "Memeriksa {{current}} dari {{total}}..."
 complete = "Pemeriksaan selesai"
 
 [checkAccessibility.steps]
-results = "Hasil"
 standard = "Standar"
-
-[checkAccessibility.tooltip.header]
-title = "Standar mana yang akan diperiksa"
-
-[checkAccessibility.tooltip.ua1]
-text = "Versi pertama PDF/UA, diterbitkan pada 2012 sebagai ISO 14289-1, untuk file PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Versi yang lebih baru, diterbitkan pada 2024 sebagai ISO 14289-2, untuk file PDF 2.0. File PDF 1.7 yang diperiksa terhadapnya akan gagal pada aturan yang hanya berlaku untuk PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotasi {{n}}"
@@ -3868,6 +4009,7 @@ title = "Pilih warna"
 transparent = "Transparan"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Tindakan"
 back = "Kembali"
 cancel = "Batal"
@@ -4206,7 +4348,9 @@ title = "Segarkan Kunci API"
 warning = "⚠️ Peringatan: Tindakan ini akan menghasilkan kunci API baru dan membuat kunci sebelumnya tidak valid."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) memungkinkan asisten AI seperti Claude menggunakan alat Stirling PDF Anda secara langsung. Hubungkan klien sekali dan asisten Anda dapat mengonversi, mengedit, mengamankan, dan memproses dokumen atas nama Anda."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Pengguna tamu tidak dapat menghubungkan klien MCP. Buat akun untuk menggunakan server MCP dan izinkan asisten AI Anda menjalankan alat Stirling PDF atas nama Anda."
 navLabel = "Server MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Salin {{label}}"
 tooltipCopied = "{{label}} disalin"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Endpoint MCP Anda"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Tambahkan ke"
 hint = "Pilih klien Anda, tempel snippet ke file yang ditampilkan, lalu restart. Anda akan login dengan akun Stirling Anda pada penggunaan pertama - tidak ada kunci yang perlu disalin."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Hubungkan asisten AI Anda"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Pertahankan Rasio Aspek"
 maxAttachmentSize = "Ukuran lampiran maksimum (MB)"
 multiple = "Banyak"
 optimizeForEbook = "Optimalkan PDF untuk pembaca ebook (menggunakan Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Keluaran"
-outputFormat = "Format Keluaran"
-pdfaAccessibleFormat = "{{format}} (dapat diakses)"
-pdfaDigitalSignatureWarning = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
-pdfaNote = "PDF/A-1b lebih kompatibel, PDF/A-2b mendukung lebih banyak fitur, PDF/A-3b mendukung file yang disematkan."
-pdfaOptions = "Opsi PDF/A"
 pdfOptions = "Opsi PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Pengaturan"
 signInToUse = "Masuk untuk menggunakan"
 single = "Tunggal"
 sourceFormatPlaceholder = "Format sumber"
-strictMode = "Mode Ketat"
-strictModeDesc = "Kesalahan jika konversi tidak sempurna (menggunakan verifikasi VeraPDF)"
 svgPdfOptions = "Opsi SVG ke PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "File SVG dirender sebagai grafik vektor untuk output yang tajam pada resolusi apa pun. Dimensi dari SVG menentukan ukuran halaman PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Tingkat Zoom"
 
 [convert.ebookOptions]
 includePageNumbers = "Sertakan nomor halaman"
-includePageNumbersDesc = "Tambahkan nomor halaman ke PDF yang dihasilkan"
 includeTableOfContents = "Sertakan daftar isi"
-includeTableOfContentsDesc = "Tambahkan daftar isi yang dihasilkan ke PDF hasil"
 optimizeForEbookPdf = "Optimalkan untuk pembaca eBook"
 optimizeForEbookPdfDesc = "Optimalkan PDF untuk membaca eBook (ukuran file lebih kecil, perenderan lebih baik pada perangkat eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Deteksi bab"
 detectChaptersDesc = "Deteksi judul yang tampak seperti bab dan sisipkan jeda halaman EPUB"
 kindleEink = "Kindle e-Ink (teks dioptimalkan)"
 outputFormat = "Format keluaran"
-outputFormatDesc = "Pilih format keluaran untuk eBook"
 tabletPhone = "Tablet/Ponsel (dengan gambar)"
 targetDevice = "Perangkat target"
 targetDeviceDesc = "Pilih profil keluaran yang dioptimalkan untuk perangkat pembaca"
@@ -4469,8 +4619,24 @@ description = "Cookies ini penting agar website berfungsi dengan benar. Cookies 
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Judul halaman sampul"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "Portfolio PDF"
 description = "Setiap file yang dipilih disimpan utuh di dalam PDF baru, apa pun jenisnya. Pembaca yang tidak mendukung portfolio menampilkan halaman sampul dengan file terlampir."
 goToFileEditor = "Buka editor file"
@@ -4488,6 +4654,9 @@ title = "Apa fungsinya"
 
 [createPortfolio.tooltip.header]
 title = "Tentang Portfolio PDF"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Pangkas otomatis ruang kosong"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Akses clipboard tidak tersedia di browser ini."
 export = "Ekspor bookmark"
 exportClipboard = "Salin JSON ke clipboard"
 exportJson = "Unduh JSON"
+exportMenu = "Export"
 importClipboard = "Tempel JSON dari clipboard"
 importJson = "Impor JSON"
+importMenu = "Import"
 loadFromPdf = "Muat dari PDF terpilih"
 noFile = "Pilih PDF untuk mengekstrak bookmark yang ada."
 selectedFile = "Dimuat dari {{file}}"
-source = "Muat bookmark"
 
 [editTableOfContents.editor]
 addTopLevel = "Tambah bookmark level atas"
@@ -4740,6 +4910,9 @@ replaceExisting = "Ganti bookmark yang ada (hapus centang untuk menambahkan)"
 replaceExistingHint = "Saat dinonaktifkan, outline baru ditambahkan setelah bookmark saat ini."
 title = "Bookmark & outline"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Ganti PDF"
 filePrompt = "Pilih PDF dari pustaka Anda atau unggah yang baru untuk memulai."
@@ -4753,7 +4926,6 @@ title = "Buka alat untuk mulai mengedit"
 [encryptedPdfUnlock]
 actionIgnored = "Pembatasan {{action}} diabaikan"
 actionUnlocked = "{{action}} dibuka untuk sesi ini"
-advanced = "Lanjutan"
 allowed = "Diizinkan"
 annotations = "Anotasi"
 authoriseAction = "PDF ini memerlukan izin untuk menggunakan {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Dibatasi"
 restrictedActions = "tindakan yang dibatasi"
 restrictedOperation = "Tindakan ini memerlukan kata sandi izin."
 retainOwnerVerification = "Verifikasi kata sandi izin untuk mempertahankannya tanpa perubahan saat menghapus kata sandi pembuka. Ini tidak akan menghapusnya."
-saveProtection = "Simpan perlindungan"
 securityChangeFailed = "Tidak dapat mengubah perlindungan. Periksa kata sandi izin dan pengaturan keamanan baru."
 sessionDetails = "Dibuka untuk sesi ini. PDF tetap terlindungi."
 sessionDetailsLabel = "Tentang pembukaan kunci sesi"
@@ -4871,7 +5042,6 @@ title = "Terjadi kesalahan"
 tryAgain = "Coba Lagi"
 
 [extractImages]
-allowDuplicates = "Simpan Gambar Duplikat"
 selectText = "Pilih format gambar yang akan dikonversi"
 submit = "Ekstrak"
 tags = "gambar, foto, simpan, arsip, zip, tangkap, ambil"
@@ -4927,12 +5097,15 @@ closeFile = "Tutup file"
 
 [fileEditor]
 closedFile = "Menutup {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File diurutkan ulang"
 filesReordered_other = "{{count}} file diurutkan ulang"
 loadedFromStorage_one = "Memuat {{count}} file dari penyimpanan"
 loadedFromStorage_other = "Memuat {{count}} file dari penyimpanan"
 loadFromStorageFailed = "Gagal memuat beberapa file dari penyimpanan"
 pinnedFile = "Menyematkan {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Menyimpan dan menutup {{name}}"
 saveFailed = "Penyimpanan gagal"
 unpinnedFile = "Melepas sematan {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Terkunci"
 previewOf = "Pratinjau {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Tambahkan file"
 created = "Dibuat"
 notIncludedInToolRun = "Tidak disertakan dalam eksekusi tool ini"
 size = "Ukuran File"
 title = "File"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Tidak ada file yang tersedia"
@@ -5104,6 +5286,7 @@ subtitle = "Tampilkan atau sembunyikan kategori di sidebar file."
 title = "Kategori sidebar"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Batal"
 error = "Tidak dapat mengganti nama file."
 illegalCharacters = "Nama file tidak boleh berisi \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Hapus bidang"
 
 [formFill.editor]
 action = "Tindakan tombol"
-actionHelp = "Apa yang dilakukan tombol saat diklik."
 actionNone = "Tidak ada"
 actionPrint = "Cetak"
 actionReset = "Reset formulir"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Membatasi jumlah karakter yang muat, digambar sebagai kotak-kot
 multiline = "Multi-baris"
 multilineHelp = "Memungkinkan lebih dari satu baris teks dan membungkus di tepi bidang."
 multiSelect = "Izinkan beberapa pilihan"
-multiSelectHelp = "Memungkinkan lebih dari satu opsi dipilih sekaligus."
 name = "Nama bidang"
 nameHelp = "Nama internal bidang. Digunakan saat mengekspor data atau mengisi formulir dari sistem lain, jadi buat tetap unik dan tanpa spasi."
 optionGap = "Jarak opsi"
@@ -5902,6 +6083,11 @@ title = "Menyesuaikan Warna/Kontras"
 desc = "Sorot, gambar, tambahkan catatan dan bentuk di penampil"
 tags = "anotasi,sorot,gambar,markup,komentar,catatan,tinjau,redline,umpan balik,alat markup,catatan tempel,bentuk,panah,kotak teks,bebas tangan"
 title = "Anotasi"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Deteksi bidang formulir secara otomatis dengan AI dan buat PDF Anda dapat diisi."
@@ -6405,6 +6591,9 @@ sort = "Urutkan"
 [merge.sortFiles]
 title = "Urutkan File"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Ringkasan Pengaturan Gabung"
 
@@ -6548,6 +6737,9 @@ title = "Autentikasi Gagal"
 message = "Anda dapat menutup jendela ini dan kembali ke Stirling PDF."
 title = "Autentikasi Berhasil"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Izinkan akses"
 approving = "Mengizinkan..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Mengembalikan Anda ke aplikasi..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} ingin mengakses akun Stirling PDF Anda"
 scopesIntro = "Ini akan mengizinkan {{app}} untuk:"
 signedInAs = "Login sebagai {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Login untuk melanjutkan"
 signInPrompt = "Login ke akun Stirling PDF Anda untuk melanjutkan menghubungkan aplikasi."
 title = "Authorise access"
 unknownApp = "Aplikasi pihak ketiga"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Bertindak sebagai Anda - semua yang dilakukan {{app}} berjalan di bawah akun Anda dan dihitung terhadap penggunaan Anda"
@@ -6572,9 +6767,12 @@ tools = "Menggunakan alat Stirling PDF atas nama Anda - mengonversi, mengedit, m
 
 [oauthConsent.scope]
 email = "Melihat alamat email Anda"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Mengonfirmasi identitas Anda"
 phone = "Melihat nomor telepon Anda"
 profile = "Melihat informasi profil dasar Anda"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Memindai dan mendeteksi teks dari gambar di dalam PDF dan menambahkannya kembali sebagai teks."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Anda akan menjadi anggota tim dan kehilangan akses pemilik."
 [pageEdit]
 deselectAll = "Tidak ada"
 selectAll = "Centang Semua"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Ekstrak Halaman"
@@ -7577,6 +7779,8 @@ stamp = "Anotasi stempel - bukan teks halaman, jadi tidak dapat diedit di sini"
 widget = "Bidang formulir - bukan teks halaman, jadi tidak dapat diedit di sini"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Edit"
 markTagged = "Tandai sebagai sepenuhnya bertagar"
 matchScanFont = "Samakan teks hasil pindai dengan {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Tag otomatis halaman"
 typeInto = "Ketik ke {{run}}"
 ungroupParagraph = "Pisahkan grup paragraf {{run}}"
 unmarkTagged = "Tandai sebagai tidak sepenuhnya bertagar"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Bungkus {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Buang perubahan yang belum disimpan?"
 
 [pdfTextEditor.error]
 decodeImage = "Tidak dapat mendekode gambar yang dipilih."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Tidak dapat menduplikasi teks ini: tidak ada font yang tersedia yang dapat menampilkan semua hurufnya."
 formLiftChangesDrawing = "Tidak dapat mengedit ini: ini digambar sebagai bagian dari grup dengan pengaturan pemotongan atau grafis yang tidak dapat dipertahankan editor saat diubah."
 insertImage = "Tidak dapat menyisipkan gambar yang dipilih."
 needsShaping = "Editor belum dapat menampilkan huruf sambung dan tanda vokal skrip ini dengan benar, sehingga perubahan ini tidak dilakukan."
+reopenLost = "Open again"
 replaceClippedImage = "Tidak dapat mengganti gambar ini: gambar dipotong, dan penggantinya akan menampilkan bagian yang disembunyikan oleh pemotongan."
 scanOffInk = "Tidak dapat mengedit teks ini: kata yang dikenali tidak sejajar dengan hasil pindai. Jalankan OCR lagi."
 unsafeRtlEdit = "Tidak dapat melakukan pengeditan ini: editor tidak dapat menggambar ulang teks kanan-ke-kiri pada baris ini tanpa mengubahnya."
@@ -7616,6 +7823,7 @@ pngFileType = "Gambar PNG"
 close = "Tutup bilah pencarian"
 count = "{{current}} dari {{total}}"
 findPlaceholder = "Cari"
+hideReplace = "Hide replace"
 ignoreAccents = "Abaikan aksen"
 matchCase = "Cocokkan huruf besar/kecil"
 next = "Kecocokan berikutnya"
@@ -7625,6 +7833,7 @@ replace = "Ganti"
 replaceAll = "Ganti semua"
 replaced = "{{count}} diganti"
 replacePlaceholder = "Ganti dengan"
+showReplace = "Show replace"
 wholeWord = "Seluruh kata"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Tautan ini tidak dapat diberi tag."
 cannotTagPage = "Konten halaman ini tidak dapat diberi tag."
 contentGroup = "Konten"
 customTag = "{{role}} (tag khusus)"
-decorativeInfo = "Pembaca layar melewati gambar dekoratif. Gunakan untuk bingkai, latar belakang, dan gambar lain yang tidak memuat informasi."
-decorativeLabel = "Gambar dekoratif"
-description = "Deskripsi gambar"
-descriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Tag tidak dapat diedit dalam file terenkripsi"
 figureDescription = "Deskripsi gambar"
 figureDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti gambar."
-formFieldDescription = "Deskripsi bidang"
 formulaDescription = "Deskripsi rumus"
 formulaDescriptionInfo = "Pembaca layar membacakan ini sebagai pengganti rumus. Ucapkan seperti saat diucapkan lantang, misalnya \"x kuadrat ditambah satu\"."
 heading = "Aksesibilitas"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokumen sepenuhnya bertagar"
 markedTaggedHint = "Memberi tahu pembaca PDF untuk menggunakan tag aksesibilitas. Centang ini setelah semuanya ditandai."
 markedWithUntagged = "Beberapa konten tidak memiliki tag, sehingga pembaca layar mungkin melewatinya."
 missingDescriptions = "Deskripsi hilang"
-mixedContent = "Gambar menyertakan konten lain"
 mixedTags = "Campuran"
 needsDescriptionBadge = "Tidak ada deskripsi"
 nextToReview = "Berikutnya untuk ditinjau"
@@ -7821,12 +8026,10 @@ notFigure = "Ditandai sebagai bagian dari teks"
 removeTag = "Hapus tag"
 saveFailed = "Perubahan aksesibilitas Anda tidak dapat disimpan, sehingga file tidak disimpan. Urungkan perubahan tersebut dan coba lagi."
 selectedText = "Teks yang dipilih"
-tagFormField = "Beri tag bidang formulir"
 tagging = "Memberi tag halaman"
 tagLabel = "Tag"
 tagLinks_one = "Tag tautan"
 tagLinks_other = "Tag {{count}} tautan"
-tagUntagged = "Tag otomatis dokumen"
 tagUntaggedHint = "Secara otomatis menambahkan tag aksesibilitas di seluruh dokumen. Hasilnya masih kasar: periksa judul, daftar, dan urutan baca setelahnya."
 unknownTag = "Tidak dapat dibaca di sini"
 unmarkedWithTags = "Beberapa penampil PDF tetap akan menggunakan tag dan mungkin melewati konten yang tidak memiliki tag."
@@ -7851,7 +8054,7 @@ heading = "Heading"
 mixedNumbering = "Mencampur heading bernomor dan tanpa nomor"
 none = "Tidak ada heading"
 onPage = "Heading pada halaman {{page}}"
-problems = "Masalah heading"
+problemCount = "{{count}} to fix"
 skippedLevel = "Melewati satu tingkat setelah Heading {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Judul"
 allLanguages = "Semua bahasa"
 cannotSetDocument = "Bahasa dokumen ini tidak dapat diubah."
 cannotSetText = "Bahasa teks ini tidak dapat diubah."
-documentHint = "Bahasa yang digunakan pembaca layar kecuali sebagian teks menetapkan bahasanya sendiri."
 documentLabel = "Bahasa"
 documentLocked = "Bahasa dokumen terenkripsi tidak dapat diubah di sini."
 inDocument = "Di dokumen ini"
 innerLabel = "Bahasa tag {{number}}"
 label = "Bahasa"
-missing = "Tidak ada bahasa yang ditetapkan. Pembaca layar akan menebak, dan mungkin membaca seluruh dokumen dengan suara yang salah."
 mixed = "Campuran"
 noMatch = "Tidak ada bahasa yang cocok. Ketik kodenya sebagai gantinya, misalnya mt atau en-IE."
 placeholder = "Pilih bahasa"
@@ -7943,6 +8144,52 @@ renderFailed = "Gagal merender halaman"
 [pdfTextEditor.password]
 incorrect = "Kata sandi salah - coba lagi."
 label = "Kata sandi"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Panduan perataan di {{value}} {{unit}} - seret ke penggaris untuk menghapus"
@@ -8124,6 +8371,10 @@ title = "Perbedaan Pratinjau"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ruang kerja ini berfokus pada pengeditan teks dan memosisikan ulang gambar tersemat. Karya seni halaman yang kompleks, widget formulir, dan grafik berlapis dipertahankan untuk ekspor tetapi tidak sepenuhnya dapat diedit di sini."
 title = "Fokus Teks dan Gambar"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF ke CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Sembunyikan kategori"
 labelCount = "label"
 sharedNote = "Label ini bawaan dan dibagikan ke seluruh tim Anda."
 showCategory = "Tampilkan kategori"
-
-[policies.pii]
-account = "Nomor rekening (berlabel)"
-card = "Kartu kredit / debit"
-email = "Alamat email"
-fieldLabel = "PII untuk direduksi"
-iban = "IBAN"
-phone = "Nomor telepon"
-placeholder = "Pilih jenis PII"
-routing = "Nomor routing AS (ABA)"
-ssn = "Nomor Social Security"
 
 [policy]
 badgeEnforcing = "{{name}} sedang diterapkan..."
@@ -10317,6 +10557,10 @@ title = "Pipeline"
 [portal.pipelines.actions]
 newCustomPipeline = "Pipeline kustom baru"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Semua pipeline"
 
@@ -12047,7 +12291,6 @@ label = "Alat baca"
 readAloud = "Bacakan"
 rotateLeft = "Putar ke kiri"
 rotateRight = "Putar ke kanan"
-search = "Cari dalam dokumen"
 switchDocument = "Ganti dokumen"
 thumbnails = "Halaman"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Warna Kotak"
 convertPDFToImageLabel = "Konversi PDF ke PDF-Image"
 customPaddingLabel = "Padding Ekstra Kustom"
 useRegexLabel = "Gunakan Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Pencarian Kata Utuh"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Pengaturan Penyensoran"
 
 [redact.auto.wordsToRedact]
 add = "Tambah"
-examples = "Contoh: Rahasia, Sangat Rahasia"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Masukkan kata"
 title = "Kata untuk Disensor"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Pilih file di pengelola file untuk meredaksi beberap
 manual = "Manual"
 mode = "Mode"
 title = "Metode Penyensoran"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Hanya cocokkan teks dengan kapitalisasi yang sama. 'Secret' tidak akan cocok dengan 'SECRET' saat diaktifkan, dan [A-Z] dalam regex hanya cocok dengan huruf besar."
@@ -12147,19 +12401,6 @@ title = "Metode Penyensoran"
 text = "Klik dan seret untuk memilih area tertentu yang akan disensor secara manual. Memberi Anda kontrol presisi atas apa yang disensor. (Segera hadir)"
 title = "Penyensoran Manual"
 
-[redact.tooltip.words]
-bullet1 = "Tambahkan satu kata setiap kali"
-bullet2 = "Tekan Enter atau klik 'Tambahkan Lagi' untuk menambah"
-bullet3 = "Klik × untuk menghapus kata"
-
-[redact.tooltip.words.description]
-text = "Masukkan kata atau frasa untuk dicari dan disensor dalam dokumen Anda. Setiap kata akan dicari secara terpisah."
-title = "Pencocokan Teks"
-
-[redact.tooltip.words.examples]
-text = "Kata yang umum disensor termasuk: detail bank, alamat email, atau nama tertentu."
-title = "Contoh Umum"
-
 [redact.tooltip.words.header]
 title = "Kata untuk Disensor"
 
@@ -12176,15 +12417,6 @@ failed = "Terjadi kesalahan saat menghapus anotasi dari PDF."
 
 [removeAnnotations.info]
 description = "Alat ini akan menghapus semua anotasi (komentar, sorotan, catatan, dll.) dari dokumen PDF Anda."
-
-[removeAnnotations.settings]
-title = "Pengaturan"
-
-[removeAnnotations.tooltip.description]
-title = "Fungsinya"
-
-[removeAnnotations.tooltip.header]
-title = "Tentang Hapus Anotasi"
 
 [removeBlanks]
 submit = "Hapus halaman kosong"
@@ -12325,6 +12557,9 @@ tags = "atur ulang,susun ulang,organisasi,reorganisasi,pindahkan halaman,urutan 
 [reorganizePages.error]
 failed = "Gagal menyusun ulang halaman"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Halaman Disusun Ulang"
 
@@ -12406,6 +12641,7 @@ title = "Balik Semua Warna"
 rotateLeft = "Putar Berlawanan Arah Jarum Jam"
 rotateRight = "Putar Searah Jarum Jam"
 selectRotation = "Pilih Sudut Rotasi (Searah Jarum Jam)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Terapkan Rotasi"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotasi PDF"
@@ -12516,8 +12752,7 @@ title = "Sanitasi"
 failed = "Terjadi kesalahan saat menyanitasi PDF."
 
 [sanitize.options]
-note = "Pilih elemen yang ingin Anda hapus dari PDF. Setidaknya satu opsi harus dipilih."
-title = "Opsi Sanitasi"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Hapus file apa pun yang disematkan dalam PDF"
@@ -12649,6 +12884,7 @@ title = "Cari PDF"
 hideTools = "Sembunyikan alat yang tidak tersedia ▴"
 messageNoFallback = "Alat tidak tersedia hingga server Anda kembali online."
 messageWithFallback = "Beberapa alat memerlukan koneksi server."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Lihat alat yang tidak tersedia ▾"
 title = "Server Stirling-PDF Anda tidak dapat dijangkau"
 toolNotAvailableLocally = "Server Stirling-PDF Anda sedang offline dan \"{{endpoint}}\" tidak tersedia pada backend lokal."
@@ -13034,6 +13270,12 @@ title = "Pintasan Keyboard"
 mac = "Sertakan ⌘ (Command), ⌥ (Option), atau modifier lainnya dalam pintasan Anda."
 windows = "Sertakan Ctrl, Alt, atau modifier lainnya dalam pintasan Anda."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Ketentuan, kebijakan privasi, dan preferensi cookie Anda."
 label = "Hukum"
@@ -13418,9 +13660,7 @@ image = "Unggah"
 text = "Teks"
 
 [sign.step]
-createDesc = "Pilih cara membuat tanda tangan"
 place = "Tempatkan & simpan"
-placeDesc = "Posisikan tanda tangan di PDF Anda"
 
 [sign.steps]
 configure = "Konfigurasikan Tanda Tangan"
@@ -13597,6 +13837,10 @@ rotateLeft = "Putar ke kiri"
 rotateRight = "Putar ke kanan"
 trim = "Pangkas sesuai tanda tangan"
 trimHint = "Memangkas ruang kosong di sekitarnya"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Pengaturan Tampilan Tanda Tangan"
@@ -13959,7 +14203,6 @@ placeholder = "Input angka untuk pembagian horizontal"
 
 [split-by-sections.splitMode]
 custom = "Halaman kustom"
-description = "Pilih cara memisahkan halaman"
 label = "Mode Pemisahan"
 splitAll = "Pisahkan semua halaman"
 splitAllExceptFirst = "Pisahkan semua kecuali pertama"
@@ -14210,10 +14453,8 @@ failed = "Terjadi kesalahan saat memberi cap waktu PDF."
 
 [timestampPdf.options]
 note = "Hanya hash SHA-256 dokumen Anda yang dikirim ke server TSA; berkas PDF itu sendiri tidak pernah dikirim ke server TSA."
-title = "Server Cap Waktu (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Pilih Otoritas Cap Waktu tepercaya"
 label = "Pilih server TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Tidak ada alat tersedia"
 
 [tooltip]
 close = "Tutup tooltip"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Alat ini akan menghapus pembatasan hanya baca dari bidang formulir PDF, sehingga dapat diedit dan diisi."
@@ -14706,6 +14961,9 @@ signatureDate = "Tanggal Tanda Tangan"
 
 [validateSignature.settings]
 certHint = "Unggah sertifikat X.509 tepercaya untuk validasi terhadap sumber tepercaya kustom."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Pengaturan Validasi"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
 copyRestricted = "Penyalinan dinonaktifkan oleh izin PDF ini."
 copyText = "Salin"
 coverPageView = "Tampilkan Halaman Sampul Secara Terpisah"
-disableColorFilter = "Nonaktifkan Filter Warna"
 documentUpdated = "Dokumen diperbarui"
 dualPageView = "Tampilan Dua Halaman"
 editText = "Edit teks"
-enableDarkFilter = "Aktifkan Filter Gelap"
-enableSepiaFilter = "Aktifkan Filter Sepia"
 engineLoadError = "Gagal menginisialisasi mesin penampil PDF"
 engineSlowWarning = "Inisialisasi mesin PDF memakan waktu lebih lama dari yang diharapkan. Periksa pengaturan WebAssembly dan Worker browser Anda, atau muat ulang halaman."
 firstPage = "Halaman Pertama"
@@ -14736,20 +14991,27 @@ fitPage = "Sesuaikan ke halaman"
 fitWidth = "Sesuaikan ke lebar"
 lastPage = "Halaman Terakhir"
 loadingEngine = "Memuat PDF Engine..."
+menuSelected = "Selected"
 moreOptions = "Lainnya"
 nextPage = "Halaman Berikutnya"
 noPdfProvided = "Tidak ada PDF yang diberikan"
 onlyPdfSupported = "Format file ini tidak didukung untuk pratinjau."
 pageNavigation = "Navigasi halaman"
+pageNumber = "Page number"
 previousPage = "Halaman Sebelumnya"
 readAloudFromHere = "Bacakan dari sini"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Dokumen tidak dapat disimpan. Coba lagi."
 saveChangesErrorTitle = "Tidak dapat menyimpan perubahan"
 singlePageView = "Tampilan Satu Halaman"
+tools = "Tools"
 unknownFile = "File tidak dikenal"
-view = "Tampilan"
 zoom = "Zoom"
 zoomIn = "Perbesar"
+zoomLevel = "Zoom level"
 zoomOut = "Perkecil"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Pratinjau tanda tangan"
 
 [viewer.signatureField]
 badge = "Tanda tangan"
+clickToSign = "Click to sign here"
 fieldTitle = "Bidang tanda tangan: {{name}}"
 signed = "Ditandatangani"
 signedWithReason = "Ditandatangani: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Bidang tanda tangan belum ditandatangani: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Memulihkan {{restored}} dari {{total}} file. Sisanya tidak lagi disim
 
 [workbenchBar]
 activeFiles = "File Aktif"
-annotations = "Anotasi"
+annotate = "Annotate"
 applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Tutup semua file"
 closePdf = "Tutup PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Batalkan semua pilihan"
 downloadAll = "Unduh Semua"
 editText = "Edit Teks"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Keluar dari mode anotasi"
 exitRedaction = "Keluar dari Mode Redaksi"
 findReplace = "Cari & ganti"
 formFill = "Editor Formulir"
-hideToolbar = "Sembunyikan bilah alat"
+layers = "Layers"
 moreActions = "Tindakan lainnya"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Editor Halaman"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Mode Geser"
 print = "Cetak PDF"
 readAloud = "Baca Nyaring"
 readAloudLanguage = "Bahasa"
 readAloudSpeed = "Kecepatan"
 redact = "Redaksi"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Putar Kiri"
 rotateRight = "Putar Kanan"
 ruler = "Penggaris / Ukur"
+rulerScaleUnset = "Not set"
 rulerSettings = "Pengaturan Skala"
 save = "Simpan"
 saveAll = "Simpan Semua"
@@ -15123,14 +15398,23 @@ selectLanguage = "Pilih bahasa"
 share = "Bagikan"
 showAllTools = "Tampilkan semua alat"
 showFewerTools = "Ciutkan bilah alat"
-showToolbar = "Tampilkan bilah alat"
+thumbnails = "Pages"
 toggleAnnotations = "Tampilkan/Sembunyikan Anotasi"
-toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
-toggleBookmarks = "Bookmark (Daftar Isi)"
 toggleComments = "Komentar"
-toggleLayers = "Tampilkan/Sembunyikan Lapisan"
-toggleSidebar = "Tampilkan/Sembunyikan Bilah Samping"
 viewer = "Penampil"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Akses Anda ke dokumen ini telah kedaluwarsa."

@@ -12,9 +12,11 @@ comingSoon = "Próximamente"
 confirm = "Confirmar"
 confirmClose = "Confirmar cierre"
 confirmCloseCancel = "Cancelar"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Cerrar archivo"
 confirmCloseDiscard = "Descartar cambios y cerrar"
 confirmCloseMessage = "¿Seguro que quieres cerrar este archivo?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Guardar y cerrar"
 confirmCloseSaveFailed_one = "Guardado con errores. No fue posible guardar {{count}} archivo."
 confirmCloseSaveFailed_other = "Guardado con errores. No se pudieron guardar {{count}} archivos."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Archivo guardado en el disco"
 filesSelected = "{{count}} archivos"
 font = "Fuente"
 fontSizeTooltip = "Tamaño del texto del número de página en puntos. Números mayores generan texto más grande."
-fontTypeTooltip = "Familia de fuente para los números de página. Elige según el estilo de tu documento."
 green = "Verde"
 help = "Ayuda"
 incorrectPasswordMessage = "La contraseña actual no es correcta."
@@ -249,9 +250,7 @@ image = "Subida"
 text = "Texto"
 
 [addImage.step]
-createDesc = "Sube la imagen que quieres añadir"
 place = "Colocar imagen"
-placeDesc = "Haz clic en el PDF para añadir tu imagen"
 
 [addImage.steps]
 configure = "Configurar imagen"
@@ -276,7 +275,7 @@ fontName = "Nombre de fuente"
 fontSize = "Tamaño de fuente"
 numberPagesDesc = "p. ej., 1,3,5-8 o déjalo en blanco para todas las páginas"
 pagePreviewAlt = "Vista previa de página"
-pagesAndStarting = "Páginas y número inicial"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Posición y páginas"
 preview = "Selección de posición"
 previewDisclaimer = "La vista previa es aproximada. El resultado final puede variar debido a las métricas de fuentes del PDF."
@@ -300,6 +299,7 @@ title = "Resultados de numeración de páginas"
 
 [addPassword]
 desc = "Cifra tu documento PDF con una contraseña."
+submit = "Add Password"
 tags = "cifrar,contraseña,bloquear,seguro,proteger,seguridad,cifrado,salvaguardar,confidencial,privado,restringir acceso"
 title = "Proteger con contraseña"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Vista previa del sello"
 tags = "sello,marca,precinto,aprobado,rechazado,confidencial,herramienta de sello,sello de goma,sello de fecha,sello de aprobación,recibido,nulo,copia,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabeto"
-clickToExpand = "Haz clic para expandir"
 customColor = "Personalizar color de texto"
 customDateDesc = "Formato personalizado"
 customPosition = "Arrastra el sello a la ubicación deseada en la ventana de vista previa."
 dateDesc = "Fecha actual"
 datetimeDesc = "Fecha y hora combinadas"
 dateTimeVars = "Fecha y hora"
-dynamicVariables = "Variables dinámicas"
 examples = "Ejemplos"
 filenameDesc = "Nombre de archivo sin extensión"
 filenameFullDesc = "Nombre de archivo con extensión"
@@ -365,6 +364,8 @@ noStampSelected = "No se ha seleccionado ningún sello. Vuelva al Paso 1."
 opacity = "Opacidad"
 otherVars = "Otros"
 pageNumberDesc = "Número de página actual"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Información de la página"
 position = "Posición"
 positionAndFormatting = "Posición y formato"
@@ -378,9 +379,10 @@ quickPosition = "Selecciona una posición en la página para colocar el sello."
 rotation = "Rotación"
 selectedImageAlt = "Imagen de sello seleccionada"
 selectTemplate = "Seleccione una plantilla..."
+size = "Size"
 stampSetup = "Configuración de sello"
 stampText = "Texto del sello"
-stampTextDescription = "Usa las variables dinámicas a continuación. Usa @@ para el @ literal. Usa \\n para nuevas líneas."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Tipo de sello"
 submit = "Añadir sello"
 tags = "Sello, Añadir imagen, centrar imagen, Marca de agua, PDF, Incrustar, Personalizar"
@@ -389,7 +391,6 @@ title = "Sellar PDF"
 totalPagesDesc = "Número total de páginas"
 useTemplate = "Usar plantilla"
 uuidDesc = "Identificador único corto (8 caracteres)"
-variablesHelp = "Haz clic en cualquier variable para insertarla en el texto de tu sello. Usa @@ para el @ literal."
 yearMonthDayDesc = "Partes de la fecha individuales"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Se produjo un error al añadir el sello al PDF."
 
 [AddStampRequest.results]
 title = "Resultados del sello"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Personalizado"
@@ -410,6 +417,11 @@ legal-footer = "Pie de página legal"
 page-numbers = "Números de página"
 pageNumberFooter = "Pie de número de página"
 timestamp = "Marca de tiempo"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Aplicar texto"
@@ -462,9 +474,7 @@ image = "Subida"
 text = "Texto"
 
 [addText.step]
-createDesc = "Introduce el texto que quieres añadir"
 place = "Colocar texto"
-placeDesc = "Haz clic en el PDF para añadir tu texto"
 
 [addText.steps]
 configure = "Configurar texto"
@@ -1233,6 +1243,18 @@ label = "Regenerar al inicio"
 description = "Número de días que el certificado será válido"
 label = "Validez del certificado (días)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Directorios desde los que las fuentes de carpeta y las salidas de carpeta pueden leer y en los que pueden escribir. Esto es un límite de seguridad: las automatizaciones nunca pueden apuntar a una ruta del servidor fuera de esta lista."
 securityNote = "Déjalo vacío para desactivar por completo las fuentes y salidas de carpeta. El directorio de configuración propio de Stirling siempre está fuera de los límites."
@@ -1456,7 +1478,9 @@ label = "Nombre de usuario SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Los clientes envían una clave API de Stirling en la cabecera X-API-KEY (o Authorization: Bearer <key>). La clave se asigna a su usuario de Stirling propietario: solo entran las cuentas aprovisionadas y las acciones se auditan como ese usuario. Gestiona las claves en Cuenta > Claves API."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Expón las herramientas PDF y los agentes de AI de Stirling a clientes MCP mediante un endpoint protegido con OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Servidor MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Herramientas permitidas"
 description = "Ids de operación que ocultar de MCP (separados por comas o espacios), p. ej., add-password remove-password. Déjalo en blanco para exponer todas las herramientas activadas."
 label = "Herramientas bloqueadas"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Cuando está desactivado (predeterminado), no se cargan el endpoint /mcp, los metadatos ni los beans MCP."
 label = "Activar servidor MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Introduce arriba tu emisor OAuth + ID de recurso, guarda y reinicia."
 step1ApiKey = "Crea una clave API en Cuenta > Claves API (cada usuario usa la suya)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "En tu cliente MCP añade un"
 step2b = "servidor que apunte a:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "El cliente descubre OAuth automáticamente desde:"
 step3ApiKey = "Envía la clave en una cabecera"
 step3ApiKeyb = "(o Authorization: Bearer <key>). No se usa OAuth ni descubrimiento de metadatos."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Aprueba el inicio de sesión; el cliente reintenta con un token. Las herramientas aparecen agrupadas: convertir, páginas, varios, seguridad, ai."
 step4ApiKey = "Las herramientas aparecen agrupadas: convertir, páginas, varios, seguridad, ai, y cada llamada se audita como el propietario de la clave."
 tip = "Consejo: registra el ID de recurso como audiencia permitida en tu IdP. Probado con MCP Inspector y Claude Desktop."
 tipApiKey = "Consejo: el modo de clave API no necesita un IdP externo; es lo más sencillo para self-host. La clave se asigna a su usuario de Stirling propietario."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Conectar un cliente MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Descubierta automáticamente desde el emisor"
 
 [admin.settings.mcp.mode]
 apikey = "Clave API (clave por usuario de Stirling)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth necesita un IdP externo. La clave API usa una clave API por usuario de Stirling (X-API-KEY), lo más sencillo para self-host."
 label = "Modo de autenticación"
 oauth = "OAuth 2.1 (IdP externo)"
@@ -1515,6 +1563,18 @@ label = "ID de recurso"
 [admin.settings.mcp.scopes]
 description = "Requerir mcp.tools.read para operaciones de lectura y mcp.tools.write para operaciones de escritura/AI."
 label = "Aplicar scopes de OAuth"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Claim JWT que se compara con un nombre de usuario de Stirling (p. ej., sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "¿Quieres ayudar a mejorar Stirling PDF?"
 tags = "anotar,resaltar,dibujar,marcar,comentario,notas,revisar,marcas rojas,comentarios,herramientas de marcado,notas adhesivas,formas,flechas,cuadro de texto,mano alzada"
 
 [annotation]
-alignCenter = "Alinear al centro"
-alignLeft = "Alinear a la izquierda"
-alignRight = "Alinear a la derecha"
 annotationStyle = "Estilo de anotación"
 backgroundColor = "Color de fondo"
 borderOff = "Borde: Desactivado"
@@ -2016,18 +2073,61 @@ underline = "Subrayado"
 undoDelete = "Deshacer"
 width = "Ancho"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Un editor PDF gratuito y privado que puedes ejecutar en cualquier infraestructura."
 
 [appBanner]
 dismiss = "Descartar"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Añadir adjuntos..."
 convertToPdfA3b = "Convertir a PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b es un formato para archivo que garantiza la preservación a largo plazo. Permite incrustar formatos de archivo arbitrarios como adjuntos. La conversión requiere Ghostscript y puede tardar más en archivos grandes."
-convertToPdfA3bTooltipHeader = "Acerca de la conversión a PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Qué hace"
 discardChanges = "Descartar"
 downloadSingle = "Descargar adjunto"
 duplicateName = "Ya existe un adjunto llamado '{{name}}'."
@@ -2208,7 +2308,6 @@ guest = "Invitado"
 user = "Usuario"
 
 [auto-rename]
-description = "Encuentra automáticamente el título del contenido de su PDF y lo utiliza como nombre de archivo."
 submit = "Renombrar automáticamente"
 tags = "auto-detectar,basado en el encabezamiento,organizar,re-etiquetar"
 title = "Renombrar automáticamente"
@@ -2218,21 +2317,6 @@ failed = "Se produjo un error al renombrar automáticamente el PDF."
 
 [auto-rename.results]
 title = "Resultados de cambio de nombre automático"
-
-[auto-rename.settings]
-title = "Acerca de"
-
-[auto-rename.tooltip.description]
-title = "Qué hace"
-
-[auto-rename.tooltip.header]
-title = "Cómo funciona el cambio de nombre automático"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Busca texto que parezca ser un título o encabezado"
-bullet2 = "Crea un nombre de archivo limpio y válido a partir del título detectado"
-bullet3 = "Conserva el nombre original si no se encuentra un título adecuado"
-title = "Cambio de nombre inteligente"
 
 [autoFormDetection]
 loading = "Detectando campos de formulario..."
@@ -2327,6 +2411,9 @@ remove = "Eliminar herramienta"
 selected = "Herramientas seleccionadas"
 selectTool = "Seleccionar una herramienta..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Cancelar"
 confirm = "Volver"
@@ -2360,6 +2447,10 @@ title = "Ejecutar automatización"
 [automate.selection]
 title = "Selección de automatización"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Crear nueva automatización"
 
@@ -2371,6 +2462,7 @@ title = "Sugeridos"
 
 [automate.sequence]
 finish = "Finalizar"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Ejecutar automatización"
 running = "Ejecutando automatización..."
 signInToRun = "Inicia sesión para ejecutar automatizaciones."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Flujo de trabajo de seguridad"
 secureWorkflowDesc = "Asegura documentos PDF eliminando contenido potencialmente malicioso como JavaScript y archivos incrustados, luego añade protección con contraseña para evitar accesos no autorizados. La contraseña se establece en 'password' por defecto."
 
 [autoRename]
-description = "Esta herramienta renombrará automáticamente los archivos PDF en función de su contenido. Analiza el documento para encontrar el título más adecuado a partir del texto."
 tags = "detección automática,basado en encabezado,organizar,reetiquetar,renombrado automático,renombrado inteligente,renombrar por contenido,nombre de archivo,nomenclatura de archivos,detectar título"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,dividir,documento,organización"
 [autoSplitPDF]
 dividerDownload2 = "Descargar 'Divisor automático (con instrucciones).pdf'"
 duplexMode = "Modo Dúplex (Escaneado de ambas caras)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "Marcado por QR,separar,segmento de escaneo,organizar"
 title = "Dividir PDF automáticamente"
 
@@ -2528,9 +2620,6 @@ tooltip = "Añade bordes alrededor de cada sección de página para ayudar con e
 [bookletImposition.addGutter]
 label = "Añadir margen de medianil"
 tooltip = "Añade espacio de margen interior para encuadernación"
-
-[bookletImposition.advanced]
-toggle = "Opciones avanzadas"
 
 [bookletImposition.doubleSided]
 label = "Impresión a doble cara"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Elegir archivo JKS"
 chooseP12File = "Elegir archivo PKCS12"
 choosePfxFile = "Elegir archivo PFX"
 choosePrivateKey = "Elegir archivo de clave privada"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Rechazado"
 fetchFailed = "No se pudieron cargar los datos de firma"
 finalized = "Finalizado"
 location = "Ubicación"
-logoTitle = "Logotipo"
-name = "Nombre"
-noLogo = "Sin logotipo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Número de página"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Contraseña del certificado"
 passwordOptional = "Déjalo vacío si no hay contraseña"
 pemCertificateLabel = "Certificado (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Clave privada (.pem / .key)"
 pending = "Pendiente"
 readyToFinalize = "Listo para finalizar"
 reason = "Razón"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Usando certificado del servidor: no se requieren archivos ni contraseña"
-showLogo = "Mostrar Logotipo"
 signatureProgress = "{{signedCount}}/{{totalCount}} firmas"
 tags = "autenticar,PEM,P12,oficial,cifrar,firmar,certificado,PKCS12,JKS,servidor,manual,auto"
 title = "Firma con certificado"
@@ -2738,12 +2828,45 @@ viewed = "Visto"
 
 [certSign.appearance]
 invisible = "Invisible"
+showOnPage = "Show signature on page"
 stepTitle = "Apariencia de firma"
 visibility = "Visibilidad"
 visible = "Visible"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Detalles de la firma"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Acerca de la apariencia de firma"
@@ -2762,9 +2885,6 @@ bullet3 = "Elija en qué página colocar la firma"
 bullet4 = "Se puede incluir un logotipo opcional"
 text = "Muestra un bloque de firma en el PDF con su nombre, fecha y detalles opcionales. Útil cuando desea que los lectores vean claramente que el documento está firmado."
 title = "Firmas visibles"
-
-[certSign.certFiles]
-stepTitle = "Archivos de certificado"
 
 [certSign.certType.tooltip.convert]
 text = "Convierta su archivo a un almacén de claves Java (.jks) con keytool, luego elija JKS."
@@ -2786,6 +2906,7 @@ text = "Elija el formato que coincida con su archivo de certificado:"
 title = "¿Qué opción debo usar?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Formato de certificado"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Este dispositivo"
 [certSign.error]
 failed = "Se produjo un error al procesar las firmas."
 
-[certSign.format]
-pkcs11 = "Token USB"
-windowsStore = "Almacén de certificados de Windows"
-
 [certSign.hardware]
-certificate = "Certificado"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Ruta del controlador personalizada…"
+digitalId = "Digital ID"
 driver = "Controlador PKCS#11"
 driverPath = "Ruta de la biblioteca del controlador"
 driverPathPlaceholder = "Ruta completa a su controlador PKCS#11 (.dll, .so o .dylib)"
-expired = "caducado"
-expires = "caduca"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Listar certificados"
-loading = "Leyendo certificados…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "No se encontraron certificados de firma"
 noDriver = "No se detectó ningún controlador PKCS#11. Instale el controlador de su token (p. ej., OpenSC), luego vuelva a abrir esto - o introduzca manualmente la ruta del controlador a continuación."
-notYetValid = "aún no válido"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN del token"
 pkcs11Hint = "Seleccione el controlador PKCS#11 de su token, introduzca el PIN y luego liste los certificados del token."
 pkcs11LoadError = "No se pudieron leer los certificados del token. Compruebe el PIN y el controlador."
-refresh = "Actualizar"
-selectCert = "Seleccionar certificado"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Seleccionar controlador"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Ranura (opcional)"
-windowsHint = "Elija un certificado de su almacén de certificados de Windows. La firma utiliza la clave de su tarjeta/token - Windows solicitará el PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "No se pudo leer el almacén de certificados de Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Regla general"
 device = "Este dispositivo"
 noOtherSources = "No hay otras fuentes de certificados disponibles."
 server = "Servidor"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Origen del certificado"
 upload = "Subir"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Actualiza tu nombre de usuario. Se cerrará tu sesión tras actualizar."
@@ -3069,7 +3205,6 @@ placeholder = "Creador del documento"
 
 [changeMetadata.customFields]
 add = "Añadir campo"
-description = "Añadir campos de metadatos personalizados al documento"
 key = "Clave"
 keyPlaceholder = "Clave personalizada"
 remove = "Eliminar"
@@ -3135,10 +3270,6 @@ bullet1 = "Fecha de creación: Cuándo se creó el documento original"
 bullet2 = "Fecha de modificación: Cuándo se cambió por última vez"
 text = "Cuándo se creó y modificó el documento."
 title = "Campos de fecha"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Eliminación completa de metadatos para garantizar la privacidad."
-title = "Eliminar metadatos existentes"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Título: Nombre del documento o encabezado"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Has alcanzado tu límite de uso. Consulta las opciones de
 
 [checkAccessibility]
 aboutRow = "Acerca de {{label}}"
-checking = "Comprobando..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Descargar informe de accesibilidad"
 fileFailed = "fallido"
+noFiles = "Select a PDF to check it."
 pickFile = "Mostrar resultados de"
-submit = "Comprobar accesibilidad"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Texto alternativo"
@@ -3286,10 +3417,17 @@ structure = "Las etiquetas indican a los lectores de pantalla qué es cada parte
 [checkAccessibility.checks]
 label = "{{passed}} de {{total}} comprobaciones superadas"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "No se pudo crear el informe de accesibilidad. Inténtalo de nuevo."
 fileTitle = "No se pudo comprobar este archivo"
 partial = "No se pudieron comprobar algunos archivos."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Declara PDF/UA"
@@ -3312,6 +3450,21 @@ title = "El archivo tiene un título en sus metadatos."
 [checkAccessibility.figures]
 summary_one = "{{count}} imagen necesita una descripción (página {{pages}})"
 summary_other = "{{count}} imágenes necesitan una descripción (páginas {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Se aplica a"
@@ -3465,19 +3618,7 @@ checking = "Comprobando {{current}} de {{total}}..."
 complete = "Comprobación completada"
 
 [checkAccessibility.steps]
-results = "Resultados"
 standard = "Estándar"
-
-[checkAccessibility.tooltip.header]
-title = "Qué estándar comprobar"
-
-[checkAccessibility.tooltip.ua1]
-text = "La primera versión de PDF/UA, publicada en 2012 como ISO 14289-1, para archivos PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "La versión más reciente, publicada en 2024 como ISO 14289-2, para archivos PDF 2.0. Un archivo PDF 1.7 comprobado contra ella falla las reglas que solo se aplican a PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anotación {{n}}"
@@ -3868,6 +4009,7 @@ title = "Elija el color"
 transparent = "Transparente"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Acciones"
 back = "Atrás"
 cancel = "Cancelar"
@@ -4206,7 +4348,9 @@ title = "Actualizar Claves API"
 warning = "⚠️ Advertencia: Esta acción generará nuevas claves API y hará que tus claves anteriores sean inválidas."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) permite que asistentes de AI como Claude usen tus herramientas de Stirling PDF directamente. Conecta un cliente una vez y tu asistente podrá convertir, editar, proteger y procesar documentos en tu nombre."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Los usuarios invitados no pueden conectar clientes MCP. Crea una cuenta para usar el servidor MCP y permitir que tu asistente de AI ejecute herramientas de Stirling PDF en tu nombre."
 navLabel = "Servidor MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Copiar {{label}}"
 tooltipCopied = "{{label}} copiado"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Tu endpoint MCP"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Añadir a"
 hint = "Elige tu cliente, pega el fragmento en el archivo indicado y reinícialo. Iniciarás sesión con tu cuenta de Stirling la primera vez que lo uses; no hay claves que copiar."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Conecta tu asistente de AI"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Mantener Relación de Aspecto"
 maxAttachmentSize = "Tamaño máximo de archivo adjunto (MB)"
 multiple = "Múltiple"
 optimizeForEbook = "Optimizar PDF para lectores de libros electrónicos (usa Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Salida"
-outputFormat = "Formato de Salida"
-pdfaAccessibleFormat = "{{format}} (accesible)"
-pdfaDigitalSignatureWarning = "El PDF contiene una firma digital. Ésta se eliminará en el siguiente paso."
-pdfaNote = "PDF/A-1b es más compatible, PDF/A-2b admite más funciones y PDF/A-3b admite archivos incrustados."
-pdfaOptions = "Opciones de PDF/A"
 pdfOptions = "Opciones de PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Configuración"
 signInToUse = "Inicia sesión para usar"
 single = "Individual"
 sourceFormatPlaceholder = "Formato de origen"
-strictMode = "Modo Estricto"
-strictModeDesc = "Error si la conversión no es perfecta (usa verificación VeraPDF)"
 svgPdfOptions = "Opciones SVG a PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Los archivos SVG se renderizan como gráficos vectoriales para una salida nítida en cualquier resolución. Las dimensiones del SVG determinan el tamaño de página del PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Nivel de Zoom"
 
 [convert.ebookOptions]
 includePageNumbers = "Incluir números de página"
-includePageNumbersDesc = "Añadir números de página al PDF generado"
 includeTableOfContents = "Incluir tabla de contenidos"
-includeTableOfContentsDesc = "Añadir una tabla de contenidos generada al PDF resultante"
 optimizeForEbookPdf = "Optimizar para lectores de eBook"
 optimizeForEbookPdfDesc = "Optimizar el PDF para lectura en eBook (tamaño de archivo menor, mejor renderizado en dispositivos eInk)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Detectar capítulos"
 detectChaptersDesc = "Detectar encabezados que parezcan capítulos e insertar saltos de página EPUB"
 kindleEink = "Kindle e-Ink (texto optimizado)"
 outputFormat = "Formato de salida"
-outputFormatDesc = "Elige el formato de salida para el eBook"
 tabletPhone = "Tableta/Teléfono (con imágenes)"
 targetDevice = "Dispositivo de destino"
 targetDeviceDesc = "Elige un perfil de salida optimizado para el dispositivo lector"
@@ -4469,8 +4619,24 @@ description = "Estas cookies son esenciales para que el sitio web funcione corre
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Título de la portada"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "Portfolio PDF"
 description = "Cada archivo seleccionado se conserva completo dentro del nuevo PDF, sea cual sea su tipo. Los lectores que no admiten portfolios muestran una portada con los archivos adjuntos."
 goToFileEditor = "Ir al editor de archivos"
@@ -4488,6 +4654,9 @@ title = "Qué hace"
 
 [createPortfolio.tooltip.header]
 title = "Acerca de PDF Portfolios"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Recortar automáticamente espacios en blanco"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "El acceso al portapapeles no está disponible en este na
 export = "Exportar marcadores"
 exportClipboard = "Copiar JSON al portapapeles"
 exportJson = "Descargar JSON"
+exportMenu = "Export"
 importClipboard = "Pegar JSON desde el portapapeles"
 importJson = "Importar JSON"
+importMenu = "Import"
 loadFromPdf = "Cargar desde el PDF seleccionado"
 noFile = "Seleccione un PDF para extraer los marcadores existentes."
 selectedFile = "Cargado desde {{file}}"
-source = "Cargar marcadores"
 
 [editTableOfContents.editor]
 addTopLevel = "Añadir marcador de primer nivel"
@@ -4740,6 +4910,9 @@ replaceExisting = "Reemplazar marcadores existentes (desmarcar para añadir al f
 replaceExistingHint = "Si está desactivado, el nuevo esquema se añadirá tras los marcadores actuales."
 title = "Marcadores y esquema"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Cambiar PDF"
 filePrompt = "Seleccione un PDF de su biblioteca o suba uno nuevo para comenzar."
@@ -4753,7 +4926,6 @@ title = "Abra la herramienta para empezar a editar"
 [encryptedPdfUnlock]
 actionIgnored = "Restricción de {{action}} ignorada"
 actionUnlocked = "{{action}} desbloqueado para esta sesión"
-advanced = "Avanzado"
 allowed = "Permitido"
 annotations = "Anotaciones"
 authoriseAction = "Este PDF requiere permiso para usar {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Restringido"
 restrictedActions = "acciones restringidas"
 restrictedOperation = "Esta acción requiere la contraseña de permisos."
 retainOwnerVerification = "Verifica la contraseña de permisos para mantenerla sin cambios mientras eliminas la contraseña de apertura. Esto no la eliminará."
-saveProtection = "Guardar protección"
 securityChangeFailed = "No se ha podido cambiar la protección. Comprueba la contraseña de permisos y la nueva configuración de seguridad."
 sessionDetails = "Abierto para esta sesión. El PDF permanece protegido."
 sessionDetailsLabel = "Acerca del desbloqueo de sesión"
@@ -4871,7 +5042,6 @@ title = "Algo ha salido mal"
 tryAgain = "Intentar de nuevo"
 
 [extractImages]
-allowDuplicates = "Guardar imágenes duplicadas"
 selectText = "Seleccionar el formato de imagen para convertir las imágenes extraídas"
 submit = "Extraer"
 tags = "imagen,fotografía,guardar,archivo,zip,capturar,coger"
@@ -4927,12 +5097,15 @@ closeFile = "Cerrar archivo"
 
 [fileEditor]
 closedFile = "{{name}} cerrado"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Archivo reordenado"
 filesReordered_other = "{{count}} archivos reordenados"
 loadedFromStorage_one = "Se cargó {{count}} archivo desde el almacenamiento"
 loadedFromStorage_other = "Se cargaron {{count}} archivos desde el almacenamiento"
 loadFromStorageFailed = "No se pudieron cargar algunos archivos desde el almacenamiento"
 pinnedFile = "{{name}} fijado"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} guardado y cerrado"
 saveFailed = "Error al guardar"
 unpinnedFile = "{{name}} desfijado"
@@ -5019,11 +5192,20 @@ locked = "Bloqueado"
 previewOf = "Vista previa de {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Agregar archivos"
 created = "Creado"
 notIncludedInToolRun = "No incluido en esta ejecución de la herramienta"
 size = "Tamaño del archivo"
 title = "Archivos"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "No hay archivos disponibles"
@@ -5104,6 +5286,7 @@ subtitle = "Muestra u oculta categorías en la barra lateral de archivos."
 title = "Categorías de la barra lateral"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Cancelar"
 error = "No se ha podido renombrar el archivo."
 illegalCharacters = "Un nombre de archivo no puede contener \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Eliminar campo"
 
 [formFill.editor]
 action = "Acción del botón"
-actionHelp = "Lo que hace el botón al hacer clic."
 actionNone = "Ninguna"
 actionPrint = "Imprimir"
 actionReset = "Restablecer formulario"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Limita cuántos caracteres caben, dibujados como cajas espaciad
 multiline = "Multilínea"
 multilineHelp = "Permite más de una línea de texto y ajusta el texto al borde del campo."
 multiSelect = "Permitir selección múltiple"
-multiSelectHelp = "Permite elegir más de una opción a la vez."
 name = "Nombre del campo"
 nameHelp = "El nombre interno del campo. Se utiliza al exportar datos o rellenar el formulario desde otro sistema, así que mantenlo único y sin espacios."
 optionGap = "Espaciado entre opciones"
@@ -5902,6 +6083,11 @@ title = "Ajustar Color/Contraste"
 desc = "Resalta, dibuja y añade notas y formas en el visor"
 tags = "anotar,resaltar,dibujar,marcar,comentario,notas,revisar,marcas rojas,comentarios,herramientas de marcado,notas adhesivas,formas,flechas,cuadro de texto,mano alzada"
 title = "Anotar"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Detecta automáticamente campos de formulario con IA y haz que tu PDF sea rellenable."
@@ -6405,6 +6591,9 @@ sort = "Ordenar"
 [merge.sortFiles]
 title = "Ordenar archivos"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Resumen de ajustes de combinación"
 
@@ -6548,6 +6737,9 @@ title = "Autenticación fallida"
 message = "Puede cerrar esta ventana y volver a Stirling PDF."
 title = "Autenticación correcta"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Permitir acceso"
 approving = "Permitiendo..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Volviendo a la app..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} quiere acceder a tu cuenta de Stirling PDF"
 scopesIntro = "Esto permitirá a {{app}}:"
 signedInAs = "Sesión iniciada como {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Iniciar sesión para continuar"
 signInPrompt = "Inicia sesión en tu cuenta de Stirling PDF para continuar conectando la app."
 title = "Authorise access"
 unknownApp = "Una aplicación de terceros"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Actuar como tú: todo lo que haga {{app}} se ejecuta con tu cuenta y cuenta para tu uso"
@@ -6572,9 +6767,12 @@ tools = "Usar tus herramientas de Stirling PDF en tu nombre: convertir, editar, 
 
 [oauthConsent.scope]
 email = "Ver tu dirección de email"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Confirmar tu identidad"
 phone = "Ver tu número de teléfono"
 profile = "Ver la información básica de tu perfil"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Tareas de limpieza y detectar texto en imágenes dentro de un PDF y volver a incrustarlo como texto"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Pasará a ser miembro del equipo y perderá el acceso de prop
 [pageEdit]
 deselectAll = "Ninguno"
 selectAll = "Marcar todo"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extraer Páginas"
@@ -7577,6 +7779,8 @@ stamp = "Anotación de sello: no es texto de página, así que no se puede edita
 widget = "Campo de formulario: no es texto de página, así que no se puede editar aquí"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Editar"
 markTagged = "Marcar como totalmente etiquetado"
 matchScanFont = "Ajustar el texto escaneado a {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Etiquetar página automáticamente"
 typeInto = "Escribir en {{run}}"
 ungroupParagraph = "Desagrupar párrafo {{run}}"
 unmarkTagged = "Marcar como no totalmente etiquetado"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Ajustar {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "¿Descartar cambios sin guardar?"
 
 [pdfTextEditor.error]
 decodeImage = "No se ha podido decodificar la imagen seleccionada."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "No se puede duplicar este texto: ninguna fuente disponible dibuja todas sus letras."
 formLiftChangesDrawing = "No se puede editar: está dibujado como parte de un grupo cuyos recortes o ajustes gráficos el editor no puede mantener al cambiarlo."
 insertImage = "No se ha podido insertar la imagen seleccionada."
 needsShaping = "El editor aún no puede dibujar correctamente las letras unidas y signos vocálicos de este sistema de escritura, por lo que no se realizó este cambio."
+reopenLost = "Open again"
 replaceClippedImage = "No se puede reemplazar esta imagen: está recortada y la sustitución mostraría las partes que el recorte oculta."
 scanOffInk = "No se puede editar este texto: las palabras reconocidas no se alinean con el escaneo. Ejecuta OCR de nuevo."
 unsafeRtlEdit = "No se puede realizar esta edición: el editor no puede volver a dibujar el texto de derecha a izquierda de esta línea sin cambiarlo."
@@ -7616,6 +7823,7 @@ pngFileType = "Imagen PNG"
 close = "Cerrar barra de búsqueda"
 count = "{{current}} de {{total}}"
 findPlaceholder = "Buscar"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignorar acentos"
 matchCase = "Coincidir mayúsculas/minúsculas"
 next = "Siguiente coincidencia"
@@ -7625,6 +7833,7 @@ replace = "Reemplazar"
 replaceAll = "Reemplazar todo"
 replaced = "{{count}} reemplazados"
 replacePlaceholder = "Reemplazar por"
+showReplace = "Show replace"
 wholeWord = "Palabra completa"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Este enlace no se puede etiquetar."
 cannotTagPage = "El contenido de esta página no se puede etiquetar."
 contentGroup = "Contenido"
 customTag = "{{role}} (etiqueta personalizada)"
-decorativeInfo = "Los lectores de pantalla omiten las imágenes decorativas. Úsalo para bordes, fondos y otras imágenes que no aportan información."
-decorativeLabel = "Imagen decorativa"
-description = "Descripción de la imagen"
-descriptionInfo = "Los lectores de pantalla leen esto en lugar de la imagen."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Las etiquetas no se pueden editar en un archivo cifrado"
 figureDescription = "Descripción de la figura"
 figureDescriptionInfo = "Los lectores de pantalla leen esto en lugar de la figura."
-formFieldDescription = "Descripción del campo"
 formulaDescription = "Descripción de la fórmula"
 formulaDescriptionInfo = "Los lectores de pantalla leen esto en lugar de la fórmula. Exprésalo como lo dirías en voz alta, por ejemplo, «x al cuadrado más uno»."
 heading = "Accesibilidad"
@@ -7813,7 +8019,6 @@ markedTagged = "El documento está totalmente etiquetado"
 markedTaggedHint = "Indica a los lectores de PDF que usen las etiquetas de accesibilidad. Márcalo cuando todo esté etiquetado."
 markedWithUntagged = "Parte del contenido no tiene etiquetas, por lo que los lectores de pantalla pueden omitirlo."
 missingDescriptions = "Descripciones que faltan"
-mixedContent = "La figura incluye otro contenido"
 mixedTags = "Mixto"
 needsDescriptionBadge = "Sin descripción"
 nextToReview = "Siguiente por revisar"
@@ -7821,12 +8026,10 @@ notFigure = "Etiquetado como parte del texto"
 removeTag = "Eliminar etiqueta"
 saveFailed = "No se han podido guardar tus cambios de accesibilidad, por lo que el archivo no se ha guardado. Deshazlos e inténtalo de nuevo."
 selectedText = "Texto seleccionado"
-tagFormField = "Etiquetar campo de formulario"
 tagging = "Etiquetando páginas"
 tagLabel = "Etiqueta"
 tagLinks_one = "Etiquetar enlace"
 tagLinks_other = "Etiquetar {{count}} enlaces"
-tagUntagged = "Etiquetar el documento automáticamente"
 tagUntaggedHint = "Añade automáticamente etiquetas de accesibilidad en todo el documento. El resultado es aproximado: comprueba después los encabezados, las listas y el orden de lectura."
 unknownTag = "No se puede leer aquí"
 unmarkedWithTags = "Algunos visores de PDF usarán igualmente las etiquetas y pueden omitir el contenido que no las tenga."
@@ -7851,7 +8054,7 @@ heading = "Encabezados"
 mixedNumbering = "Mezcla encabezados numerados y sin numerar"
 none = "Sin encabezados"
 onPage = "Encabezado en la página {{page}}"
-problems = "Problemas de encabezados"
+problemCount = "{{count}} to fix"
 skippedLevel = "Omite un nivel después de Encabezado {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Título"
 allLanguages = "Todos los idiomas"
 cannotSetDocument = "El idioma de este documento no se puede cambiar."
 cannotSetText = "El idioma de este texto no se puede cambiar."
-documentHint = "El idioma que usarán los lectores de pantalla salvo que una parte del texto establezca el suyo propio."
 documentLabel = "Idioma"
 documentLocked = "El idioma de un documento cifrado no se puede cambiar aquí."
 inDocument = "En este documento"
 innerLabel = "Idioma de la etiqueta {{number}}"
 label = "Idioma"
-missing = "Sin idioma establecido. Los lectores de pantalla lo adivinarán y pueden leer todo el documento con una voz incorrecta."
 mixed = "Mixto"
 noMatch = "No hay idioma coincidente. Escribe su código, como mt o en-IE."
 placeholder = "Selecciona un idioma"
@@ -7943,6 +8144,52 @@ renderFailed = "No se pudo renderizar la página"
 [pdfTextEditor.password]
 incorrect = "Contraseña incorrecta; inténtalo de nuevo."
 label = "Contraseña"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Guía de alineación en {{value}} {{unit}}; arrástrala a una regla para eliminarla"
@@ -8124,6 +8371,10 @@ title = "Variaciones de la vista previa"
 [pdfTextEditor.tooltip.textFocus]
 text = "Este espacio de trabajo se centra en editar texto y recolocar imágenes incrustadas. Las ilustraciones de página complejas, widgets de formularios y gráficos por capas se preservan para la exportación pero no son totalmente editables aquí."
 title = "Enfoque en texto e imagen"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF a CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Ocultar categoría"
 labelCount = "etiquetas"
 sharedNote = "Estas etiquetas están integradas y se comparten con todo tu equipo."
 showCategory = "Mostrar categoría"
-
-[policies.pii]
-account = "Números de cuenta (etiquetados)"
-card = "Tarjetas de crédito / débito"
-email = "Direcciones de correo electrónico"
-fieldLabel = "PII para redactar"
-iban = "IBAN"
-phone = "Números de teléfono"
-placeholder = "Seleccionar tipos de PII"
-routing = "Números de enrutamiento de EE. UU. (ABA)"
-ssn = "Números de la Seguridad Social"
 
 [policy]
 badgeEnforcing = "Aplicando {{name}}..."
@@ -10317,6 +10557,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "Nuevo flujo personalizado"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Todos los flujos"
 
@@ -12047,7 +12291,6 @@ label = "Herramientas de lectura"
 readAloud = "Leer en voz alta"
 rotateLeft = "Girar a la izquierda"
 rotateRight = "Girar a la derecha"
-search = "Buscar en el documento"
 switchDocument = "Cambiar de documento"
 thumbnails = "Páginas"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Color de Caja"
 convertPDFToImageLabel = "Convertir PDF a PDF-Imagen"
 customPaddingLabel = "Relleno Extra Personalizado"
 useRegexLabel = "Usar Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Búsqueda de Palabra Completa"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Configuración de Censura"
 
 [redact.auto.wordsToRedact]
 add = "Agregar"
-examples = "Ejemplos: Confidencial, Alto-Secreto"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Introduzca una palabra"
 title = "Palabras a Censurar"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Selecciona archivos en el gestor de archivos para ce
 manual = "Manual"
 mode = "Modo"
 title = "Método de Censura"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Solo coincide con texto que tenga las mismas mayúsculas y minúsculas. 'Secret' no coincidirá con 'SECRET' cuando esté activado, y [A-Z] en una regex solo coincide con mayúsculas."
@@ -12147,19 +12401,6 @@ title = "Método de Censura"
 text = "Haga clic y arrastre para seleccionar manualmente áreas específicas para censurar. Le da control preciso sobre lo que se censura. (Próximamente)"
 title = "Censura Manual"
 
-[redact.tooltip.words]
-bullet1 = "Agregue una palabra a la vez"
-bullet2 = "Presione Enter o haga clic en 'Agregar Otra' para agregar"
-bullet3 = "Haga clic en × para eliminar palabras"
-
-[redact.tooltip.words.description]
-text = "Introduzca palabras o frases para encontrar y censurar en su documento. Cada palabra se buscará por separado."
-title = "Coincidencia de Texto"
-
-[redact.tooltip.words.examples]
-text = "Las palabras típicas para censurar incluyen: detalles bancarios, direcciones de correo electrónico o nombres específicos."
-title = "Ejemplos Comunes"
-
 [redact.tooltip.words.header]
 title = "Palabras a Censurar"
 
@@ -12176,15 +12417,6 @@ failed = "Se produjo un error al eliminar las anotaciones del PDF."
 
 [removeAnnotations.info]
 description = "Esta herramienta eliminará todas las anotaciones (comentarios, resaltados, notas, etc.) de sus documentos PDF."
-
-[removeAnnotations.settings]
-title = "Configuración"
-
-[removeAnnotations.tooltip.description]
-title = "Qué hace"
-
-[removeAnnotations.tooltip.header]
-title = "Acerca de Eliminar anotaciones"
 
 [removeBlanks]
 submit = "Eliminar páginas en blanco"
@@ -12325,6 +12557,9 @@ tags = "reorganizar,reordenar,organizar,reorganizar,mover páginas,orden de pág
 [reorganizePages.error]
 failed = "Error al reorganizar las páginas"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Páginas reorganizadas"
 
@@ -12406,6 +12641,7 @@ title = "Invertir todos los colores"
 rotateLeft = "Rotar en sentido antihorario"
 rotateRight = "Rotar en sentido horario"
 selectRotation = "Selecciona el ángulo de rotación (en sentido horario)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Aplicar rotación"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotar PDF"
@@ -12516,8 +12752,7 @@ title = "Desinfectar"
 failed = "Se produjo un error al desinfectar el PDF."
 
 [sanitize.options]
-note = "Seleccione los elementos que desea eliminar del PDF. Debe seleccionarse al menos una opción."
-title = "Opciones de Desinfección"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Eliminar cualquier archivo incrustado dentro del PDF"
@@ -12649,6 +12884,7 @@ title = "Buscar PDF"
 hideTools = "Ocultar herramientas no disponibles ▴"
 messageNoFallback = "Las herramientas no estarán disponibles hasta que tu servidor vuelva a estar en línea."
 messageWithFallback = "Alguna herramientas requieren conexión con el servidor."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Ver herramientas no disponibles ▾"
 title = "Tu servidor de Stirling-PDF está inaccesible"
 toolNotAvailableLocally = "Tu servidor Stirling-PDF está sin conexión y \"{{endpoint}}\" no está disponible en el backend local."
@@ -13034,6 +13270,12 @@ title = "Atajos de teclado"
 mac = "Incluye ⌘ (Command), ⌥ (Option) u otro modificador en tu atajo."
 windows = "Incluye Ctrl, Alt u otro modificador en tu atajo."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Términos, política de privacidad y tus preferencias de cookies."
 label = "Legal"
@@ -13418,9 +13660,7 @@ image = "Subida"
 text = "Texto"
 
 [sign.step]
-createDesc = "Elija cómo quiere crear la firma"
 place = "Colocar y guardar"
-placeDesc = "Posicione la firma en su PDF"
 
 [sign.steps]
 configure = "Configurar Firma"
@@ -13597,6 +13837,10 @@ rotateLeft = "Girar a la izquierda"
 rotateRight = "Girar a la derecha"
 trim = "Recortar a la firma"
 trimHint = "Recorta el espacio vacío alrededor"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Ajustes de apariencia de la firma"
@@ -13959,7 +14203,6 @@ placeholder = "Introduzca el número de divisiones horizontales"
 
 [split-by-sections.splitMode]
 custom = "Páginas personalizadas"
-description = "Elige cómo dividir las páginas"
 label = "Modo de división"
 splitAll = "Dividir todas las páginas"
 splitAllExceptFirst = "Dividir todas excepto la primera"
@@ -14210,10 +14453,8 @@ failed = "Se produjo un error al aplicar el sello de tiempo al PDF."
 
 [timestampPdf.options]
 note = "Solo se envía al servidor TSA el hash SHA-256 de tu documento; el archivo PDF en sí nunca se envía al servidor TSA."
-title = "Servidor de sello de tiempo (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Elige una Autoridad de Sellado de Tiempo de confianza"
 label = "Selecciona un servidor TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "No hay herramientas disponibles"
 
 [tooltip]
 close = "Cerrar información sobre herramientas"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Esta herramienta eliminará las restricciones de solo lectura de los campos de formulario PDF, haciéndolos editables y rellenables."
@@ -14706,6 +14961,9 @@ signatureDate = "Fecha de firma"
 
 [validateSignature.settings]
 certHint = "Sube un certificado X.509 de confianza para validar frente a un origen de confianza personalizado."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Configuración de validación"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "No se puede previsualizar el archivo"
 copyRestricted = "La copia está deshabilitada por los permisos de este PDF."
 copyText = "Copiar"
 coverPageView = "Mostrar página de portada por separado"
-disableColorFilter = "Desactivar filtro de color"
 documentUpdated = "Documento actualizado"
 dualPageView = "Vista de Página Doble"
 editText = "Editar texto"
-enableDarkFilter = "Activar filtro oscuro"
-enableSepiaFilter = "Activar filtro sepia"
 engineLoadError = "No se pudo inicializar el motor del visor de PDF"
 engineSlowWarning = "La inicialización del motor PDF está tardando más de lo esperado. Comprueba la configuración de WebAssembly y Worker de tu navegador, o recarga la página."
 firstPage = "Primera Página"
@@ -14736,20 +14991,27 @@ fitPage = "Ajustar a la página"
 fitWidth = "Ajustar al ancho"
 lastPage = "Última Página"
 loadingEngine = "Cargando motor PDF..."
+menuSelected = "Selected"
 moreOptions = "Más"
 nextPage = "Página Siguiente"
 noPdfProvided = "No se proporcionó ningún PDF"
 onlyPdfSupported = "Este formato de archivo no admite vista previa."
 pageNavigation = "Navegación de páginas"
+pageNumber = "Page number"
 previousPage = "Página Anterior"
 readAloudFromHere = "Leer en voz alta desde aquí"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "No se pudo guardar el documento. Inténtelo de nuevo."
 saveChangesErrorTitle = "No se pudieron guardar los cambios"
 singlePageView = "Vista de Página Única"
+tools = "Tools"
 unknownFile = "Archivo desconocido"
-view = "Ver"
 zoom = "Zoom"
 zoomIn = "Acercar"
+zoomLevel = "Zoom level"
 zoomOut = "Alejar"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Vista previa de la firma"
 
 [viewer.signatureField]
 badge = "Firma"
+clickToSign = "Click to sign here"
 fieldTitle = "Campo de firma: {{name}}"
 signed = "Firmado"
 signedWithReason = "Firmado: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Campo de firma sin firmar: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Se han restaurado {{restored}} de {{total}} archivos. El resto ya no 
 
 [workbenchBar]
 activeFiles = "Archivos activos"
-annotations = "Anotaciones"
+annotate = "Annotate"
 applyRedactionsFirst = "Aplicar redacciones primero"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Cerrar todos los archivos"
 closePdf = "Cerrar PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Deseleccionar todo"
 downloadAll = "Descargar todo"
 editText = "Editar texto"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Salir del modo de anotación"
 exitRedaction = "Salir del modo de redacción"
 findReplace = "Buscar y reemplazar"
 formFill = "Editor de formularios"
-hideToolbar = "Ocultar barra de herramientas"
+layers = "Layers"
 moreActions = "Más acciones"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Editor de páginas"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Modo desplazar"
 print = "Imprimir PDF"
 readAloud = "Leer en voz alta"
 readAloudLanguage = "Idioma"
 readAloudSpeed = "Velocidad"
 redact = "Redactar"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Girar a la izquierda"
 rotateRight = "Girar a la derecha"
 ruler = "Regla / Medir"
+rulerScaleUnset = "Not set"
 rulerSettings = "Ajustes de escala"
 save = "Guardar"
 saveAll = "Guardar todo"
@@ -15123,14 +15398,23 @@ selectLanguage = "Seleccionar idioma"
 share = "Compartir"
 showAllTools = "Mostrar todas las herramientas"
 showFewerTools = "Contraer barra de herramientas"
-showToolbar = "Mostrar barra de herramientas"
+thumbnails = "Pages"
 toggleAnnotations = "Alternar visibilidad de las anotaciones"
-toggleAttachments = "Alternar adjuntos"
-toggleBookmarks = "Marcadores (tabla de contenidos)"
 toggleComments = "Comentarios"
-toggleLayers = "Alternar capas"
-toggleSidebar = "Alternar barra lateral"
 viewer = "Visor"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Tu acceso a este documento ha expirado."

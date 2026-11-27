@@ -12,9 +12,11 @@ comingSoon = "近日公開"
 confirm = "確認"
 confirmClose = "閉じる確認"
 confirmCloseCancel = "キャンセル"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "ファイルを閉じる"
 confirmCloseDiscard = "変更を破棄して閉じる"
 confirmCloseMessage = "このファイルを閉じてもよろしいですか？"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "保存して閉じる"
 confirmCloseSaveFailed_one = "エラーがあります。{{count}} file を保存できませんでした。"
 confirmCloseSaveFailed_other = "エラー付きで保存されました。{{count}} 個のファイルを保存できませんでした。"
@@ -44,7 +46,6 @@ fileSavedToDisk = "ファイルをディスクに保存しました"
 filesSelected = "{{count}} 個のファイル"
 font = "フォント"
 fontSizeTooltip = "ページ番号テキストのポイントサイズ。大きい数値ほど文字が大きくなります。"
-fontTypeTooltip = "ページ番号のフォントファミリー。文書のスタイルに合わせて選択してください。"
 green = "緑"
 help = "ヘルプ"
 incorrectPasswordMessage = "現在のパスワードが正しくありません。"
@@ -249,9 +250,7 @@ image = "アップロード"
 text = "テキスト"
 
 [addImage.step]
-createDesc = "追加する画像をアップロード"
 place = "画像を配置"
-placeDesc = "PDFをクリックして画像を追加"
 
 [addImage.steps]
 configure = "画像を設定"
@@ -276,7 +275,7 @@ fontName = "フォント名"
 fontSize = "フォントサイズ"
 numberPagesDesc = "例: 1,3,5-8、または全ページの場合は空白のままにします"
 pagePreviewAlt = "ページプレビュー"
-pagesAndStarting = "ページと開始番号"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "位置とページ"
 preview = "位置の選択"
 previewDisclaimer = "プレビューは概算です。最終出力は PDF のフォントメトリクスにより異なる場合があります。"
@@ -300,6 +299,7 @@ title = "ページ番号の結果"
 
 [addPassword]
 desc = "パスワードで PDF 文書を暗号化します。"
+submit = "Add Password"
 tags = "暗号化,パスワード,ロック,安全,保護,セキュリティ,暗号化,保護措置,機密,非公開,アクセス制限"
 title = "パスワードの追加"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "スタンププレビュー"
 tags = "スタンプ,マーク,印,承認済み,却下,機密,スタンプツール,ゴム印,日付スタンプ,承認スタンプ,受領,無効,コピー,原本"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "文字"
-clickToExpand = "クリックして展開"
 customColor = "文字色のカスタム"
 customDateDesc = "カスタム形式"
 customPosition = "プレビューウィンドウでスタンプをドラッグして配置します。"
 dateDesc = "現在の日付"
 datetimeDesc = "日付と時刻の組み合わせ"
 dateTimeVars = "日付と時刻"
-dynamicVariables = "動的変数"
 examples = "例"
 filenameDesc = "拡張子なしのファイル名"
 filenameFullDesc = "拡張子付きのファイル名"
@@ -365,6 +364,8 @@ noStampSelected = "スタンプが選択されていません。ステップ1に
 opacity = "不透明度"
 otherVars = "その他"
 pageNumberDesc = "現在のページ番号"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "ページ情報"
 position = "位置"
 positionAndFormatting = "位置と書式"
@@ -378,9 +379,10 @@ quickPosition = "ページ上の配置位置を選択してください。"
 rotation = "回転"
 selectedImageAlt = "選択されたスタンプ画像"
 selectTemplate = "テンプレートを選択..."
+size = "Size"
 stampSetup = "スタンプ設定"
 stampText = "スタンプする文章"
-stampTextDescription = "以下の動的変数を使用します。リテラルの @ には @@ を使用します。改行には \\n を使用します。"
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "スタンプの種類"
 submit = "スタンプを追加"
 tags = "スタンプ, 画像を追加, 画像を中央に配置, 透かし, PDF, 埋め込み, カスタマイズ"
@@ -389,7 +391,6 @@ title = "PDFにスタンプを押す"
 totalPagesDesc = "総ページ数"
 useTemplate = "テンプレートを使用"
 uuidDesc = "短い一意識別子（8 文字）"
-variablesHelp = "任意の変数をクリックしてスタンプテキストに挿入します。リテラルの @ には @@ を使用します。"
 yearMonthDayDesc = "個別の日付要素"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "PDF にスタンプを追加中にエラーが発生しました。"
 
 [AddStampRequest.results]
 title = "スタンプ結果"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "カスタム"
@@ -410,6 +417,11 @@ legal-footer = "法的フッター"
 page-numbers = "ページ番号"
 pageNumberFooter = "ページ番号フッター"
 timestamp = "タイムスタンプ"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "テキストを適用"
@@ -462,9 +474,7 @@ image = "アップロード"
 text = "テキスト"
 
 [addText.step]
-createDesc = "追加するテキストを入力"
 place = "テキスト配置"
-placeDesc = "PDF上をクリックしてテキストを追加"
 
 [addText.steps]
 configure = "テキスト設定"
@@ -1233,6 +1243,18 @@ label = "起動時に再生成"
 description = "証明書の有効日数"
 label = "証明書の有効期間（日）"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "フォルダーソースとフォルダー出力が読み書きできるディレクトリ。これはセキュリティ境界です。自動化はこのリスト外のサーバーパスを指すことはできません。"
 securityNote = "フォルダーソースと出力を完全に無効化するには、ここを空のままにします。Stirling 独自の構成ディレクトリは常にアクセス禁止です。"
@@ -1456,7 +1478,9 @@ label = "SMTP ユーザー名"
 
 [admin.settings.mcp]
 apikeyNote = "クライアントは X-API-KEY ヘッダー（または Authorization: Bearer <key>）で Stirling API key を送信します。キーは所有する Stirling ユーザーに対応します。プロビジョニング済みアカウントのみアクセスでき、操作はそのユーザーとして監査されます。キーは Account > API Keys で管理します。"
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stirling の PDF ツールと AI エージェントを OAuth で保護されたエンドポイント経由で MCP クライアントに公開します。"
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "許可するツール"
 description = "MCP から隠す operation id（カンマまたはスペース区切り）。例: add-password remove-password。有効なすべてのツールを公開する場合は空白のままにします。"
 label = "ブロックするツール"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "オフ（デフォルト）の場合、/mcp エンドポイント、メタデータ、MCP beans は読み込まれません。"
 label = "MCP Server を有効化"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "上に OAuth issuer + resource ID を入力し、保存して再起動します。"
 step1ApiKey = "Account > API Keys で API key を作成します（各ユーザーが自分のキーを使用します）。"
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "MCP クライアントに"
 step2b = "server を追加し、次を指定します:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "クライアントは OAuth を次から自動検出します:"
 step3ApiKey = "キーを"
 step3ApiKeyb = "ヘッダー（または Authorization: Bearer <key>）で送信します。OAuth やメタデータ検出は使用されません。"
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "サインインを承認すると、クライアントはトークン付きで再試行します。ツールは convert、pages、misc、security、ai にグループ化されて表示されます。"
 step4ApiKey = "ツールは convert、pages、misc、security、ai にグループ化されて表示され、すべての呼び出しはキーの所有者として監査されます。"
 tip = "ヒント: resource ID を IdP の許可 audience として登録してください。MCP Inspector と Claude Desktop でテスト済みです。"
 tipApiKey = "ヒント: API-key モードでは外部 IdP は不要です。セルフホストでは最も簡単です。キーは所有する Stirling ユーザーに対応します。"
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "MCP クライアントを接続"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "issuer から自動検出"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling ユーザーごとのキー)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth には外部 IdP が必要です。API key は Stirling のユーザー別 API key（X-API-KEY）を使用します。セルフホストでは最も簡単です。"
 label = "認証モード"
 oauth = "OAuth 2.1 (外部 IdP)"
@@ -1515,6 +1563,18 @@ label = "リソースID"
 [admin.settings.mcp.scopes]
 description = "読み取り操作には mcp.tools.read、書き込み/AI 操作には mcp.tools.write を要求します。"
 label = "OAuth scopes を適用"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling ユーザー名と照合する JWT claim（例: sub, email, preferred_username）。"
@@ -1943,9 +2003,6 @@ title = "Stirling PDF の改善にご協力いただけますか？"
 tags = "注釈,ハイライト,描画,マークアップ,コメント,メモ,レビュー,赤入れ,フィードバック,マークアップツール,付箋,図形,矢印,テキストボックス,フリーハンド"
 
 [annotation]
-alignCenter = "中央揃え"
-alignLeft = "左揃え"
-alignRight = "右揃え"
 annotationStyle = "注釈スタイル"
 backgroundColor = "背景色"
 borderOff = "枠線: オフ"
@@ -2016,18 +2073,61 @@ underline = "下線"
 undoDelete = "元に戻す"
 width = "幅"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "どのインフラでも実行できる、無料でプライベートな PDF エディター。"
 
 [appBanner]
 dismiss = "閉じる"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "添付ファイルを追加..."
 convertToPdfA3b = "PDF/A-3b に変換"
 convertToPdfA3bTooltip = "PDF/A-3b は長期保存を保証するアーカイブ形式です。任意のファイル形式を添付として埋め込めます。変換には Ghostscript が必要で、大きなファイルでは時間がかかる場合があります。"
-convertToPdfA3bTooltipHeader = "PDF/A-3b 変換について"
-convertToPdfA3bTooltipTitle = "機能"
 discardChanges = "破棄"
 downloadSingle = "添付ファイルをダウンロード"
 duplicateName = "名前が '{{name}}' の添付ファイルはすでに存在します。"
@@ -2208,7 +2308,6 @@ guest = "ゲスト"
 user = "ユーザー"
 
 [auto-rename]
-description = "PDF コンテンツからタイトルを自動的に検出し、ファイル名として使用します。"
 submit = "自動リネーム"
 tags = "自動検出,ヘッダー基準,整理,リネーム"
 title = "ファイル名の自動変更"
@@ -2218,21 +2317,6 @@ failed = "PDF の自動リネーム中にエラーが発生しました。"
 
 [auto-rename.results]
 title = "自動リネーム結果"
-
-[auto-rename.settings]
-title = "概要"
-
-[auto-rename.tooltip.description]
-title = "機能"
-
-[auto-rename.tooltip.header]
-title = "自動リネームの仕組み"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "タイトルや見出しと見なせるテキストを探します"
-bullet2 = "検出したタイトルからクリーンで有効なファイル名を作成します"
-bullet3 = "適切なタイトルが見つからない場合は元の名前を保持します"
-title = "スマートリネーム"
 
 [autoFormDetection]
 loading = "フォームフィールドを検出中..."
@@ -2327,6 +2411,9 @@ remove = "ツールを削除"
 selected = "選択したツール"
 selectTool = "ツールを選択..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "キャンセル"
 confirm = "戻る"
@@ -2360,6 +2447,10 @@ title = "自動処理を実行"
 [automate.selection]
 title = "自動処理の選択"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "新しい自動処理を作成"
 
@@ -2371,6 +2462,7 @@ title = "提案"
 
 [automate.sequence]
 finish = "完了"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "自動処理を実行"
 running = "自動処理を実行中..."
 signInToRun = "自動処理を実行するにはサインインしてください。"
@@ -2391,7 +2483,6 @@ secureWorkflow = "セキュリティ ワークフロー"
 secureWorkflowDesc = "JavaScript や埋め込みファイルなどの潜在的に悪意あるコンテンツを削除し、パスワード保護を追加して PDF を保護します。既定パスワードは「password」です。"
 
 [autoRename]
-description = "このツールは内容に基づいて PDF ファイル名を自動でリネームします。文書内のテキストから最適なタイトルを抽出して適用します。"
 tags = "自動検出,ヘッダー基準,整理,ラベル変更,自動名前変更,自動リネーム,スマートリネーム,内容で名前変更,ファイル名,ファイル命名,タイトル検出"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,分割,ドキュメント,整理"
 [autoSplitPDF]
 dividerDownload2 = "ダウンロード '自動仕切り用紙 (手順書付き).pdf'"
 duplexMode = "両面モード (表裏スキャン)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR ベース,分離,スキャン分割,整理"
 title = "PDFの自動分割"
 
@@ -2528,9 +2620,6 @@ tooltip = "各ページ区画の周りにカットや位置合わせ用の枠線
 [bookletImposition.addGutter]
 label = "ノド（余白）を追加"
 tooltip = "製本用の内側余白スペースを追加します"
-
-[bookletImposition.advanced]
-toggle = "詳細オプション"
 
 [bookletImposition.doubleSided]
 label = "両面印刷"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS ファイルを選択"
 chooseP12File = "PKCS12 ファイルを選択"
 choosePfxFile = "PFX ファイルを選択"
 choosePrivateKey = "秘密鍵ファイルを選択"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "辞退"
 fetchFailed = "署名データの読み込みに失敗しました"
 finalized = "最終化済み"
 location = "場所"
-logoTitle = "ロゴ"
-name = "名前"
-noLogo = "ロゴなし"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "ページ番号"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "証明書パスワード"
 passwordOptional = "パスワードがない場合は空欄のまま"
 pemCertificateLabel = "証明書 (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "秘密鍵 (.pem / .key)"
 pending = "保留中"
 readyToFinalize = "最終化の準備完了"
 reason = "理由"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "サーバー証明書を使用 - ファイルやパスワードは不要です"
-showLogo = "ロゴを表示"
 signatureProgress = "{{signedCount}}/{{totalCount}} 件の署名"
 tags = "認証,PEM,P12,公式,暗号化,署名,証明書,PKCS12,JKS,サーバー,手動,自動"
 title = "証明書による署名"
@@ -2738,12 +2828,45 @@ viewed = "閲覧済み"
 
 [certSign.appearance]
 invisible = "非表示"
+showOnPage = "Show signature on page"
 stepTitle = "署名の表示"
 visibility = "表示状態"
 visible = "表示"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "署名詳細"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "署名の表示について"
@@ -2762,9 +2885,6 @@ bullet3 = "署名を配置するページを選択可能"
 bullet4 = "任意でロゴを含められます"
 text = "PDF 上に署名ブロックを表示し、氏名、日付、任意の詳細を示します。文書が署名済みであることを読者に明確に示したい場合に有用です。"
 title = "可視署名"
-
-[certSign.certFiles]
-stepTitle = "証明書ファイル"
 
 [certSign.certType.tooltip.convert]
 text = "keytool でファイルを Java キーストア（.jks）に変換し、JKS を選択してください。"
@@ -2786,6 +2906,7 @@ text = "お持ちの証明書ファイルに合う形式を選択してくださ
 title = "どのオプションを使うべき？"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "証明書形式"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "このデバイス"
 [certSign.error]
 failed = "署名の処理中にエラーが発生しました。"
 
-[certSign.format]
-pkcs11 = "USBトークン"
-windowsStore = "Windows 証明書ストア"
-
 [certSign.hardware]
-certificate = "証明書"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "カスタムドライバーのパス…"
+digitalId = "Digital ID"
 driver = "PKCS#11 ドライバー"
 driverPath = "ドライバーライブラリのパス"
 driverPathPlaceholder = "お使いの PKCS#11 ドライバーへのフルパス（.dll、.so または .dylib）"
-expired = "期限切れ"
-expires = "有効期限"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "証明書を一覧表示"
-loading = "証明書を読み込み中…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "署名用証明書が見つかりません"
 noDriver = "PKCS#11 ドライバーが検出されませんでした。お使いのトークンのドライバー（例: OpenSC）をインストールしてから、この画面を再度開くか、下にドライバーのパスを手動で入力してください。"
-notYetValid = "まだ有効ではありません"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "トークン PIN"
 pkcs11Hint = "お使いのトークンの PKCS#11 ドライバーを選択し、PIN を入力して、トークン上の証明書を一覧表示してください。"
 pkcs11LoadError = "トークンから証明書を読み取れませんでした。PIN とドライバーを確認してください。"
-refresh = "更新"
-selectCert = "証明書を選択"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "ドライバーを選択"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "スロット（任意）"
-windowsHint = "Windows の証明書ストアから証明書を選択してください。署名にはカード/トークン上の鍵が使用され、Windows が PIN の入力を求めます。"
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Windows の証明書ストアを読み取れませんでした"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "判断基準"
 device = "このデバイス"
 noOtherSources = "他に利用可能な証明書ソースはありません。"
 server = "サーバー"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "証明書の取得元"
 upload = "アップロード"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "ユーザー名を更新します。更新後はログアウトされます。"
@@ -3069,7 +3205,6 @@ placeholder = "文書の作成アプリ"
 
 [changeMetadata.customFields]
 add = "フィールドを追加"
-description = "文書にカスタムメタデータ項目を追加します"
 key = "キー"
 keyPlaceholder = "カスタムキー"
 remove = "削除"
@@ -3135,10 +3270,6 @@ bullet1 = "作成日：文書が作られた日"
 bullet2 = "更新日：最後に変更された日"
 text = "文書の作成日時と最終更新日時です。"
 title = "日付フィールド"
-
-[changeMetadata.tooltip.deleteAll]
-text = "プライバシー保護のためにメタデータを完全削除します。"
-title = "既存メタデータの削除"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Title: 文書名または見出し"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "使用上限に達しました。続行するにはプラ
 
 [checkAccessibility]
 aboutRow = "{{label}} について"
-checking = "確認中..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "アクセシビリティレポートをダウンロード"
 fileFailed = "失敗"
+noFiles = "Select a PDF to check it."
 pickFile = "結果を表示"
-submit = "アクセシビリティをチェック"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "代替テキスト"
@@ -3286,10 +3417,17 @@ structure = "見出し、リスト、表などページ各部の意味と読む�
 [checkAccessibility.checks]
 label = "チェック項目のうち {{passed}}/{{total}} が合格"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "アクセシビリティレポートを作成できませんでした。もう一度お試しください。"
 fileTitle = "このファイルはチェックできませんでした"
 partial = "一部のファイルをチェックできませんでした。"
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "PDF/UA を宣言"
@@ -3312,6 +3450,21 @@ title = "メタデータにタイトルがあります。"
 [checkAccessibility.figures]
 summary_one = "{{count}} 件の画像に説明が必要（{{pages}} ページ）"
 summary_other = "{{count}} 件の画像に説明が必要（{{pages}} ページ）"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "適用対象"
@@ -3465,19 +3618,7 @@ checking = "{{current}}/{{total}} を確認中..."
 complete = "チェック完了"
 
 [checkAccessibility.steps]
-results = "結果"
 standard = "規格"
-
-[checkAccessibility.tooltip.header]
-title = "どの規格でチェックするか"
-
-[checkAccessibility.tooltip.ua1]
-text = "2012 年に ISO 14289-1 として公開された最初の PDF/UA。PDF 1.7 ファイル向け。"
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "2024 年に ISO 14289-2 として公開された新しいバージョン。PDF 2.0 ファイル向け。PDF 1.7 ファイルをこれでチェックすると、PDF 2.0 のみに適用されるルールで不合格になります。"
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "注釈 {{n}}"
@@ -3868,6 +4009,7 @@ title = "色を選択"
 transparent = "透明"
 
 [common]
+aboutField = "About {{field}}"
 actions = "操作"
 back = "戻る"
 cancel = "キャンセル"
@@ -4206,7 +4348,9 @@ title = "API キーを更新"
 warning = "⚠️ 警告：この操作は新しい API キーを生成し、以前のキーを無効にします。"
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) により、Claude などの AI アシスタントが Stirling PDF ツールを直接使用できます。一度クライアントを接続すると、アシスタントがあなたに代わってドキュメントの変換、編集、保護、処理を行えます。"
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "ゲストユーザーは MCP クライアントを接続できません。MCP サーバーを使用し、AI アシスタントがあなたに代わって Stirling PDF ツールを実行できるようにするには、アカウントを作成してください。"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} をコピー"
 tooltipCopied = "{{label}} をコピーしました"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "あなたの MCP エンドポイント"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "追加先"
 hint = "クライアントを選び、表示されたファイルにスニペットを貼り付けてから再起動します。初回使用時に Stirling アカウントでサインインします。コピーするキーはありません。"
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "AI アシスタントを接続"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "縦横比を維持"
 maxAttachmentSize = "最大添付サイズ（MB）"
 multiple = "複数"
 optimizeForEbook = "PDF を eBook リーダー向けに最適化（Ghostscript 使用）"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "出力"
-outputFormat = "出力形式"
-pdfaAccessibleFormat = "{{format}} (アクセシブル)"
-pdfaDigitalSignatureWarning = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
-pdfaNote = "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能に対応し、PDF/A-3b は埋め込みファイルに対応しています。"
-pdfaOptions = "PDF/A オプション"
 pdfOptions = "PDF オプション"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "設定"
 signInToUse = "使用するにはサインインしてください"
 single = "単一"
 sourceFormatPlaceholder = "変換元形式"
-strictMode = "厳格モード"
-strictModeDesc = "変換が完全でない場合はエラーにします（VeraPDF 検証を使用）"
 svgPdfOptions = "SVG から PDF のオプション"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG ファイルはベクターグラフィックとしてレンダリングされるため、どの解像度でも鮮明に出力されます。SVG の寸法により PDF ページサイズが決まります。"
@@ -4396,9 +4549,7 @@ zoomLevel = "ズームレベル"
 
 [convert.ebookOptions]
 includePageNumbers = "ページ番号を含める"
-includePageNumbersDesc = "生成される PDF にページ番号を追加"
 includeTableOfContents = "目次を含める"
-includeTableOfContentsDesc = "生成した目次を結果の PDF に追加"
 optimizeForEbookPdf = "電子書籍リーダー向けに最適化"
 optimizeForEbookPdfDesc = "PDF を eBook 読書向けに最適化します（ファイルサイズ縮小、eInk デバイスでの表示改善）"
 
@@ -4407,7 +4558,6 @@ detectChapters = "章を検出"
 detectChaptersDesc = "章のように見える見出しを検出し、EPUB の改ページを挿入します"
 kindleEink = "Kindle e-Ink（テキスト最適化）"
 outputFormat = "出力形式"
-outputFormatDesc = "電子書籍の出力形式を選択"
 tabletPhone = "タブレット/スマートフォン（画像あり）"
 targetDevice = "対象デバイス"
 targetDeviceDesc = "リーダーデバイス向けに最適化された出力プロファイルを選択"
@@ -4469,8 +4619,24 @@ description = "これらの Cookie は Web サイトが正しく機能するた�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "表紙ページのタイトル"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF ポートフォリオ"
 description = "選択した各ファイルは、種類に関係なく新しい PDF 内に丸ごと保持されます。ポートフォリオに対応していないリーダーでは、添付ファイル付きの表紙ページが表示されます。"
 goToFileEditor = "ファイルエディターへ移動"
@@ -4488,6 +4654,9 @@ title = "機能"
 
 [createPortfolio.tooltip.header]
 title = "PDF ポートフォリオについて"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "余白を自動トリミング"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "このブラウザーではクリップボードにア�
 export = "ブックマークをエクスポート"
 exportClipboard = "JSON をクリップボードにコピー"
 exportJson = "JSON をダウンロード"
+exportMenu = "Export"
 importClipboard = "クリップボードの JSON を貼り付け"
 importJson = "JSON をインポート"
+importMenu = "Import"
 loadFromPdf = "選択したPDFから読み込み"
 noFile = "既存のブックマークを抽出するPDFを選択してください。"
 selectedFile = "{{file}} から読み込み"
-source = "ブックマークを読み込み"
 
 [editTableOfContents.editor]
 addTopLevel = "最上位のブックマークを追加"
@@ -4740,6 +4910,9 @@ replaceExisting = "既存のブックマークを置換（オフで末尾に追�
 replaceExistingHint = "無効にすると、新しいアウトラインは現在のブックマークの後ろに追加されます。"
 title = "ブックマークとアウトライン"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDFを変更"
 filePrompt = "ライブラリからPDFを選ぶか、新規にアップロードしてください。"
@@ -4753,7 +4926,6 @@ title = "ツールを開いて編集を開始"
 [encryptedPdfUnlock]
 actionIgnored = "{{action}} の制限を無視しました"
 actionUnlocked = "このセッションで {{action}} のロックを解除しました"
-advanced = "詳細"
 allowed = "許可済み"
 annotations = "注釈"
 authoriseAction = "この PDF で {{action}} を使用するには権限が必要です。"
@@ -4801,7 +4973,6 @@ restricted = "制限あり"
 restrictedActions = "制限された操作"
 restrictedOperation = "この操作には権限パスワードが必要です。"
 retainOwnerVerification = "開くためのパスワードを削除しつつ権限パスワードを変更せず保持するには、権限パスワードを確認してください。これは権限パスワードを削除しません。"
-saveProtection = "保護を保存"
 securityChangeFailed = "保護を変更できません。権限パスワードと新しいセキュリティ設定を確認してください。"
 sessionDetails = "このセッションで開きます。PDF は保護されたままです。"
 sessionDetailsLabel = "セッションでのロック解除について"
@@ -4871,7 +5042,6 @@ title = "問題が発生しました"
 tryAgain = "再試行"
 
 [extractImages]
-allowDuplicates = "重複した画像を保存する"
 selectText = "抽出した画像のフォーマットを選択"
 submit = "抽出"
 tags = "画像,写真,保存,アーカイブ,ZIP,キャプチャ,取得"
@@ -4927,12 +5097,15 @@ closeFile = "ファイルを閉じる"
 
 [fileEditor]
 closedFile = "{{name}} を閉じました"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "ファイルの順序を変更しました"
 filesReordered_other = "{{count}} 個のファイルの順序を変更しました"
 loadedFromStorage_one = "ストレージから {{count}} 個のファイルを読み込みました"
 loadedFromStorage_other = "ストレージから {{count}} 個のファイルを読み込みました"
 loadFromStorageFailed = "ストレージから一部のファイルを読み込めませんでした"
 pinnedFile = "{{name}} をピン留めしました"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} を保存して閉じました"
 saveFailed = "保存に失敗しました"
 unpinnedFile = "{{name}} のピン留めを解除しました"
@@ -5019,11 +5192,20 @@ locked = "ロック済み"
 previewOf = "{{name}} のプレビュー"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "ファイルを追加"
 created = "作成日時"
 notIncludedInToolRun = "このツール実行には含まれていません"
 size = "ファイルサイズ"
 title = "ファイル"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "利用可能なファイルはありません"
@@ -5104,6 +5286,7 @@ subtitle = "ファイルサイドバーのカテゴリを表示または非表�
 title = "サイドバーのカテゴリ"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "キャンセル"
 error = "ファイル名を変更できませんでした。"
 illegalCharacters = "ファイル名に \\ / : * ? \" < > | を含めることはできません"
@@ -5607,7 +5790,6 @@ removeField = "フィールドを削除"
 
 [formFill.editor]
 action = "ボタンアクション"
-actionHelp = "クリックされたときにボタンが行う動作です。"
 actionNone = "なし"
 actionPrint = "印刷"
 actionReset = "フォームをリセット"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "入力できる文字数を制限し、等間隔のボックス
 multiline = "複数行"
 multilineHelp = "複数行のテキストを許可し、フィールドの端で折り返します。"
 multiSelect = "複数選択を許可"
-multiSelectHelp = "一度に複数のオプションを選択できるようにします。"
 name = "フィールド名"
 nameHelp = "フィールドの内部名です。データのエクスポートや別システムからのフォーム入力時に使用されるため、一意でスペースを含まない名前にしてください。"
 optionGap = "オプション間隔"
@@ -5902,6 +6083,11 @@ title = "色/コントラストの調整"
 desc = "ビューワーでハイライト、描画、ノートや図形の追加"
 tags = "注釈,ハイライト,描画,マークアップ,コメント,メモ,レビュー,赤入れ,フィードバック,マークアップツール,付箋,図形,矢印,テキストボックス,フリーハンド"
 title = "注釈"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "AI でフォームフィールドを自動検出し、PDF を入力可能にします。"
@@ -6405,6 +6591,9 @@ sort = "ソート"
 [merge.sortFiles]
 title = "ファイルを並べ替え"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "結合設定の概要"
 
@@ -6548,6 +6737,9 @@ title = "認証に失敗しました"
 message = "このウィンドウを閉じて Stirling PDF に戻れます。"
 title = "認証に成功しました"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "アクセスを許可"
 approving = "許可中..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "アプリに戻っています..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} があなたのStirling PDFアカウントへのアクセスを求めています"
 scopesIntro = "これにより {{app}} は次を実行できます:"
 signedInAs = "{{name}} としてサインイン中"
@@ -6565,6 +6758,8 @@ signInButton = "サインインして続行"
 signInPrompt = "アプリの接続を続行するには、Stirling PDFアカウントにサインインしてください。"
 title = "Authorise access"
 unknownApp = "サードパーティアプリケーション"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "あなたとして操作 - {{app}} が行うすべてはあなたのアカウントで実行され、使用量にカウントされます"
@@ -6572,9 +6767,12 @@ tools = "あなたに代わってStirling PDFツールを使用 - ドキュメ�
 
 [oauthConsent.scope]
 email = "メールアドレスを表示"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "本人確認"
 phone = "電話番号を表示"
 profile = "基本プロフィール情報を表示"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。"
@@ -6956,6 +7154,10 @@ yourCloudAccess = "あなたはチームメンバーになり、所有者アク�
 [pageEdit]
 deselectAll = "なし"
 selectAll = "すべてチェック"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "ページの抽出"
@@ -7577,6 +7779,8 @@ stamp = "スタンプ注釈 - ページテキストではないため、ここ�
 widget = "フォームフィールド - ページテキストではないため、ここでは編集できません"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "編集"
 markTagged = "完全にタグ付け済みとしてマーク"
 matchScanFont = "スキャンテキストを {{face}} に合わせる"
@@ -7590,6 +7794,7 @@ tagPageContent = "ページを自動タグ付け"
 typeInto = "{{run}} に入力"
 ungroupParagraph = "段落 {{run}} のグループ化を解除"
 unmarkTagged = "完全にタグ付け済みの指定を解除"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "{{run}} を折り返し"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "未保存の変更を破棄しますか？"
 
 [pdfTextEditor.error]
 decodeImage = "選択した画像をデコードできませんでした。"
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "このテキストを複製できません。使用可能なフォントに、すべての文字を描画できるものがありません。"
 formLiftChangesDrawing = "編集できません。これは、変更時にエディターが維持できないクリッピングまたはグラフィック設定を持つグループの一部として描画されています。"
 insertImage = "選択した画像を挿入できませんでした。"
 needsShaping = "エディターはまだこのスクリプトの連結文字や母音記号を正しく描画できないため、この変更は行われませんでした。"
+reopenLost = "Open again"
 replaceClippedImage = "この画像は置換できません。トリミングされており、置換するとトリミングで隠れている部分が表示されてしまいます。"
 scanOffInk = "このテキストは編集できません: 認識された語がスキャンと一致しません。OCR を再実行してください。"
 unsafeRtlEdit = "この編集は行えません。エディターは、この行の右から左へのテキストを変更せずに再描画できません。"
@@ -7616,6 +7823,7 @@ pngFileType = "PNG画像"
 close = "検索バーを閉じる"
 count = "{{current}} / {{total}}"
 findPlaceholder = "検索"
+hideReplace = "Hide replace"
 ignoreAccents = "アクセントを無視"
 matchCase = "大文字と小文字を区別"
 next = "次の一致"
@@ -7625,6 +7833,7 @@ replace = "置換"
 replaceAll = "すべて置換"
 replaced = "{{count}}件を置換しました"
 replacePlaceholder = "置換後の文字列"
+showReplace = "Show replace"
 wholeWord = "単語全体"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "このリンクはタグ付けできません。"
 cannotTagPage = "このページのコンテンツはタグ付けできません。"
 contentGroup = "コンテンツ"
 customTag = "{{role}}（カスタムタグ）"
-decorativeInfo = "スクリーンリーダーは装飾用画像をスキップします。境界線、背景、その他情報を持たない画像に使用してください。"
-decorativeLabel = "装飾用画像"
-description = "画像の説明"
-descriptionInfo = "スクリーンリーダーは画像の代わりにこれを読み上げます。"
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "暗号化されたファイルではタグを編集できません"
 figureDescription = "図の説明"
 figureDescriptionInfo = "スクリーンリーダーは図の代わりにこれを読み上げます。"
-formFieldDescription = "フィールドの説明"
 formulaDescription = "数式の説明"
 formulaDescriptionInfo = "スクリーンリーダーは数式の代わりにこれを読み上げます。例えば「x の二乗プラス 1」のように、口頭で言う形で記述してください。"
 heading = "アクセシビリティ"
@@ -7813,7 +8019,6 @@ markedTagged = "ドキュメントは完全にタグ付け済み"
 markedTaggedHint = "PDF リーダーにアクセシビリティタグの使用を指示します。すべてタグ付けし終えたら有効にしてください。"
 markedWithUntagged = "一部のコンテンツにタグがなく、スクリーンリーダーにスキップされる可能性があります。"
 missingDescriptions = "説明がありません"
-mixedContent = "図に他のコンテンツが含まれています"
 mixedTags = "混在"
 needsDescriptionBadge = "説明なし"
 nextToReview = "次のレビュー対象へ"
@@ -7821,12 +8026,10 @@ notFigure = "テキストの一部としてタグ付け済み"
 removeTag = "タグを削除"
 saveFailed = "アクセシビリティの変更を保存できなかったため、ファイルは保存されませんでした。変更を元に戻して、もう一度お試しください。"
 selectedText = "選択したテキスト"
-tagFormField = "フォーム フィールドにタグ付け"
 tagging = "ページのタグ付け"
 tagLabel = "タグ"
 tagLinks_one = "リンクにタグ付け"
 tagLinks_other = "{{count}} 件のリンクにタグ付け"
-tagUntagged = "ドキュメントを自動タグ付け"
 tagUntaggedHint = "ドキュメント全体にアクセシビリティタグを自動追加します。結果は大まかなので、その後に見出し、リスト、読み順を確認してください。"
 unknownTag = "ここでは読み取れません"
 unmarkedWithTags = "一部の PDF ビューアはタグを使用するため、タグのないコンテンツをスキップする場合があります。"
@@ -7851,7 +8054,7 @@ heading = "見出し"
 mixedNumbering = "番号付き見出しと番号なし見出しが混在しています"
 none = "見出しなし"
 onPage = "{{page}} ページの見出し"
-problems = "見出しの問題"
+problemCount = "{{count}} to fix"
 skippedLevel = "見出し {{previous}} の後でレベルを飛ばしています"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "タイトル"
 allLanguages = "すべての言語"
 cannotSetDocument = "このドキュメントの言語は変更できません。"
 cannotSetText = "このテキストの言語は変更できません。"
-documentHint = "テキストで個別設定がない限り、スクリーンリーダーが使用する言語です。"
 documentLabel = "言語"
 documentLocked = "暗号化されたドキュメントの言語はここでは変更できません。"
 inDocument = "このドキュメント内"
 innerLabel = "タグ {{number}} の言語"
 label = "言語"
-missing = "言語が未設定です。スクリーンリーダーが推測するため、文書全体を誤った声で読む可能性があります。"
 mixed = "混在"
 noMatch = "一致する言語がありません。代わりに mt や en-IE のようにコードを入力してください。"
 placeholder = "言語を選択"
@@ -7943,6 +8144,52 @@ renderFailed = "ページをレンダリングできませんでした"
 [pdfTextEditor.password]
 incorrect = "パスワードが正しくありません - もう一度お試しください。"
 label = "パスワード"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} の配置ガイド - 削除するにはルーラー上にドラッグ"
@@ -8124,6 +8371,10 @@ title = "プレビュー差異"
 [pdfTextEditor.tooltip.textFocus]
 text = "このワークスペースはテキストの編集と埋め込み画像の位置調整に重点を置いています。複雑なページのアートワーク、フォームウィジェット、レイヤー化されたグラフィックは書き出し時に保持されますが、ここでは完全には編集できません。"
 title = "テキストと画像のフォーカス"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDFをCSVに変換"
@@ -8383,17 +8634,6 @@ hideCategory = "カテゴリを非表示"
 labelCount = "ラベル"
 sharedNote = "これらのラベルは組み込みで、チーム全体で共有されます。"
 showCategory = "カテゴリを表示"
-
-[policies.pii]
-account = "アカウント番号（ラベル付き）"
-card = "クレジット／デビットカード"
-email = "メールアドレス"
-fieldLabel = "墨消しするPII"
-iban = "IBAN"
-phone = "電話番号"
-placeholder = "PIIタイプを選択"
-routing = "米国のルーティング番号（ABA）"
-ssn = "社会保障番号"
 
 [policy]
 badgeEnforcing = "{{name}} を適用中..."
@@ -10317,6 +10557,10 @@ title = "パイプライン"
 [portal.pipelines.actions]
 newCustomPipeline = "新しいカスタムパイプライン"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "すべてのパイプライン"
 
@@ -12047,7 +12291,6 @@ label = "閲覧ツール"
 readAloud = "読み上げ"
 rotateLeft = "左に回転"
 rotateRight = "右に回転"
-search = "ドキュメント内を検索"
 switchDocument = "ドキュメントを切り替え"
 thumbnails = "ページ"
 
@@ -12062,6 +12305,7 @@ colorLabel = "ボックスの色"
 convertPDFToImageLabel = "PDF を PDF-Image に変換"
 customPaddingLabel = "追加余白を指定"
 useRegexLabel = "正規表現を使用"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "完全一致検索"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "墨消し設定"
 
 [redact.auto.wordsToRedact]
 add = "追加"
-examples = "例: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "語句を入力"
 title = "墨消し語句"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "複数ファイルを一度に墨消しするには�
 manual = "手動"
 mode = "モード"
 title = "墨消し方法"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "同じ大文字・小文字のテキストのみ一致します。有効にすると 'Secret' は 'SECRET' と一致せず、正規表現の [A-Z] は大文字のみに一致します。"
@@ -12147,19 +12401,6 @@ title = "墨消し方法"
 text = "クリック＆ドラッグで墨消しする領域を手動選択します。どこを墨消しするかを正確に制御できます。（近日対応）"
 title = "手動墨消し"
 
-[redact.tooltip.words]
-bullet1 = "1 語ずつ追加"
-bullet2 = "Enter を押すか「さらに追加」をクリックして追加"
-bullet3 = "× をクリックで削除"
-
-[redact.tooltip.words.description]
-text = "文書内で検索して墨消しする単語やフレーズを入力します。各語句は個別に検索されます。"
-title = "テキスト一致"
-
-[redact.tooltip.words.examples]
-text = "銀行情報、メールアドレス、特定の氏名などが典型的な墨消し対象です。"
-title = "一般的な例"
-
 [redact.tooltip.words.header]
 title = "墨消し語句"
 
@@ -12176,15 +12417,6 @@ failed = "PDF から注釈を削除中にエラーが発生しました。"
 
 [removeAnnotations.info]
 description = "このツールは PDF 文書からすべての注釈（コメント、ハイライト、ノート等）を削除します。"
-
-[removeAnnotations.settings]
-title = "設定"
-
-[removeAnnotations.tooltip.description]
-title = "機能"
-
-[removeAnnotations.tooltip.header]
-title = "注釈削除について"
 
 [removeBlanks]
 submit = "空白ページを削除"
@@ -12325,6 +12557,9 @@ tags = "並べ替え,順序変更,整理,再編成,ページを移動,ページ�
 [reorganizePages.error]
 failed = "ページの再構成に失敗しました"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "ページを再構成しました"
 
@@ -12406,6 +12641,7 @@ title = "全色反転"
 rotateLeft = "反時計回りに回転"
 rotateRight = "時計回りに回転"
 selectRotation = "回転角度を選択（時計回り）"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "回転を適用"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDFの回転"
@@ -12516,8 +12752,7 @@ title = "サニタイズ"
 failed = "PDF のサニタイズ中にエラーが発生しました。"
 
 [sanitize.options]
-note = "PDF から削除したい要素を選択してください。少なくとも 1 つのオプションを選択する必要があります。"
-title = "サニタイズのオプション"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "PDF に埋め込まれたファイルをすべて削除"
@@ -12649,6 +12884,7 @@ title = "PDF を検索"
 hideTools = "利用不可のツールを非表示 ▴"
 messageNoFallback = "サーバーがオンラインに戻るまでツールは使用できません。"
 messageWithFallback = "一部のツールにはサーバー接続が必要です。"
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "利用不可のツールを表示 ▾"
 title = "Stirling-PDF サーバーに到達できません"
 toolNotAvailableLocally = "Stirling-PDF サーバーがオフラインで、ローカルバックエンドでは「{{endpoint}}」を利用できません。"
@@ -13034,6 +13270,12 @@ title = "キーボードショートカット"
 mac = "ショートカットに⌘（Command）、⌥（Option）などの修飾キーを含めてください。"
 windows = "ショートカットにCtrl、Altなどの修飾キーを含めてください。"
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "利用規約、プライバシーポリシー、Cookie 設定。"
 label = "法的情報"
@@ -13418,9 +13660,7 @@ image = "アップロード"
 text = "テキスト"
 
 [sign.step]
-createDesc = "署名の作成方法を選択"
 place = "配置して保存"
-placeDesc = "PDF上に署名の位置を指定"
 
 [sign.steps]
 configure = "署名を設定"
@@ -13597,6 +13837,10 @@ rotateLeft = "左に回転"
 rotateRight = "右に回転"
 trim = "署名に合わせてトリミング"
 trimHint = "周囲の空白を切り抜きます"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "署名の外観設定"
@@ -13959,7 +14203,6 @@ placeholder = "水平方向の分割数を選択"
 
 [split-by-sections.splitMode]
 custom = "カスタムページ"
-description = "ページの分割方法を選択"
 label = "分割モード"
 splitAll = "全ページを分割"
 splitAllExceptFirst = "先頭以外を分割"
@@ -14210,10 +14453,8 @@ failed = "PDF のタイムスタンプ中にエラーが発生しました。"
 
 [timestampPdf.options]
 note = "ドキュメントの SHA-256 ハッシュのみが TSA サーバーに送信され、PDF ファイル自体が TSA サーバーに送信されることはありません。"
-title = "タイムスタンプサーバー (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "信頼できる Time Stamp Authority を選択"
 label = "TSA サーバーを選択"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "利用可能なツールがありません"
 
 [tooltip]
 close = "ツールチップを閉じる"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "このツールは PDF フォームフィールドの読み取り専用制限を解除し、編集・入力可能にします。"
@@ -14706,6 +14961,9 @@ signatureDate = "署名日時"
 
 [validateSignature.settings]
 certHint = "信頼できる X.509 証明書をアップロードし、カスタム信頼ソースに対して検証します。"
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "検証設定"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "ファイルをプレビューできません"
 copyRestricted = "このPDFの権限によりコピーは無効になっています。"
 copyText = "コピー"
 coverPageView = "表紙ページを個別に表示"
-disableColorFilter = "カラーフィルターを無効化"
 documentUpdated = "ドキュメントが更新されました"
 dualPageView = "見開き表示"
 editText = "テキストを編集"
-enableDarkFilter = "ダークフィルターを有効化"
-enableSepiaFilter = "セピアフィルターを有効化"
 engineLoadError = "PDF ビューアーエンジンの初期化に失敗しました"
 engineSlowWarning = "PDF エンジンの初期化に予想以上の時間がかかっています。ブラウザーの WebAssembly と Worker の設定を確認するか、ページを再読み込みしてください。"
 firstPage = "最初のページ"
@@ -14736,20 +14991,27 @@ fitPage = "ページに合わせる"
 fitWidth = "幅に合わせる"
 lastPage = "最後のページ"
 loadingEngine = "PDF エンジンを読み込み中..."
+menuSelected = "Selected"
 moreOptions = "その他"
 nextPage = "次のページ"
 noPdfProvided = "PDF が指定されていません"
 onlyPdfSupported = "このファイル形式はプレビューに対応していません。"
 pageNavigation = "ページ移動"
+pageNumber = "Page number"
 previousPage = "前のページ"
 readAloudFromHere = "ここから読み上げ"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "ドキュメントを保存できませんでした。もう一度お試しください。"
 saveChangesErrorTitle = "変更を保存できませんでした"
 singlePageView = "単一ページ表示"
+tools = "Tools"
 unknownFile = "不明なファイル"
-view = "表示"
 zoom = "ズーム"
 zoomIn = "拡大"
+zoomLevel = "Zoom level"
 zoomOut = "縮小"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "署名プレビュー"
 
 [viewer.signatureField]
 badge = "署名"
+clickToSign = "Click to sign here"
 fieldTitle = "署名フィールド: {{name}}"
 signed = "署名済み"
 signedWithReason = "署名済み: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "未署名の署名フィールド: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{total}} 件中 {{restored}} 件のファイルを復元しました
 
 [workbenchBar]
 activeFiles = "アクティブなファイル"
-annotations = "注釈"
+annotate = "Annotate"
 applyRedactionsFirst = "先に墨消しを適用"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "すべてのファイルを閉じる"
 closePdf = "PDF を閉じる"
+defaultZoom = "Default zoom"
 deselectAll = "すべての選択を解除"
 downloadAll = "すべてダウンロード"
 editText = "テキストを編集"
@@ -15100,18 +15367,26 @@ exitAnnotations = "注釈モードを終了"
 exitRedaction = "墨消しモードを終了"
 findReplace = "検索と置換"
 formFill = "フォームエディター"
-hideToolbar = "ツールバーを非表示"
+layers = "Layers"
 moreActions = "その他のアクション"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "ページエディター"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "パンモード"
 print = "PDF を印刷"
 readAloud = "読み上げ"
 readAloudLanguage = "言語"
 readAloudSpeed = "速度"
 redact = "墨消し"
+reviewAccessibility = "Accessibility"
 rotateLeft = "左に回転"
 rotateRight = "右に回転"
 ruler = "定規 / 測定"
+rulerScaleUnset = "Not set"
 rulerSettings = "縮尺設定"
 save = "保存"
 saveAll = "すべて保存"
@@ -15123,14 +15398,23 @@ selectLanguage = "言語を選択"
 share = "共有"
 showAllTools = "すべてのツールを表示"
 showFewerTools = "ツールバーを折りたたむ"
-showToolbar = "ツールバーを表示"
+thumbnails = "Pages"
 toggleAnnotations = "注釈の表示を切り替え"
-toggleAttachments = "添付ファイルを切り替え"
-toggleBookmarks = "ブックマーク（目次）"
 toggleComments = "コメント"
-toggleLayers = "レイヤーを切り替え"
-toggleSidebar = "サイドバーを切り替え"
 viewer = "ビューアー"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "このドキュメントへのアクセス期限が切れました。"

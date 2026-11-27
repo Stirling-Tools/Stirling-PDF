@@ -12,9 +12,11 @@ comingSoon = "Kommer snart"
 confirm = "Bekräfta"
 confirmClose = "Bekräfta stängning"
 confirmCloseCancel = "Avbryt"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Stäng fil"
 confirmCloseDiscard = "Kasta ändringar och stäng"
 confirmCloseMessage = "Är du säker på att du vill stänga den här filen?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Spara och stäng"
 confirmCloseSaveFailed_one = "Sparat med fel. {{count}} fil kunde inte sparas."
 confirmCloseSaveFailed_other = "Sparades med fel. {{count}} filer kunde inte sparas."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Fil sparad till disk"
 filesSelected = "{{count}} filer"
 font = "Teckensnitt"
 fontSizeTooltip = "Storlek på sidnummertext i punkter. Större tal ger större text."
-fontTypeTooltip = "Typsnittsfamilj för sidnummer. Välj utifrån dokumentets stil."
 green = "Grön"
 help = "Hjälp"
 incorrectPasswordMessage = "Nuvarande lösenord är felaktigt."
@@ -249,9 +250,7 @@ image = "Uppladdning"
 text = "Textsignatur"
 
 [addImage.step]
-createDesc = "Ladda upp bilden du vill lägga till"
 place = "Placera bild"
-placeDesc = "Klicka på PDF:en för att lägga till bilden"
 
 [addImage.steps]
 configure = "Konfigurera bild"
@@ -276,7 +275,7 @@ fontName = "Typsnitt"
 fontSize = "Teckenstorlek"
 numberPagesDesc = "t.ex. 1,3,5-8 eller lämna tomt för alla sidor"
 pagePreviewAlt = "Sidförhandsvisning"
-pagesAndStarting = "Sidor och startnummer"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Position och sidor"
 preview = "Val av position"
 previewDisclaimer = "Förhandsvisningen är ungefärlig. Slutresultatet kan variera beroende på PDF‑typsnittsmetrik."
@@ -300,6 +299,7 @@ title = "Resultat för sidnumrering"
 
 [addPassword]
 desc = "Kryptera ditt PDF-dokument med ett lösenord."
+submit = "Add Password"
 tags = "kryptera,lösenord,lås,säker,skydda,säkerhet,kryptering,skydd,konfidentiell,privat,begränsa åtkomst"
 title = "Lägg till lösenord"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Stämpelförhandsvisning"
 tags = "stämpel,märkning,sigill,godkänd,avvisad,konfidentiell,stämpelverktyg,gummistämpel,datumstämpel,godkännandestämpel,mottagen,makulerad,kopia,original"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Klicka för att expandera"
 customColor = "Anpassad textfärg"
 customDateDesc = "Anpassat format"
 customPosition = "Dra stämpeln till önskad plats i förhandsvisningen."
 dateDesc = "Aktuellt datum"
 datetimeDesc = "Datum och tid tillsammans"
 dateTimeVars = "Datum och tid"
-dynamicVariables = "Dynamiska variabler"
 examples = "Exempel"
 filenameDesc = "Filnamn utan filändelse"
 filenameFullDesc = "Filnamn med filändelse"
@@ -365,6 +364,8 @@ noStampSelected = "Ingen stämpel vald. Gå tillbaka till steg 1."
 opacity = "Opacitet"
 otherVars = "Övrigt"
 pageNumberDesc = "Aktuellt sidnummer"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Sidinformation"
 position = "Placering"
 positionAndFormatting = "Position och formatering"
@@ -378,9 +379,10 @@ quickPosition = "Välj en position på sidan för att placera stämpeln."
 rotation = "Rotering"
 selectedImageAlt = "Vald stämpelbild"
 selectTemplate = "Välj en mall…"
+size = "Size"
 stampSetup = "Stämpelinställningar"
 stampText = "Stämpeltext"
-stampTextDescription = "Använd dynamiska variabler nedan. Använd @@ för ett bokstavligt @. Använd \\n för nya rader."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Stämpeltyp"
 submit = "Lägg till stämpel"
 tags = "Stämpel,Lägg till bild,centrera bild,Vattenstämpel,PDF,Bädda in,Anpassa"
@@ -389,7 +391,6 @@ title = "Stämpla PDF"
 totalPagesDesc = "Totalt antal sidor"
 useTemplate = "Använd mall"
 uuidDesc = "Kort unik identifierare (8 tecken)"
-variablesHelp = "Klicka på en variabel för att infoga den i stämpeltexten. Använd @@ för ett bokstavligt @."
 yearMonthDayDesc = "Enskilda datumdelar"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Ett fel inträffade när stämpeln skulle läggas till i PDF:en."
 
 [AddStampRequest.results]
 title = "Resultat av stämpling"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Anpassad"
@@ -410,6 +417,11 @@ legal-footer = "Juridisk sidfot"
 page-numbers = "Sidnummer"
 pageNumberFooter = "Sidfot med sidnummer"
 timestamp = "Tidsstämpel"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Verkställ text"
@@ -462,9 +474,7 @@ image = "Uppladdning"
 text = "Textsignatur"
 
 [addText.step]
-createDesc = "Ange texten du vill lägga till"
 place = "Placera text"
-placeDesc = "Klicka på PDF:en för att lägga till din text"
 
 [addText.steps]
 configure = "Konfigurera text"
@@ -1233,6 +1243,18 @@ label = "Återskapa vid start"
 description = "Antal dagar certifikatet ska vara giltigt"
 label = "Certifikatets giltighet (dagar)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Kataloger som mappkällor och mappmål får läsa från och skriva till. Detta är en säkerhetsgräns: automatiseringar kan aldrig pekas mot en serversökväg utanför denna lista."
 securityNote = "Lämna detta tomt för att inaktivera mappkällor och mappmål helt. Stirlings egen konfigurationskatalog är alltid förbjuden."
@@ -1456,7 +1478,9 @@ label = "SMTP-användarnamn"
 
 [admin.settings.mcp]
 apikeyNote = "Klienter skickar en Stirling API-nyckel i huvudet X-API-KEY (eller Authorization: Bearer <key>). Nyckeln kopplas till sin Stirling-användare. Endast etablerade konton kommer in och åtgärder granskas som den användaren. Hantera nycklar under Konto > API-nycklar."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en slutpunkt med OAuth- eller API-nyckelautentisering."
+endpointUrl = "MCP endpoint URL"
 title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Tillåtna verktyg"
 description = "Åtgärds-ID:n som ska döljas från MCP (komma- eller blankstegsseparerade), t.ex. add-password remove-password. Lämna tomt för att exponera alla aktiverade verktyg."
 label = "Blockerade verktyg"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "När den är avstängd (standard) läses ingen /mcp-slutpunkt, metadata eller MCP-komponenter in."
 label = "Aktivera MCP-server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Ange OAuth-utfärdaren och resurs-ID:t ovan, spara och starta om."
 step1ApiKey = "Skapa en API-nyckel under Konto > API-nycklar (varje användare använder sin egen)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Lägg till en"
 step2b = "server som pekar på:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Klienten hittar OAuth automatiskt från:"
 step3ApiKey = "Skicka nyckeln i ett"
 step3ApiKeyb = "huvud (eller Authorization: Bearer <key>). OAuth eller metadatasökning används inte."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Godkänn inloggningen; klienten försöker igen med en token. Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI."
 step4ApiKey = "Verktygen grupperas som konvertera, sidor, övrigt, säkerhet och AI – varje anrop granskas som nyckelns ägare."
 tip = "Tips: registrera resurs-ID:t som en tillåten målgrupp i din IdP. Testat med MCP Inspector och Claude Desktop."
 tipApiKey = "Tips: API-nyckelläget behöver ingen extern IdP – enklast för självhosting. Nyckeln kopplas till sin Stirling-användare."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Anslut en MCP-klient"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Hittas automatiskt från utfärdaren"
 
 [admin.settings.mcp.mode]
 apikey = "API-nyckel (Stirling-nyckel per användare)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth behöver en extern IdP. API-nyckel använder en Stirling-API-nyckel per användare (X-API-KEY); det är enklast för självhosting."
 label = "Autentiseringsläge"
 oauth = "OAuth 2.1 (extern IdP)"
@@ -1515,6 +1563,18 @@ label = "Resurs-ID"
 [admin.settings.mcp.scopes]
 description = "Kräv mcp.tools.read för läsåtgärder och mcp.tools.write för skriv-/AI-åtgärder."
 label = "Tvinga OAuth-scope"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT-claim som matchas mot ett Stirling-användarnamn (t.ex. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Vill du hjälpa till att göra Stirling PDF bättre?"
 tags = "annotera,markera,rita,uppmärkning,kommentar,anteckningar,granskning,ändringsmarkering,återkoppling,uppmärkningsverktyg,notislappar,former,pilar,textruta,friform"
 
 [annotation]
-alignCenter = "Centrera"
-alignLeft = "Vänsterjustera"
-alignRight = "Högerjustera"
 annotationStyle = "Annoteringsstil"
 backgroundColor = "Bakgrundsfärg"
 borderOff = "Ram: Av"
@@ -2016,18 +2073,61 @@ underline = "Understrykning"
 undoDelete = "Ångra"
 width = "Bredd"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "En gratis, privat PDF-redigerare som du kan köra på valfri infrastruktur."
 
 [appBanner]
 dismiss = "Stäng"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Lägg till bilagor..."
 convertToPdfA3b = "Konvertera till PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b är ett arkivformat som säkerställer långsiktig bevaring. Det tillåter inbäddning av godtyckliga filformat som bilagor. Konverteringen kräver Ghostscript och kan ta längre tid för stora filer."
-convertToPdfA3bTooltipHeader = "Om konvertering till PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Vad den gör"
 discardChanges = "Kassera"
 downloadSingle = "Ladda ner bilaga"
 duplicateName = "En bilaga med namnet '{{name}}' finns redan."
@@ -2208,7 +2308,6 @@ guest = "Gäst"
 user = "Användare"
 
 [auto-rename]
-description = "Hittar automatiskt titeln i innehållet i din PDF och använder den som filnamn."
 submit = "Auto-byt namn"
 tags = "auto-detektera,rubrikbaserad,organisera,märka om"
 title = "Auto-byt namn"
@@ -2218,21 +2317,6 @@ failed = "Ett fel inträffade vid automatisk namnändring av PDF:en."
 
 [auto-rename.results]
 title = "Resultat för automatisk namnändring"
-
-[auto-rename.settings]
-title = "Om"
-
-[auto-rename.tooltip.description]
-title = "Vad det gör"
-
-[auto-rename.tooltip.header]
-title = "Så fungerar automatisk namnändring"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Letar efter text som verkar vara en titel eller rubrik"
-bullet2 = "Skapar ett rent, giltigt filnamn från den upptäckta titeln"
-bullet3 = "Behåller ursprungsnamnet om ingen lämplig titel hittas"
-title = "Smart namnbyte"
 
 [autoFormDetection]
 loading = "Identifierar formulärfält..."
@@ -2327,6 +2411,9 @@ remove = "Ta bort verktyg"
 selected = "Valda verktyg"
 selectTool = "Välj ett verktyg..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Avbryt"
 confirm = "Gå tillbaka"
@@ -2360,6 +2447,10 @@ title = "Kör automatisering"
 [automate.selection]
 title = "Val av automatisering"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Skapa ny automatisering"
 
@@ -2371,6 +2462,7 @@ title = "Föreslagna"
 
 [automate.sequence]
 finish = "Slutför"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Kör automatisering"
 running = "Kör automatisering..."
 signInToRun = "Logga in för att köra automatiseringar."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Säkerhetsarbetsflöde"
 secureWorkflowDesc = "Säkrar PDF-dokument genom att ta bort potentiellt skadligt innehåll som JavaScript och inbäddade filer, och lägger sedan till lösenordsskydd för att förhindra obehörig åtkomst. Lösenordet är som standard satt till 'password'."
 
 [autoRename]
-description = "Detta verktyg byter automatiskt namn på PDF-filer baserat på deras innehåll. Det analyserar dokumentet för att hitta den mest lämpliga titeln från texten."
 tags = "autodetektera,rubrikbaserad,organisera,etikettera om,byt namn automatiskt,automatiskt namnbyte,smart namnbyte,byt namn efter innehåll,filnamn,namnge fil,identifiera titel"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,dela,dokument,organisation"
 [autoSplitPDF]
 dividerDownload2 = "Ladda ner 'Auto-delningsavdelare (med instruktioner).pdf'"
 duplexMode = "Duplexläge (Fram- och baksideskanning)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-baserad,separera,skanna-segment,organisera"
 title = "Auto-dela PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Lägger till kanter runt varje sidsektion för att underlätta kapnin
 [bookletImposition.addGutter]
 label = "Lägg till falsmarginal"
 tooltip = "Lägger till inre marginal för bindning"
-
-[bookletImposition.advanced]
-toggle = "Avancerade alternativ"
 
 [bookletImposition.doubleSided]
 label = "Dubbelsidig utskrift"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Välj JKS-fil"
 chooseP12File = "Välj PKCS12-fil"
 choosePfxFile = "Välj PFX-fil"
 choosePrivateKey = "Välj fil med privat nyckel"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Avböjt"
 fetchFailed = "Det gick inte att läsa in signeringsdata"
 finalized = "Slutförd"
 location = "Plats"
-logoTitle = "Logotyp"
-name = "Namn"
-noLogo = "Ingen logotyp"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Sidnummer"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Certifikatlösenord"
 passwordOptional = "Lämna tomt om inget lösenord"
 pemCertificateLabel = "Certifikat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Privat nyckel (.pem / .key)"
 pending = "Väntar"
 readyToFinalize = "Klart att slutföra"
 reason = "Anledning"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Använder servercertifikat – inga filer eller lösenord krävs"
-showLogo = "Visa logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signaturer"
 tags = "autentisera,PEM,P12,officiell,kryptera,signera,certifikat,PKCS12,JKS,server,manuell,auto"
 title = "Certifikatsignering"
@@ -2738,12 +2828,45 @@ viewed = "Visad"
 
 [certSign.appearance]
 invisible = "Osynlig"
+showOnPage = "Show signature on page"
 stepTitle = "Signaturutseende"
 visibility = "Synlighet"
 visible = "Synlig"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Signaturdetaljer"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Om signaturutseende"
@@ -2762,9 +2885,6 @@ bullet3 = "Välj vilken sida signaturen ska placeras på"
 bullet4 = "Valfri logotyp kan inkluderas"
 text = "Visar ett signaturblock på PDF:en med ditt namn, datum och valfria detaljer. Användbart när du vill att läsare tydligt ska se att dokumentet är signerat."
 title = "Synliga signaturer"
-
-[certSign.certFiles]
-stepTitle = "Certifikatfiler"
 
 [certSign.certType.tooltip.convert]
 text = "Konvertera din fil till ett Java-nyckellager (.jks) med keytool och välj sedan JKS."
@@ -2786,6 +2906,7 @@ text = "Välj det format som matchar din certifikatfil:"
 title = "Vilket alternativ ska jag använda?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Certifikatformat"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Den här enheten"
 [certSign.error]
 failed = "Ett fel inträffade vid bearbetning av signaturer."
 
-[certSign.format]
-pkcs11 = "USB-token"
-windowsStore = "Windows certifikatlager"
-
 [certSign.hardware]
-certificate = "Certifikat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Anpassad drivrutinssökväg…"
+digitalId = "Digital ID"
 driver = "PKCS#11-drivrutin"
 driverPath = "Sökväg till drivrutinsbibliotek"
 driverPathPlaceholder = "Fullständig sökväg till din PKCS#11-drivrutin (.dll, .so eller .dylib)"
-expired = "utgånget"
-expires = "förfaller"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Lista certifikat"
-loading = "Läser certifikat…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Inga signeringscertifikat hittades"
 noDriver = "Ingen PKCS#11-drivrutin upptäcktes. Installera din tokens drivrutin (t.ex. OpenSC) och öppna detta igen - eller ange drivrutinens sökväg manuellt nedan."
-notYetValid = "ännu inte giltigt"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token-PIN"
 pkcs11Hint = "Välj din tokens PKCS#11-drivrutin, ange PIN och lista sedan certifikaten på tokenen."
 pkcs11LoadError = "Kunde inte läsa certifikat från tokenen. Kontrollera PIN och drivrutin."
-refresh = "Uppdatera"
-selectCert = "Välj certifikat"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Välj drivrutin"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (valfritt)"
-windowsHint = "Välj ett certifikat från ditt Windows certifikatlager. Signeringen använder nyckeln på ditt kort/din token - Windows kommer att be om PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Kunde inte läsa Windows certifikatlager"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Tumregel"
 device = "Den här enheten"
 noOtherSources = "Inga andra certifikatkällor är tillgängliga."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certifikatkälla"
 upload = "Ladda upp"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Uppdatera ditt användarnamn. Du loggas ut efter uppdateringen."
@@ -3069,7 +3205,6 @@ placeholder = "Dokumentskapare"
 
 [changeMetadata.customFields]
 add = "Lägg till fält"
-description = "Lägg till anpassade metadatafält i dokumentet"
 key = "Nyckel"
 keyPlaceholder = "Anpassad nyckel"
 remove = "Ta bort"
@@ -3135,10 +3270,6 @@ bullet1 = "Skapandedatum: När det ursprungliga dokumentet skapades"
 bullet2 = "Ändringsdatum: När det senast ändrades"
 text = "När dokumentet skapades och ändrades."
 title = "Datumfält"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Fullständig radering av metadata för att säkerställa integritet."
-title = "Ta bort befintliga metadata"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Titel: Dokumentets namn eller rubrik"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Du har nått användningsgränsen. Se abonnemangsalternat
 
 [checkAccessibility]
 aboutRow = "Om {{label}}"
-checking = "Kontrollerar..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Ladda ner tillgänglighetsrapport"
 fileFailed = "misslyckades"
+noFiles = "Select a PDF to check it."
 pickFile = "Visa resultat för"
-submit = "Kontrollera tillgänglighet"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternativtext"
@@ -3286,10 +3417,17 @@ structure = "Taggar talar om för skärmläsare vad varje del av en sida är, ti
 [checkAccessibility.checks]
 label = "{{passed}} av {{total}} kontroller godkända"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Tillgänglighetsrapporten kunde inte skapas. Försök igen."
 fileTitle = "Den här filen kunde inte kontrolleras"
 partial = "Vissa filer kunde inte kontrolleras."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Deklarerar PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Filen har en titel i sin metadata."
 [checkAccessibility.figures]
 summary_one = "{{count}} bild behöver en beskrivning (sida {{pages}})"
 summary_other = "{{count}} bilder behöver en beskrivning (sidor {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Gäller"
@@ -3465,19 +3618,7 @@ checking = "Kontrollerar {{current}} av {{total}}..."
 complete = "Kontroll klar"
 
 [checkAccessibility.steps]
-results = "Resultat"
 standard = "Standard"
-
-[checkAccessibility.tooltip.header]
-title = "Vilken standard som ska kontrolleras"
-
-[checkAccessibility.tooltip.ua1]
-text = "Den första versionen av PDF/UA, publicerad 2012 som ISO 14289-1, för PDF 1.7-filer."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Den nyare versionen, publicerad 2024 som ISO 14289-2, för PDF 2.0-filer. En PDF 1.7-fil kontrollerad mot den underkänns på regler som bara gäller för PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Anteckning {{n}}"
@@ -3868,6 +4009,7 @@ title = "Välj färg"
 transparent = "Transparent"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Åtgärder"
 back = "Tillbaka"
 cancel = "Avbryt"
@@ -4206,7 +4348,9 @@ title = "Uppdatera API-nycklar"
 warning = "⚠️ Varning: Denna åtgärd kommer att generera nya API-nycklar och göra dina tidigare nycklar ogiltiga."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) låter AI-assistenter som Claude använda dina Stirling PDF-verktyg direkt. Anslut en klient en gång så kan assistenten konvertera, redigera, skydda och bearbeta dokument åt dig."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Gästanvändare kan inte ansluta MCP-klienter. Skapa ett konto för att använda MCP-servern och låta din AI-assistent köra Stirling PDF-verktyg åt dig."
 navLabel = "MCP-server"
 tip = "Varje åtgärd assistenten kör utförs som ditt konto och räknas mot din användning, precis som när du använder Stirling PDF direkt."
@@ -4221,11 +4365,26 @@ tooltip = "Kopiera {{label}}"
 tooltipCopied = "{{label}} kopierad"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Din MCP-slutpunkt"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Lägg till i"
 hint = "Välj klient, klistra in kodavsnittet i den visade filen och starta sedan om den. Vid första användningen loggar du in med ditt Stirling-konto – inga nycklar behöver kopieras."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Anslut din AI-assistent"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Behåll bildförhållande"
 maxAttachmentSize = "Maximal bilagestorlek (MB)"
 multiple = "Flera"
 optimizeForEbook = "Optimera PDF för e‑boksläsare (använder Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Utdata"
-outputFormat = "Utdataformat"
-pdfaAccessibleFormat = "{{format}} (tillgängligt)"
-pdfaDigitalSignatureWarning = "PDF:en innehåller en digital signatur. Denna kommer att tas bort i nästa steg."
-pdfaNote = "PDF/A-1b är mer kompatibel, PDF/A-2b stöder fler funktioner, PDF/A-3b stöder inbäddade filer."
-pdfaOptions = "PDF/A‑alternativ"
 pdfOptions = "PDF‑alternativ"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Inställningar"
 signInToUse = "Logga in för att använda"
 single = "En"
 sourceFormatPlaceholder = "Källformat"
-strictMode = "Strikt läge"
-strictModeDesc = "Ge fel om konverteringen inte är perfekt (använder VeraPDF-verifiering)"
 svgPdfOptions = "Alternativ för SVG till PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG-filer återges som vektorgrafik för skarp utdata vid alla upplösningar. Dimensionerna i SVG-filen avgör PDF-sidans storlek."
@@ -4396,9 +4549,7 @@ zoomLevel = "Zoomnivå"
 
 [convert.ebookOptions]
 includePageNumbers = "Inkludera sidnummer"
-includePageNumbersDesc = "Lägg till sidnummer i den genererade PDF-filen"
 includeTableOfContents = "Inkludera innehållsförteckning"
-includeTableOfContentsDesc = "Lägg till en genererad innehållsförteckning i den resulterande PDF-filen"
 optimizeForEbookPdf = "Optimera för e-boksläsare"
 optimizeForEbookPdfDesc = "Optimera PDF:en för e-boksläsning (mindre filstorlek, bättre rendering på eInk-enheter)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Identifiera kapitel"
 detectChaptersDesc = "Identifiera rubriker som liknar kapitel och infoga EPUB-sidbrytningar"
 kindleEink = "Kindle e‑Ink (textoptimerad)"
 outputFormat = "Utdataformat"
-outputFormatDesc = "Välj utdataformat för e-boken"
 tabletPhone = "Surfplatta/telefon (med bilder)"
 targetDevice = "Målenhet"
 targetDeviceDesc = "Välj en utmatningsprofil optimerad för läsarenheten"
@@ -4469,8 +4619,24 @@ description = "De här cookies är nödvändiga för att webbplatsen ska fungera
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Titel på försättssida"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF-portfölj"
 description = "Varje vald fil behålls hel inuti den nya PDF:en, oavsett typ. Läsare som inte stöder portföljer visar en försättssida med filerna bifogade."
 goToFileEditor = "Gå till filredigeraren"
@@ -4488,6 +4654,9 @@ title = "Vad den gör"
 
 [createPortfolio.tooltip.header]
 title = "Om PDF-portföljer"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Auto-beskär tomrum"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Åtkomst till Urklipp är inte tillgängligt i denna web
 export = "Exportera bokmärken"
 exportClipboard = "Kopiera JSON till Urklipp"
 exportJson = "Hämta JSON"
+exportMenu = "Export"
 importClipboard = "Klistra in JSON från Urklipp"
 importJson = "Importera JSON"
+importMenu = "Import"
 loadFromPdf = "Ladda från vald PDF"
 noFile = "Välj en PDF för att extrahera befintliga bokmärken."
 selectedFile = "Laddat från {{file}}"
-source = "Ladda bokmärken"
 
 [editTableOfContents.editor]
 addTopLevel = "Lägg till bokmärke på toppnivå"
@@ -4740,6 +4910,9 @@ replaceExisting = "Ersätt befintliga bokmärken (avmarkera för att lägga till
 replaceExistingHint = "När inaktiverad läggs den nya dispositionen till efter de nuvarande bokmärkena."
 title = "Bokmärken & disposition"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Byt PDF"
 filePrompt = "Välj en PDF från ditt bibliotek eller ladda upp en ny för att börja."
@@ -4753,7 +4926,6 @@ title = "Öppna verktyget för att börja redigera"
 [encryptedPdfUnlock]
 actionIgnored = "Begränsning för {{action}} ignorerades"
 actionUnlocked = "{{action}} upplåst för denna session"
-advanced = "Avancerat"
 allowed = "Tillåtet"
 annotations = "Anteckningar"
 authoriseAction = "Denna PDF kräver behörighet för att använda {{action}}."
@@ -4801,7 +4973,6 @@ restricted = "Begränsat"
 restrictedActions = "begränsade åtgärder"
 restrictedOperation = "Denna åtgärd kräver lösenordet för behörigheter."
 retainOwnerVerification = "Verifiera lösenordet för behörigheter för att behålla det oförändrat medan lösenordet för att öppna tas bort. Detta kommer inte att ta bort det."
-saveProtection = "Spara skydd"
 securityChangeFailed = "Det gick inte att ändra skyddet. Kontrollera lösenordet för behörigheter och de nya säkerhetsinställningarna."
 sessionDetails = "Öppen för denna session. PDF:en förblir skyddad."
 sessionDetailsLabel = "Om upplåsning för sessionen"
@@ -4871,7 +5042,6 @@ title = "Något gick fel"
 tryAgain = "Försök igen"
 
 [extractImages]
-allowDuplicates = "Spara dubblettbilder"
 selectText = "Välj bildformat att konvertera extraherade bilder till"
 submit = "Extrahera"
 tags = "bild,foto,spara,arkiv,zip,fånga,ta"
@@ -4927,12 +5097,15 @@ closeFile = "Stäng fil"
 
 [fileEditor]
 closedFile = "Stängde {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Filens ordning ändrades"
 filesReordered_other = "Ordningen för {{count}} filer ändrades"
 loadedFromStorage_one = "Läste in {{count}} fil från lagring"
 loadedFromStorage_other = "Läste in {{count}} filer från lagring"
 loadFromStorageFailed = "Det gick inte att läsa in vissa filer från lagring"
 pinnedFile = "Fäste {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Sparade och stängde {{name}}"
 saveFailed = "Sparning misslyckades"
 unpinnedFile = "Lossade {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Låst"
 previewOf = "Förhandsvisning av {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Lägg till filer"
 created = "Skapad"
 notIncludedInToolRun = "Ingår inte i denna verktygskörning"
 size = "Filstorlek"
 title = "Filer"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Inga filer tillgängliga"
@@ -5104,6 +5286,7 @@ subtitle = "Visa eller dölj kategorier i filsidofältet."
 title = "Sidofältskategorier"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Avbryt"
 error = "Kunde inte byta namn på filen."
 illegalCharacters = "Ett filnamn får inte innehålla \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Ta bort fält"
 
 [formFill.editor]
 action = "Knappåtgärd"
-actionHelp = "Vad knappen gör när den klickas."
 actionNone = "Ingen"
 actionPrint = "Skriv ut"
 actionReset = "Återställ formulär"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Begränsar hur många tecken som får plats, ritade som jämnt 
 multiline = "Flera rader"
 multilineHelp = "Tillåter mer än en textrad och radbryter vid fältets kant."
 multiSelect = "Tillåt flera val"
-multiSelectHelp = "Gör att mer än ett alternativ kan väljas samtidigt."
 name = "Fältnamn"
 nameHelp = "Fältets interna namn. Används vid export av data eller när formuläret fylls i från ett annat system, så håll det unikt och utan mellanslag."
 optionGap = "Alternativavstånd"
@@ -5902,6 +6083,11 @@ title = "Justera färger/kontrast"
 desc = "Markera, rita, lägg till anteckningar och former i visaren"
 tags = "anteckna,markera,rita,markup,kommentar,noter,granska,rödmarkering,feedback,markup-verktyg,klisterlappar,former,pilar,textruta,frihand"
 title = "Annotera"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Identifiera formulärfält automatiskt med AI och gör din PDF ifyllbar."
@@ -6405,6 +6591,9 @@ sort = "Sortera"
 [merge.sortFiles]
 title = "Sortera filer"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Översikt över sammanfogningsinställningar"
 
@@ -6548,6 +6737,9 @@ title = "Autentisering misslyckades"
 message = "Du kan stänga detta fönster och återgå till Stirling PDF."
 title = "Autentisering lyckades"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Tillåt åtkomst"
 approving = "Tillåter…"
@@ -6558,6 +6750,7 @@ loadFailed = "Den här auktoriseringsbegäran är ogiltig eller har gått ut. St
 loading = "Läser in auktoriseringsbegäran…"
 missingId = "Auktoriseringsbegäran saknas. Starta anslutningen från appen och försök igen."
 redirecting = "Återgår till appen…"
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} vill få åtkomst till ditt Stirling PDF-konto"
 scopesIntro = "Detta ger {{app}} rätt att:"
 signedInAs = "Inloggad som {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Logga in för att fortsätta"
 signInPrompt = "Logga in på ditt Stirling PDF-konto för att fortsätta ansluta appen."
 title = "Godkänn åtkomst"
 unknownApp = "En tredjepartsapp"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Agera som du – allt {{app}} gör körs under ditt konto och räknas mot din användning"
@@ -6572,9 +6767,12 @@ tools = "Använd dina Stirling PDF-verktyg åt dig – konvertera, redigera, sig
 
 [oauthConsent.scope]
 email = "Se din e-postadress"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Bekräfta din identitet"
 phone = "Se ditt telefonnummer"
 profile = "Se din grundläggande profilinformation"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Rengör skanningar och upptäcker text från bilder i en PDF och lägger till den igen som text."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Du blir teammedlem och förlorar ägaråtkomst."
 [pageEdit]
 deselectAll = "Ingen"
 selectAll = "Markera alla"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Extrahera sidor"
@@ -7577,6 +7779,8 @@ stamp = "Stämpelanteckning – inte sidtext, så den kan inte redigeras här"
 widget = "Formulärfält – inte sidtext, så det kan inte redigeras här"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Redigera"
 markTagged = "Markera som helt taggad"
 matchScanFont = "Matcha skannad text till {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Autotagga sida"
 typeInto = "Skriv i {{run}}"
 ungroupParagraph = "Avgruppera stycke {{run}}"
 unmarkTagged = "Markera som inte helt taggad"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Radbryt {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Kassera osparade ändringar?"
 
 [pdfTextEditor.error]
 decodeImage = "Kunde inte avkoda den valda bilden."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Det går inte att duplicera den här texten: inget tillgängligt teckensnitt ritar alla dess bokstäver."
 formLiftChangesDrawing = "Det går inte att redigera detta: det ritas som en del av en grupp vars beskärnings- eller grafikinställningar redigeraren inte kan behålla när den ändras."
 insertImage = "Kunde inte infoga den valda bilden."
 needsShaping = "Redigeraren kan ännu inte rita den här skriftens sammanfogade bokstäver och vokaltecken korrekt, så den här ändringen gjordes inte."
+reopenLost = "Open again"
 replaceClippedImage = "Det går inte att ersätta den här bilden: den är beskuren och ersättningen skulle visa delar som beskärningen döljer."
 scanOffInk = "Kan inte redigera den här texten: dess igenkända ord stämmer inte med skanningen. Kör OCR igen."
 unsafeRtlEdit = "Det går inte att göra den här ändringen: redigeraren kan inte rita om den här radens höger-till-vänster-text utan att ändra den."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG-bild"
 close = "Stäng sökfält"
 count = "{{current}} av {{total}}"
 findPlaceholder = "Sök"
+hideReplace = "Hide replace"
 ignoreAccents = "Ignorera accenter"
 matchCase = "Matcha skiftläge"
 next = "Nästa träff"
@@ -7625,6 +7833,7 @@ replace = "Ersätt"
 replaceAll = "Ersätt alla"
 replaced = "{{count}} ersatta"
 replacePlaceholder = "Ersätt med"
+showReplace = "Show replace"
 wholeWord = "Helt ord"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Den här länken kan inte taggas."
 cannotTagPage = "Den här sidans innehåll kan inte taggas."
 contentGroup = "Innehåll"
 customTag = "{{role}} (anpassad tagg)"
-decorativeInfo = "Skärmläsare hoppar över dekorativa bilder. Använd detta för ramar, bakgrunder och andra bilder som inte förmedlar någon information."
-decorativeLabel = "Dekorativ bild"
-description = "Bildbeskrivning"
-descriptionInfo = "Skärmläsare läser upp detta i stället för bilden."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Taggar kan inte redigeras i en krypterad fil"
 figureDescription = "Figurbeskrivning"
 figureDescriptionInfo = "Skärmläsare läser upp detta i stället för figuren."
-formFieldDescription = "Fältbeskrivning"
 formulaDescription = "Formelbeskrivning"
 formulaDescriptionInfo = "Skärmläsare läser upp detta i stället för formeln. Säg det som du skulle säga högt, t.ex. \"x upphöjt till två plus ett\"."
 heading = "Tillgänglighet"
@@ -7813,7 +8019,6 @@ markedTagged = "Dokumentet är helt taggat"
 markedTaggedHint = "Talar om för PDF-läsare att använda tillgänglighetstaggarna. Kryssa i när allt är taggat."
 markedWithUntagged = "Visst innehåll saknar taggar, så skärmläsare kan hoppa över det."
 missingDescriptions = "Saknade beskrivningar"
-mixedContent = "Figuren innehåller annat innehåll"
 mixedTags = "Blandat"
 needsDescriptionBadge = "Ingen beskrivning"
 nextToReview = "Nästa att granska"
@@ -7821,12 +8026,10 @@ notFigure = "Taggad som en del av texten"
 removeTag = "Ta bort tagg"
 saveFailed = "Dina tillgänglighetsändringar kunde inte sparas, så filen sparades inte. Ångra dem och försök igen."
 selectedText = "Markerad text"
-tagFormField = "Tagga formulärfält"
 tagging = "Taggar sidor"
 tagLabel = "Tagg"
 tagLinks_one = "Tagga länk"
 tagLinks_other = "Tagga {{count}} länkar"
-tagUntagged = "Autotagga dokument"
 tagUntaggedHint = "Lägger automatiskt till tillgänglighetstaggar i hela dokumentet. Resultatet är grovt: kontrollera rubriker, listor och läsordning efteråt."
 unknownTag = "Kan inte läsas här"
 unmarkedWithTags = "Vissa PDF-läsare använder ändå taggarna och kan hoppa över innehåll utan dem."
@@ -7851,7 +8054,7 @@ heading = "Rubriker"
 mixedNumbering = "Blandar numrerade och onumrerade rubriker"
 none = "Inga rubriker"
 onPage = "Rubrik på sida {{page}}"
-problems = "Rubrikproblem"
+problemCount = "{{count}} to fix"
 skippedLevel = "Hoppar över en nivå efter Rubrik {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Titel"
 allLanguages = "Alla språk"
 cannotSetDocument = "Det här dokumentets språk kan inte ändras."
 cannotSetText = "Den här textens språk kan inte ändras."
-documentHint = "Språket som skärmläsare använder om inte en del av texten anger sitt eget."
 documentLabel = "Språk"
 documentLocked = "Språket i ett krypterat dokument kan inte ändras här."
 inDocument = "I det här dokumentet"
 innerLabel = "Språk för tagg {{number}}"
 label = "Språk"
-missing = "Inget språk angivet. Skärmläsare kommer att gissa, och kan läsa hela dokumentet i fel röst."
 mixed = "Blandat"
 noMatch = "Inget matchande språk. Skriv dess kod i stället, t.ex. mt eller en-IE."
 placeholder = "Välj språk"
@@ -7943,6 +8144,52 @@ renderFailed = "Det gick inte att rendera sidan"
 [pdfTextEditor.password]
 incorrect = "Fel lösenord – försök igen."
 label = "Lösenord"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Justeringsguide vid {{value}} {{unit}} – dra till en linjal för att ta bort"
@@ -8124,6 +8371,10 @@ title = "Avvikelser i förhandsvisning"
 [pdfTextEditor.tooltip.textFocus]
 text = "Denna arbetsyta fokuserar på att redigera text och flytta inbäddade bilder. Komplex sidgrafik, formulärwidgets och lagergrafik bevaras för export men kan inte redigeras fullt ut här."
 title = "Fokus på text och bild"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF till CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Dölj kategori"
 labelCount = "etiketter"
 sharedNote = "Dessa etiketter är inbyggda och delas inom hela ditt team."
 showCategory = "Visa kategori"
-
-[policies.pii]
-account = "Kontonummer (etiketterade)"
-card = "Kredit-/betalkort"
-email = "E-postadresser"
-fieldLabel = "Personuppgifter att maskera"
-iban = "IBAN-nummer"
-phone = "Telefonnummer"
-placeholder = "Välj typer av personuppgifter"
-routing = "USA-routingnummer (ABA)"
-ssn = "Social Security-nummer"
 
 [policy]
 badgeEnforcing = "{{name}} tillämpas..."
@@ -10317,6 +10557,10 @@ title = "Arbetsflöden"
 [portal.pipelines.actions]
 newCustomPipeline = "Ny anpassad pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Alla pipelines"
 
@@ -12047,7 +12291,6 @@ label = "Läsverktyg"
 readAloud = "Läs högt"
 rotateLeft = "Rotera åt vänster"
 rotateRight = "Rotera åt höger"
-search = "Sök i dokument"
 switchDocument = "Byt dokument"
 thumbnails = "Sidor"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Rutans färg"
 convertPDFToImageLabel = "Konvertera PDF till PDF-bild"
 customPaddingLabel = "Anpassad extra utfyllnad"
 useRegexLabel = "Använd regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Endast hela ord"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Maskningsinställningar"
 
 [redact.auto.wordsToRedact]
 add = "Lägg till"
-examples = "Exempel: Konfidentiellt, Top Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Ange ett ord"
 title = "Ord att maskera"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Välj filer i filhanteraren för att maskera flera f
 manual = "Manuell"
 mode = "Läge"
 title = "Maskningsmetod"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Matcha endast text med samma skiftläge. 'Secret' matchar inte 'SECRET' när detta är aktiverat, och [A-Z] i en regex matchar endast versaler."
@@ -12147,19 +12401,6 @@ title = "Maskningsmetod"
 text = "Klicka och dra för att manuellt välja specifika områden att maskera. Ger dig exakt kontroll över vad som maskeras. (Kommer snart)"
 title = "Manuell maskning"
 
-[redact.tooltip.words]
-bullet1 = "Lägg till ett ord i taget"
-bullet2 = "Tryck på Enter eller klicka på 'Lägg till en till' för att lägga till"
-bullet3 = "Klicka på × för att ta bort ord"
-
-[redact.tooltip.words.description]
-text = "Ange ord eller fraser att hitta och maskera i dokumentet. Varje ord söks efter separat."
-title = "Textmatchning"
-
-[redact.tooltip.words.examples]
-text = "Typiska ord att maskera inkluderar: bankuppgifter, e-postadresser eller specifika namn."
-title = "Vanliga exempel"
-
 [redact.tooltip.words.header]
 title = "Ord att maskera"
 
@@ -12176,15 +12417,6 @@ failed = "Ett fel inträffade när annoteringar togs bort från PDF:en."
 
 [removeAnnotations.info]
 description = "Detta verktyg tar bort alla annoteringar (kommentarer, markeringar, anteckningar, etc.) från dina PDF-dokument."
-
-[removeAnnotations.settings]
-title = "Inställningar"
-
-[removeAnnotations.tooltip.description]
-title = "Vad det gör"
-
-[removeAnnotations.tooltip.header]
-title = "Om Ta bort annoteringar"
 
 [removeBlanks]
 submit = "Ta bort tomma sidor"
@@ -12325,6 +12557,9 @@ tags = "ordna om,ändra ordning,organisera,omorganisera,flytta sidor,sidordning,
 [reorganizePages.error]
 failed = "Misslyckades med att omorganisera sidor"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Sidor omorganiserade"
 
@@ -12406,6 +12641,7 @@ title = "Invertera alla färger"
 rotateLeft = "Rotera moturs"
 rotateRight = "Rotera medurs"
 selectRotation = "Välj rotationsvinkel (medurs)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Tillämpa rotation"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rotera PDF"
@@ -12516,8 +12752,7 @@ title = "Sanera"
 failed = "Ett fel uppstod vid sanering av PDF:en."
 
 [sanitize.options]
-note = "Välj vilka element du vill ta bort från PDF:en. Minst ett alternativ måste väljas."
-title = "Saneringsalternativ"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Ta bort eventuella filer som är inbäddade i PDF:en"
@@ -12649,6 +12884,7 @@ title = "Sök i PDF"
 hideTools = "Dölj otillgängliga verktyg ▴"
 messageNoFallback = "Verktygen är otillgängliga tills din server är online igen."
 messageWithFallback = "Vissa verktyg kräver en serveranslutning."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Visa otillgängliga verktyg ▾"
 title = "Din Stirling-PDF-server kan inte nås"
 toolNotAvailableLocally = "Din Stirling-PDF-server är offline och \"{{endpoint}}\" är inte tillgänglig i den lokala backend."
@@ -13034,6 +13270,12 @@ title = "Kortkommandon"
 mac = "Inkludera ⌘ (Command), ⌥ (Option) eller en annan modifierare i ditt kortkommando."
 windows = "Inkludera Ctrl, Alt eller en annan modifierare i ditt kortkommando."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Villkor, integritetspolicy och dina cookieinställningar."
 label = "Juridik"
@@ -13418,9 +13660,7 @@ image = "Uppladdning"
 text = "Textsignatur"
 
 [sign.step]
-createDesc = "Välj hur du vill skapa signaturen"
 place = "Placera & spara"
-placeDesc = "Placera signaturen på din PDF"
 
 [sign.steps]
 configure = "Konfigurera signatur"
@@ -13597,6 +13837,10 @@ rotateLeft = "Rotera åt vänster"
 rotateRight = "Rotera åt höger"
 trim = "Beskär till signaturen"
 trimHint = "Beskär det tomma utrymmet runt den"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Inställningar för signaturutseende"
@@ -13959,7 +14203,6 @@ placeholder = "Ange antal horisontella indelningar"
 
 [split-by-sections.splitMode]
 custom = "Anpassade sidor"
-description = "Välj hur sidorna ska delas"
 label = "Delningsläge"
 splitAll = "Dela alla sidor"
 splitAllExceptFirst = "Dela alla utom första"
@@ -14210,10 +14453,8 @@ failed = "Ett fel inträffade när PDF:en tidsstämplades."
 
 [timestampPdf.options]
 note = "Endast en SHA-256-hash av ditt dokument skickas till TSA-servern; själva PDF-filen skickas aldrig till TSA-servern."
-title = "Tidsstämpelserver (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Välj en betrodd Time Stamp Authority"
 label = "Välj en TSA-server"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Inga verktyg tillgängliga"
 
 [tooltip]
 close = "Stäng verktygstips"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Detta verktyg tar bort skrivskyddsbegränsningar från PDF-formulärfält så att de blir redigerbara och ifyllbara."
@@ -14706,6 +14961,9 @@ signatureDate = "Signeringsdatum"
 
 [validateSignature.settings]
 certHint = "Ladda upp ett betrott X.509-certifikat för att validera mot en anpassad förtroendekälla."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Valideringsinställningar"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Kan inte förhandsgranska filen"
 copyRestricted = "Kopiering är inaktiverad av behörigheterna för denna PDF."
 copyText = "Kopiera"
 coverPageView = "Visa omslagssida separat"
-disableColorFilter = "Inaktivera färgfilter"
 documentUpdated = "Dokumentet har uppdaterats"
 dualPageView = "Dubbelsidig vy"
 editText = "Redigera text"
-enableDarkFilter = "Aktivera mörkt filter"
-enableSepiaFilter = "Aktivera sepiafilter"
 engineLoadError = "Det gick inte att initiera PDF-visningsmotorn"
 engineSlowWarning = "Initieringen av PDF-motorn tar längre tid än förväntat. Kontrollera webbläsarens WebAssembly- och Worker-inställningar, eller ladda om sidan."
 firstPage = "Första sidan"
@@ -14736,20 +14991,27 @@ fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
 lastPage = "Sista sidan"
 loadingEngine = "Läser in PDF-motor..."
+menuSelected = "Selected"
 moreOptions = "Mer"
 nextPage = "Nästa sida"
 noPdfProvided = "Ingen PDF angiven"
 onlyPdfSupported = "Detta filformat stöds inte för förhandsgranskning."
 pageNavigation = "Sidnavigering"
+pageNumber = "Page number"
 previousPage = "Föregående sida"
 readAloudFromHere = "Läs upp härifrån"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Dokumentet kunde inte sparas. Försök igen."
 saveChangesErrorTitle = "Kunde inte spara ändringar"
 singlePageView = "Ensidig vy"
+tools = "Tools"
 unknownFile = "Okänd fil"
-view = "Visa"
 zoom = "Zooma"
 zoomIn = "Zooma in"
+zoomLevel = "Zoom level"
 zoomOut = "Zooma ut"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Signaturförhandsvisning"
 
 [viewer.signatureField]
 badge = "Signatur"
+clickToSign = "Click to sign here"
 fieldTitle = "Signaturfält: {{name}}"
 signed = "Signerad"
 signedWithReason = "Signerad: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Osignerat signaturfält: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Återställde {{restored}} av {{total}} filer. Resten lagras inte lä
 
 [workbenchBar]
 activeFiles = "Aktiva filer"
-annotations = "Anteckningar"
+annotate = "Annotate"
 applyRedactionsFirst = "Tillämpa maskeringar först"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Stäng alla filer"
 closePdf = "Stäng PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Avmarkera alla"
 downloadAll = "Ladda ner alla"
 editText = "Redigera text"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Avsluta annoteringsläge"
 exitRedaction = "Avsluta maskeringsläge"
 findReplace = "Sök & ersätt"
 formFill = "Formulärredigerare"
-hideToolbar = "Dölj verktygsfält"
+layers = "Layers"
 moreActions = "Fler åtgärder"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Sidredigerare"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Panoreringsläge"
 print = "Skriv ut PDF"
 readAloud = "Läs upp"
 readAloudLanguage = "Språk"
 readAloudSpeed = "Hastighet"
 redact = "Maskera"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Rotera åt vänster"
 rotateRight = "Rotera åt höger"
 ruler = "Linjal / Mät"
+rulerScaleUnset = "Not set"
 rulerSettings = "Skalinställningar"
 save = "Spara"
 saveAll = "Spara alla"
@@ -15123,14 +15398,23 @@ selectLanguage = "Välj språk"
 share = "Dela"
 showAllTools = "Visa alla verktyg"
 showFewerTools = "Fäll ihop verktygsfält"
-showToolbar = "Visa verktygsfält"
+thumbnails = "Pages"
 toggleAnnotations = "Visa/dölj anteckningar"
-toggleAttachments = "Visa/dölj bilagor"
-toggleBookmarks = "Bokmärken (innehållsförteckning)"
 toggleComments = "Kommentarer"
-toggleLayers = "Visa/dölj lager"
-toggleSidebar = "Visa/dölj sidofält"
 viewer = "Visare"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Din åtkomst till detta dokument har löpt ut."

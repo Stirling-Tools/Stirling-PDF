@@ -12,9 +12,11 @@ comingSoon = "Binnenkort"
 confirm = "Bevestigen"
 confirmClose = "Sluiten bevestigen"
 confirmCloseCancel = "Annuleren"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Bestand sluiten"
 confirmCloseDiscard = "Wijzigingen verwerpen en sluiten"
 confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Opslaan en sluiten"
 confirmCloseSaveFailed_one = "Opgeslagen met fouten. {{count}} bestand kon niet worden opgeslagen."
 confirmCloseSaveFailed_other = "Opgeslagen met fouten. {{count}} bestanden konden niet worden opgeslagen."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Bestand opgeslagen op schijf"
 filesSelected = "{{count}} bestanden"
 font = "Lettertype"
 fontSizeTooltip = "Grootte van de paginanummertekst in punten. Grotere getallen geven grotere tekst."
-fontTypeTooltip = "Lettertypefamilie voor de paginanummers. Kies passend bij de stijl van uw document."
 green = "Groen"
 help = "Hulp"
 incorrectPasswordMessage = "Huidige wachtwoord is onjuist."
@@ -249,9 +250,7 @@ image = "Uploaden"
 text = "Tekst"
 
 [addImage.step]
-createDesc = "Upload de afbeelding die u wilt toevoegen"
 place = "Afbeelding plaatsen"
-placeDesc = "Klik op de PDF om uw afbeelding toe te voegen"
 
 [addImage.steps]
 configure = "Afbeelding configureren"
@@ -276,7 +275,7 @@ fontName = "Lettertypenaam"
 fontSize = "Lettertypegrootte"
 numberPagesDesc = "bijv. 1,3,5-8 of laat leeg voor alle pagina's"
 pagePreviewAlt = "Paginavoorbeeld"
-pagesAndStarting = "Pagina's en startnummer"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Positie en pagina's"
 preview = "Positie selecteren"
 previewDisclaimer = "Voorbeeld is indicatief. Het uiteindelijke resultaat kan afwijken door PDF-lettertype­metriek."
@@ -300,6 +299,7 @@ title = "Resultaten paginanummering"
 
 [addPassword]
 desc = "Versleutel uw PDF-document met een wachtwoord."
+submit = "Add Password"
 tags = "versleutelen,wachtwoord,vergrendelen,beveiligen,beschermen,beveiliging,versleuteling,veiligstellen,vertrouwelijk,privé,toegang beperken"
 title = "Wachtwoord toevoegen"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Stempelvoorbeeld"
 tags = "stempel,markering,zegel,goedgekeurd,afgewezen,vertrouwelijk,stempeltool,rubberstempel,datumstempel,goedkeuringsstempel,ontvangen,ongeldig,kopie,origineel"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Alfabet"
-clickToExpand = "Klik om uit te vouwen"
 customColor = "Aangepaste tekstkleur"
 customDateDesc = "Aangepaste opmaak"
 customPosition = "Sleep de stempel naar de gewenste locatie in het voorbeeldvenster."
 dateDesc = "Huidige datum"
 datetimeDesc = "Datum en tijd gecombineerd"
 dateTimeVars = "Datum en tijd"
-dynamicVariables = "Dynamische variabelen"
 examples = "Voorbeelden"
 filenameDesc = "Bestandsnaam zonder extensie"
 filenameFullDesc = "Bestandsnaam met extensie"
@@ -365,6 +364,8 @@ noStampSelected = "Geen stempel geselecteerd. Ga terug naar stap 1."
 opacity = "Transparantie"
 otherVars = "Overig"
 pageNumberDesc = "Huidig paginanummer"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Pagina-informatie"
 position = "Positie"
 positionAndFormatting = "Positie & opmaak"
@@ -378,9 +379,10 @@ quickPosition = "Selecteer een positie op de pagina om de stempel te plaatsen."
 rotation = "Rotatie"
 selectedImageAlt = "Geselecteerde stempelafbeelding"
 selectTemplate = "Selecteer een sjabloon..."
+size = "Size"
 stampSetup = "Stempel instellen"
 stampText = "Stempel tekst"
-stampTextDescription = "Gebruik de dynamische variabelen hieronder. Gebruik @@ voor een letterlijke @. Gebruik \\n voor nieuwe regels."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Soort stempel"
 submit = "Stempel toevoegen"
 tags = "Stempel, Afbeelding toevoegen, afbeelding centreren, watermerk, PDF, Insluiten, Aanpassen"
@@ -389,7 +391,6 @@ title = "Stempel PDF"
 totalPagesDesc = "Totaal aantal pagina's"
 useTemplate = "Sjabloon gebruiken"
 uuidDesc = "Korte unieke identificatie (8 tekens)"
-variablesHelp = "Klik op een variabele om deze in je stempeltekst in te voegen. Gebruik @@ voor een letterlijke @."
 yearMonthDayDesc = "Afzonderlijke datumonderdelen"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Er is een fout opgetreden bij het toevoegen van een stempel aan de PDF
 
 [AddStampRequest.results]
 title = "Stempelresultaten"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Aangepast"
@@ -410,6 +417,11 @@ legal-footer = "Juridische voettekst"
 page-numbers = "Paginanummers"
 pageNumberFooter = "Voettekst met paginanummer"
 timestamp = "Tijdstempel"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Tekst toepassen"
@@ -462,9 +474,7 @@ image = "Uploaden"
 text = "Tekst"
 
 [addText.step]
-createDesc = "Voer de tekst in die u wilt toevoegen"
 place = "Tekst plaatsen"
-placeDesc = "Klik op de PDF om uw tekst toe te voegen"
 
 [addText.steps]
 configure = "Tekst configureren"
@@ -1233,6 +1243,18 @@ label = "Opnieuw genereren bij opstarten"
 description = "Aantal dagen dat het certificaat geldig is"
 label = "Certificaatgeldigheid (dagen)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Mappen waaruit mapbronnen en mapuitvoer mogen lezen en naar mogen schrijven. Dit is een beveiligingsgrens: automatiseringen kunnen nooit naar een serverpad buiten deze lijst worden verwezen."
 securityNote = "Laat dit leeg om mapbronnen en mapuitvoer volledig uit te schakelen. De eigen configuratiemap van Stirling is altijd verboden terrein."
@@ -1456,7 +1478,9 @@ label = "SMTP-gebruikersnaam"
 
 [admin.settings.mcp]
 apikeyNote = "Clients sturen een Stirling API key in de X-API-KEY header (of Authorization: Bearer <key>). De sleutel wordt gekoppeld aan de eigenaar ervan als Stirling-gebruiker - alleen ingerichte accounts krijgen toegang, en acties worden als die gebruiker geaudit. Beheer sleutels onder Account > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Stel de PDF-tools en AI-agents van Stirling beschikbaar aan MCP-clients via een met OAuth beveiligd endpoint."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Toegestane tools"
 description = "Operation ids om te verbergen voor MCP (gescheiden door komma's of spaties), bijv. add-password remove-password. Laat leeg om alle ingeschakelde tools beschikbaar te stellen."
 label = "Geblokkeerde tools"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Wanneer uitgeschakeld (standaard), worden geen /mcp endpoint, metadata of MCP beans geladen."
 label = "MCP Server inschakelen"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Voer hierboven je OAuth issuer + resource ID in, sla op en herstart."
 step1ApiKey = "Maak een API key aan onder Account > API Keys (elke gebruiker gebruikt zijn eigen sleutel)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "Voeg in je MCP-client een"
 step2b = "server toe die verwijst naar:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "De client ontdekt OAuth automatisch via:"
 step3ApiKey = "Stuur de sleutel in een"
 step3ApiKeyb = "header (of Authorization: Bearer <key>). Er wordt geen OAuth- of metadata-detectie gebruikt."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Keur de aanmelding goed; de client probeert opnieuw met een token. Tools verschijnen gegroepeerd: converteren, pagina's, diversen, beveiliging, ai."
 step4ApiKey = "Tools verschijnen gegroepeerd: converteren, pagina's, diversen, beveiliging, ai - en elke aanroep wordt geaudit als de eigenaar van de sleutel."
 tip = "Tip: registreer de resource ID als toegestane audience in je IdP. Getest met MCP Inspector en Claude Desktop."
 tipApiKey = "Tip: de API-key-modus heeft geen externe IdP nodig - het eenvoudigst voor self-host. De sleutel wordt gekoppeld aan de eigenaar ervan als Stirling-gebruiker."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Een MCP-client verbinden"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Automatisch ontdekt via issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API-sleutel (Stirling-sleutel per gebruiker)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth heeft een externe IdP nodig. API key gebruikt een Stirling API key per gebruiker (X-API-KEY) - het eenvoudigst voor self-host."
 label = "Authenticatiemodus"
 oauth = "OAuth 2.1 (externe IdP)"
@@ -1515,6 +1563,18 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Vereis mcp.tools.read voor leesbewerkingen en mcp.tools.write voor schrijf-/AI-bewerkingen."
 label = "OAuth scopes afdwingen"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim die wordt vergeleken met een Stirling-gebruikersnaam (bijv. sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Wilt u Stirling PDF beter maken?"
 tags = "annoteren,markeren,tekenen,markup,opmerking,notities,beoordelen,redline,feedback,markup-tools,plaknotities,vormen,pijlen,tekstvak,uit de vrije hand"
 
 [annotation]
-alignCenter = "Centreren"
-alignLeft = "Links uitlijnen"
-alignRight = "Rechts uitlijnen"
 annotationStyle = "Annotatiestijl"
 backgroundColor = "Achtergrondkleur"
 borderOff = "Rand: Uit"
@@ -2016,18 +2073,61 @@ underline = "Understrepen"
 undoDelete = "Ongedaan maken"
 width = "Breedte"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Een gratis, private PDF-editor die je op elke infrastructuur kunt draaien."
 
 [appBanner]
 dismiss = "Sluiten"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Bijlagen toevoegen..."
 convertToPdfA3b = "Converteren naar PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b is een archiveringsformaat voor langdurige opslag. Het kan willekeurige bestandsformaten als bijlagen invoegen. Conversie vereist Ghostscript en kan langer duren bij grote bestanden."
-convertToPdfA3bTooltipHeader = "Over PDF/A-3b-conversie"
-convertToPdfA3bTooltipTitle = "Zo werkt het"
 discardChanges = "Verwerpen"
 downloadSingle = "Bijlage downloaden"
 duplicateName = "Er bestaat al een bijlage met de naam '{{name}}'."
@@ -2208,7 +2308,6 @@ guest = "Gast"
 user = "Gebruiker"
 
 [auto-rename]
-description = "Zoekt automatisch de titel in uw PDF-inhoud en gebruikt deze als bestandsnaam."
 submit = "Automatisch hernoemen"
 tags = "auto-detecteren,op-header-gebaseerd,organiseren,herlabelen"
 title = "Automatisch hernoemen"
@@ -2218,21 +2317,6 @@ failed = "Er is een fout opgetreden bij het automatisch hernoemen van de PDF."
 
 [auto-rename.results]
 title = "Resultaten automatisch hernoemen"
-
-[auto-rename.settings]
-title = "Over"
-
-[auto-rename.tooltip.description]
-title = "Zo werkt het"
-
-[auto-rename.tooltip.header]
-title = "Hoe automatisch hernoemen werkt"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Zoekt naar tekst die op een titel of kop lijkt"
-bullet2 = "Maakt een schone, geldige bestandsnaam van de gedetecteerde titel"
-bullet3 = "Behoudt de oorspronkelijke naam als er geen geschikte titel wordt gevonden"
-title = "Slim hernoemen"
 
 [autoFormDetection]
 loading = "Formuliervelden detecteren..."
@@ -2327,6 +2411,9 @@ remove = "Tool verwijderen"
 selected = "Geselecteerde tools"
 selectTool = "Selecteer een tool..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Annuleren"
 confirm = "Teruggaan"
@@ -2360,6 +2447,10 @@ title = "Automatisering uitvoeren"
 [automate.selection]
 title = "Selectie automatisering"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Nieuwe automatisering maken"
 
@@ -2371,6 +2462,7 @@ title = "Aanbevolen"
 
 [automate.sequence]
 finish = "Voltooien"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Automatisering uitvoeren"
 running = "Automatisering uitvoeren..."
 signInToRun = "Meld je aan om automatiseringen uit te voeren."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Beveiligingsworkflow"
 secureWorkflowDesc = "Beveiligt PDF-documenten door mogelijk kwaadaardige inhoud zoals JavaScript en ingesloten bestanden te verwijderen, en voegt vervolgens wachtwoordbeveiliging toe om ongeautoriseerde toegang te voorkomen. Wachtwoord is standaard ingesteld op 'password'."
 
 [autoRename]
-description = "Deze tool hernoemt PDF-bestanden automatisch op basis van hun inhoud. Het analyseert het document om de meest geschikte titel uit de tekst te vinden."
 tags = "automatisch detecteren,op basis van koptekst,organiseren,opnieuw labelen,automatisch hernoemen,slim hernoemen,hernoemen op inhoud,bestandsnaam,bestandsnaamgeving,titel detecteren"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,splitsen,document,organiseren"
 [autoSplitPDF]
 dividerDownload2 = "Download 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "Duplex Modus (voor- en achterkant scannen)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "QR-gebaseerd,scheiden,scan-segment,organiseren"
 title = "PDF automatisch splitsen"
 
@@ -2528,9 +2620,6 @@ tooltip = "Voegt randen rond elk paginadeel toe om te helpen bij snijden en uitl
 [bookletImposition.addGutter]
 label = "Gootmarge toevoegen"
 tooltip = "Voegt binnenmargeruimte toe voor binden"
-
-[bookletImposition.advanced]
-toggle = "Geavanceerde opties"
 
 [bookletImposition.doubleSided]
 label = "Dubbelzijdig afdrukken"
@@ -2714,14 +2803,15 @@ chooseJksFile = "JKS-bestand kiezen"
 chooseP12File = "PKCS12-bestand kiezen"
 choosePfxFile = "PFX-bestand kiezen"
 choosePrivateKey = "Privésleutelbestand kiezen"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Geweigerd"
 fetchFailed = "Ondertekeningsgegevens laden mislukt"
 finalized = "Gefinaliseerd"
 location = "Locatie"
-logoTitle = "Logo"
-name = "Naam"
-noLogo = "Geen logo"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Paginanummer"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Wachtwoord van het certificaat"
 passwordOptional = "Leeg laten als er geen wachtwoord is"
 pemCertificateLabel = "Certificaat (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Privésleutel (.pem / .key)"
 pending = "In afwachting"
 readyToFinalize = "Klaar om te finaliseren"
 reason = "Reden"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Servercertificaat gebruiken - geen bestanden of wachtwoord nodig"
-showLogo = "Logo tonen"
 signatureProgress = "{{signedCount}}/{{totalCount}} handtekeningen"
 tags = "authenticeren,PEM,P12,officieel,versleutelen,ondertekenen,certificaat,PKCS12,JKS,server,handmatig,auto"
 title = "Certificaat ondertekening"
@@ -2738,12 +2828,45 @@ viewed = "Bekeken"
 
 [certSign.appearance]
 invisible = "Onzichtbaar"
+showOnPage = "Show signature on page"
 stepTitle = "Weergave van handtekening"
 visibility = "Zichtbaarheid"
 visible = "Zichtbaar"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Handtekeningdetails"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Over handtekeningsweergave"
@@ -2762,9 +2885,6 @@ bullet3 = "Kies op welke pagina de handtekening wordt geplaatst"
 bullet4 = "Optioneel kan een logo worden toegevoegd"
 text = "Toont een handtekeningblok op de PDF met uw naam, datum en optionele details. Handig wanneer u lezers duidelijk wilt laten zien dat het document is ondertekend."
 title = "Zichtbare handtekeningen"
-
-[certSign.certFiles]
-stepTitle = "Certificaatbestanden"
 
 [certSign.certType.tooltip.convert]
 text = "Converteer uw bestand met keytool naar een Java-keystore (.jks) en kies vervolgens JKS."
@@ -2786,6 +2906,7 @@ text = "Kies de indeling die overeenkomt met uw certificaatbestand:"
 title = "Welke optie moet ik gebruiken?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Certificaatindeling"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Dit apparaat"
 [certSign.error]
 failed = "Er is een fout opgetreden bij het verwerken van handtekeningen."
 
-[certSign.format]
-pkcs11 = "USB-token"
-windowsStore = "Windows-certificaatopslag"
-
 [certSign.hardware]
-certificate = "Certificaat"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Aangepast stuurprogrammapad…"
+digitalId = "Digital ID"
 driver = "PKCS#11-stuurprogramma"
 driverPath = "Pad naar stuurprogrammabibliotheek"
 driverPathPlaceholder = "Volledig pad naar uw PKCS#11-stuurprogramma (.dll, .so of .dylib)"
-expired = "verlopen"
-expires = "verloopt"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Certificaten weergeven"
-loading = "Certificaten worden gelezen…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Geen ondertekeningscertificaten gevonden"
 noDriver = "Er is geen PKCS#11-stuurprogramma gedetecteerd. Installeer het stuurprogramma van uw token (bijv. OpenSC), open dit daarna opnieuw of voer hieronder handmatig het pad naar het stuurprogramma in."
-notYetValid = "nog niet geldig"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "Token-PIN"
 pkcs11Hint = "Selecteer het PKCS#11-stuurprogramma van uw token, voer de PIN in en geef vervolgens de certificaten op het token weer."
 pkcs11LoadError = "Kon de certificaten niet van het token lezen. Controleer de PIN en het stuurprogramma."
-refresh = "Vernieuwen"
-selectCert = "Selecteer certificaat"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Selecteer stuurprogramma"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Slot (optioneel)"
-windowsHint = "Kies een certificaat uit uw Windows-certificaatopslag. Ondertekenen gebruikt de sleutel op uw kaart/token - Windows zal om de PIN vragen."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Kon de Windows-certificaatopslag niet lezen"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Vuistregel"
 device = "Dit apparaat"
 noOtherSources = "Er zijn geen andere certificaatbronnen beschikbaar."
 server = "Server"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Certificaatbron"
 upload = "Uploaden"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Werk uw gebruikersnaam bij. U wordt uitgelogd na het bijwerken."
@@ -3069,7 +3205,6 @@ placeholder = "Maker van het document"
 
 [changeMetadata.customFields]
 add = "Veld toevoegen"
-description = "Voeg aangepaste metadata-velden toe aan het document"
 key = "Sleutel"
 keyPlaceholder = "Aangepaste sleutel"
 remove = "Verwijderen"
@@ -3135,10 +3270,6 @@ bullet1 = "Aanmaakdatum: wanneer het oorspronkelijke document is gemaakt"
 bullet2 = "Wijzigingsdatum: wanneer het voor het laatst is gewijzigd"
 text = "Wanneer het document is gemaakt en gewijzigd."
 title = "Datumvelden"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Volledige verwijdering van metadata om privacy te waarborgen."
-title = "Bestaande metadata verwijderen"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Titel: documentnaam of kop"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Je hebt je gebruikslimiet bereikt. Bekijk je planopties o
 
 [checkAccessibility]
 aboutRow = "Over {{label}}"
-checking = "Controleren..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Toegankelijkheidsrapport downloaden"
 fileFailed = "mislukt"
+noFiles = "Select a PDF to check it."
 pickFile = "Resultaten tonen voor"
-submit = "Toegankelijkheid controleren"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternatieve tekst"
@@ -3286,10 +3417,17 @@ structure = "Tags vertellen schermlezers wat elk deel van een pagina is, zoals e
 [checkAccessibility.checks]
 label = "{{passed}} van {{total}} controles geslaagd"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Het toegankelijkheidsrapport kon niet worden gemaakt. Probeer het opnieuw."
 fileTitle = "Dit bestand kon niet worden gecontroleerd"
 partial = "Sommige bestanden konden niet worden gecontroleerd."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Verklaart PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Het bestand heeft een titel in de metadata."
 [checkAccessibility.figures]
 summary_one = "{{count}} afbeelding heeft een beschrijving nodig (pagina {{pages}})"
 summary_other = "{{count}} afbeeldingen hebben een beschrijving nodig (pagina's {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Van toepassing op"
@@ -3465,19 +3618,7 @@ checking = "Controleren {{current}} van {{total}}..."
 complete = "Controle voltooid"
 
 [checkAccessibility.steps]
-results = "Resultaten"
 standard = "Standaard"
-
-[checkAccessibility.tooltip.header]
-title = "Welke standaard te controleren"
-
-[checkAccessibility.tooltip.ua1]
-text = "De eerste versie van PDF/UA, gepubliceerd in 2012 als ISO 14289-1, voor PDF 1.7-bestanden."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "De nieuwere versie, gepubliceerd in 2024 als ISO 14289-2, voor PDF 2.0-bestanden. Een PDF 1.7-bestand dat hiertegen wordt gecontroleerd, faalt op regels die alleen voor PDF 2.0 gelden."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Annotatie {{n}}"
@@ -3868,6 +4009,7 @@ title = "Kies kleur"
 transparent = "Transparant"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Acties"
 back = "Terug"
 cancel = "Annuleren"
@@ -4206,7 +4348,9 @@ title = "API-sleutels vernieuwen"
 warning = "⚠️ Waarschuwing: deze actie genereert nieuwe API-sleutels en maakt uw vorige sleutels ongeldig."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) laat AI-assistenten zoals Claude je Stirling PDF-tools rechtstreeks gebruiken. Verbind één keer een client en je assistent kan namens jou documenten converteren, bewerken, beveiligen en verwerken."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Gastgebruikers kunnen geen MCP-clients verbinden. Maak een account aan om de MCP server te gebruiken en je AI-assistent namens jou Stirling PDF-tools te laten uitvoeren."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "{{label}} kopiëren"
 tooltipCopied = "{{label}} gekopieerd"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Je MCP-endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Toevoegen aan"
 hint = "Kies je client, plak de snippet in het getoonde bestand en herstart deze. Bij het eerste gebruik meld je je aan met je Stirling-account - geen sleutels om te kopiëren."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Verbind je AI-assistent"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Beeldverhouding behouden"
 maxAttachmentSize = "Maximale bijlagengrootte (MB)"
 multiple = "Meerdere"
 optimizeForEbook = "PDF optimaliseren voor e-readers (gebruikt Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Uitvoer"
-outputFormat = "Uitvoerformaat"
-pdfaAccessibleFormat = "{{format}} (toegankelijk)"
-pdfaDigitalSignatureWarning = "Dit PDF bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
-pdfaNote = "PDF/A-1b is compatibeler, PDF/A-2b ondersteunt meer functies, PDF/A-3b ondersteunt ingesloten bestanden."
-pdfaOptions = "PDF/A-opties"
 pdfOptions = "PDF-opties"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Instellingen"
 signInToUse = "Meld u aan om te gebruiken"
 single = "Enkel"
 sourceFormatPlaceholder = "Brontype"
-strictMode = "Strikte modus"
-strictModeDesc = "Fout als de conversie niet perfect is (gebruikt VeraPDF-verificatie)"
 svgPdfOptions = "SVG naar PDF-opties"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG-bestanden worden gerenderd als vectorafbeeldingen voor scherpe uitvoer op elke resolutie. Afmetingen uit de SVG bepalen de PDF-paginagrootte."
@@ -4396,9 +4549,7 @@ zoomLevel = "Zoomniveau"
 
 [convert.ebookOptions]
 includePageNumbers = "Paginanummering toevoegen"
-includePageNumbersDesc = "Paginanummers toevoegen aan de gegenereerde PDF"
 includeTableOfContents = "Inhoudsopgave toevoegen"
-includeTableOfContentsDesc = "Gegenereerde inhoudsopgave toevoegen aan de resulterende PDF"
 optimizeForEbookPdf = "Optimalisatie voor ebook-lezers"
 optimizeForEbookPdfDesc = "Optimaliseer de PDF voor eBook-lezen (kleinere bestandsgrootte, betere weergave op eInk-apparaten)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Hoofdstukken detecteren"
 detectChaptersDesc = "Detecteer koppen die op hoofdstukken lijken en voeg EPUB-pagina-einden in"
 kindleEink = "Kindle e-Ink (tekst geoptimaliseerd)"
 outputFormat = "Uitvoerformaat"
-outputFormatDesc = "Kies het uitvoerformaat voor het ebook"
 tabletPhone = "Tablet/telefoon (met afbeeldingen)"
 targetDevice = "Doelapparaat"
 targetDeviceDesc = "Kies een uitvoerprofiel dat is geoptimaliseerd voor het leesapparaat"
@@ -4469,8 +4619,24 @@ description = "Deze cookies zijn essentieel om de website goed te laten function
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Titel van voorpagina"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF Portfolio"
 description = "Elk geselecteerd bestand blijft volledig behouden in de nieuwe PDF, ongeacht het type. Lezers die portfolio's niet ondersteunen tonen een voorpagina met de bestanden als bijlage."
 goToFileEditor = "Naar bestandseditor gaan"
@@ -4488,6 +4654,9 @@ title = "Wat het doet"
 
 [createPortfolio.tooltip.header]
 title = "Over PDF-portfolio's"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Witruimte autom. bijsnijden"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Klembordtoegang is niet beschikbaar in deze browser."
 export = "Bladwijzers exporteren"
 exportClipboard = "JSON naar klembord kopiëren"
 exportJson = "JSON downloaden"
+exportMenu = "Export"
 importClipboard = "JSON vanaf klembord plakken"
 importJson = "JSON importeren"
+importMenu = "Import"
 loadFromPdf = "Laden uit geselecteerde PDF"
 noFile = "Selecteer een PDF om bestaande bladwijzers te extraheren."
 selectedFile = "Geladen uit {{file}}"
-source = "Bladwijzers laden"
 
 [editTableOfContents.editor]
 addTopLevel = "Bladwijzer op hoogste niveau toevoegen"
@@ -4740,6 +4910,9 @@ replaceExisting = "Bestaande bladwijzers vervangen (uitvinken om toe te voegen)"
 replaceExistingHint = "Wanneer uitgeschakeld, wordt de nieuwe inhoud na de huidige bladwijzers toegevoegd."
 title = "Bladwijzers & inhoud"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "PDF wijzigen"
 filePrompt = "Selecteer een PDF uit uw bibliotheek of upload een nieuwe om te beginnen."
@@ -4753,7 +4926,6 @@ title = "Open de tool om te beginnen met bewerken"
 [encryptedPdfUnlock]
 actionIgnored = "Beperking voor {{action}} genegeerd"
 actionUnlocked = "{{action}} ontgrendeld voor deze sessie"
-advanced = "Geavanceerd"
 allowed = "Toegestaan"
 annotations = "Annotaties"
 authoriseAction = "Deze PDF vereist machtiging om {{action}} te gebruiken."
@@ -4801,7 +4973,6 @@ restricted = "Beperkt"
 restrictedActions = "beperkte acties"
 restrictedOperation = "Deze actie vereist het machtigingswachtwoord."
 retainOwnerVerification = "Verifieer het machtigingswachtwoord om het ongewijzigd te behouden terwijl het openingswachtwoord wordt verwijderd. Dit verwijdert het niet."
-saveProtection = "Bescherming opslaan"
 securityChangeFailed = "Kan de bescherming niet wijzigen. Controleer het machtigingswachtwoord en de nieuwe beveiligingsinstellingen."
 sessionDetails = "Open voor deze sessie. De PDF blijft beveiligd."
 sessionDetailsLabel = "Over ontgrendelen voor sessie"
@@ -4871,7 +5042,6 @@ title = "Er is iets misgegaan"
 tryAgain = "Probeer opnieuw"
 
 [extractImages]
-allowDuplicates = "Dubbele afbeeldingen opslaan"
 selectText = "Selecteer het beeldformaat voor geëxtraheerde afbeeldingen"
 submit = "Extraheren"
 tags = "foto,opslaan,archief,zip,vastleggen,plukken"
@@ -4927,12 +5097,15 @@ closeFile = "Bestand sluiten"
 
 [fileEditor]
 closedFile = "{{name}} gesloten"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Bestand opnieuw geordend"
 filesReordered_other = "{{count}} bestanden opnieuw geordend"
 loadedFromStorage_one = "{{count}} bestand uit opslag geladen"
 loadedFromStorage_other = "{{count}} bestanden uit opslag geladen"
 loadFromStorageFailed = "Sommige bestanden laden uit opslag mislukt"
 pinnedFile = "{{name}} vastgezet"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "{{name}} opgeslagen en gesloten"
 saveFailed = "Opslaan mislukt"
 unpinnedFile = "{{name}} losgemaakt"
@@ -5019,11 +5192,20 @@ locked = "Vergrendeld"
 previewOf = "Voorbeeld van {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Bestanden toevoegen"
 created = "Aangemaakt"
 notIncludedInToolRun = "Niet opgenomen in deze tooluitvoering"
 size = "Bestandsgrootte"
 title = "Bestanden"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Geen bestanden beschikbaar"
@@ -5104,6 +5286,7 @@ subtitle = "Toon of verberg categorieën in de bestanden-zijbalk."
 title = "Zijbalkcategorieën"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Annuleren"
 error = "Kon de bestandsnaam niet wijzigen."
 illegalCharacters = "Een bestandsnaam mag geen \\ / : * ? \" < > | bevatten"
@@ -5607,7 +5790,6 @@ removeField = "Veld verwijderen"
 
 [formFill.editor]
 action = "Knopactie"
-actionHelp = "Wat de knop doet wanneer erop wordt geklikt."
 actionNone = "Geen"
 actionPrint = "Afdrukken"
 actionReset = "Formulier opnieuw instellen"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Beperkt hoeveel tekens passen, weergegeven als gelijkmatig verd
 multiline = "Meerregelig"
 multilineHelp = "Staat meer dan één tekstregel toe en breekt af aan de rand van het veld."
 multiSelect = "Meerdere selecties toestaan"
-multiSelectHelp = "Hiermee kan meer dan één optie tegelijk worden gekozen."
 name = "Veldnaam"
 nameHelp = "De interne naam van het veld. Wordt gebruikt bij het exporteren van gegevens of het invullen van het formulier vanuit een ander systeem, dus houd deze uniek en zonder spaties."
 optionGap = "Optieafstand"
@@ -5902,6 +6083,11 @@ title = "Kleuren/contrast aanpassen"
 desc = "Markeren, tekenen, notities en vormen toevoegen in de viewer"
 tags = "annoteren,markeren,tekenen,markup,opmerking,notities,beoordelen,redline,feedback,markup tools,plaknotities,vormen,pijlen,tekstvak,uit de hand"
 title = "Annoteren"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Detecteer automatisch formuliervelden met AI en maak je PDF invulbaar."
@@ -6405,6 +6591,9 @@ sort = "Sorteren"
 [merge.sortFiles]
 title = "Bestanden sorteren"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Overzicht instellingen samenvoegen"
 
@@ -6548,6 +6737,9 @@ title = "Authenticatie mislukt"
 message = "U kunt dit venster sluiten en terugkeren naar Stirling PDF."
 title = "Authenticatie geslaagd"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Toegang toestaan"
 approving = "Toestaan..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Je wordt teruggestuurd naar de app..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} wil toegang tot je Stirling PDF-account"
 scopesIntro = "Hiermee kan {{app}}:"
 signedInAs = "Ingelogd als {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Log in om door te gaan"
 signInPrompt = "Log in op je Stirling PDF-account om door te gaan met het koppelen van de app."
 title = "Authorise access"
 unknownApp = "Een applicatie van derden"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Handelen namens jou - alles wat {{app}} doet, gebeurt onder je account en telt mee voor je gebruik"
@@ -6572,9 +6767,12 @@ tools = "Je Stirling PDF-tools namens jou gebruiken - je documenten converteren,
 
 [oauthConsent.scope]
 email = "Je e-mailadres bekijken"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Je identiteit bevestigen"
 phone = "Je telefoonnummer bekijken"
 profile = "Je basisprofielinformatie bekijken"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Ruim scans op, detecteert tekst van afbeeldingen in een PDF en voegt deze opnieuw toe als tekst."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Je wordt teamlid en verliest eigenaarstoegang."
 [pageEdit]
 deselectAll = "Geen"
 selectAll = "Alles aanvinken"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Pagina's extraheren"
@@ -7577,6 +7779,8 @@ stamp = "Stempelannotatie - geen paginatekst, dus kan hier niet worden bewerkt"
 widget = "Formulierveld - geen paginatekst, dus kan hier niet worden bewerkt"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Bewerken"
 markTagged = "Markeren als volledig getagd"
 matchScanFont = "Gescande tekst afstemmen op {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Pagina automatisch taggen"
 typeInto = "Typ in {{run}}"
 ungroupParagraph = "Groepering van alinea {{run}} opheffen"
 unmarkTagged = "Markeren als niet volledig getagd"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Laat {{run}} omlopen"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Niet-opgeslagen wijzigingen verwerpen?"
 
 [pdfTextEditor.error]
 decodeImage = "Kon de geselecteerde afbeelding niet decoderen."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Kan deze tekst niet dupliceren: geen beschikbaar lettertype kan al zijn letters weergeven."
 formLiftChangesDrawing = "Kan dit niet bewerken: het is weergegeven als onderdeel van een groep met uitsnijding of grafische instellingen die de editor bij wijzigen niet kan behouden."
 insertImage = "Kon de geselecteerde afbeelding niet invoegen."
 needsShaping = "De editor kan de verbonden letters en klinkertekens van dit schrift nog niet correct weergeven, daarom is deze wijziging niet doorgevoerd."
+reopenLost = "Open again"
 replaceClippedImage = "Kan deze afbeelding niet vervangen: deze is bijgesneden en de vervanging zou de delen tonen die door de uitsnijding verborgen zijn."
 scanOffInk = "Kan deze tekst niet bewerken: de herkende woorden lijnen niet uit met de scan. Voer OCR opnieuw uit."
 unsafeRtlEdit = "Kan deze bewerking niet uitvoeren: de editor kan de tekst van deze regel van rechts-naar-links niet opnieuw tekenen zonder deze te veranderen."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG-afbeelding"
 close = "Zoekbalk sluiten"
 count = "{{current}} van {{total}}"
 findPlaceholder = "Zoeken"
+hideReplace = "Hide replace"
 ignoreAccents = "Accenten negeren"
 matchCase = "Hoofdlettergevoelig"
 next = "Volgende overeenkomst"
@@ -7625,6 +7833,7 @@ replace = "Vervangen"
 replaceAll = "Alles vervangen"
 replaced = "{{count}} vervangen"
 replacePlaceholder = "Vervangen door"
+showReplace = "Show replace"
 wholeWord = "Hele woord"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Deze link kan niet worden getagd."
 cannotTagPage = "De inhoud van deze pagina kan niet worden getagd."
 contentGroup = "Content"
 customTag = "{{role}} (aangepaste tag)"
-decorativeInfo = "Schermlezers slaan decoratieve afbeeldingen over. Gebruik dit voor randen, achtergronden en andere afbeeldingen die geen informatie bevatten."
-decorativeLabel = "Decoratieve afbeelding"
-description = "Afbeeldingsbeschrijving"
-descriptionInfo = "Schermlezers lezen dit voor in plaats van de afbeelding."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Tags kunnen niet worden bewerkt in een versleuteld bestand"
 figureDescription = "Figuurbeschrijving"
 figureDescriptionInfo = "Schermlezers lezen dit voor in plaats van de figuur."
-formFieldDescription = "Veldbeschrijving"
 formulaDescription = "Formulebeschrijving"
 formulaDescriptionInfo = "Schermlezers lezen dit voor in plaats van de formule. Beschrijf het zoals u het hardop zou zeggen, bijvoorbeeld \"x in het kwadraat plus één\"."
 heading = "Toegankelijkheid"
@@ -7813,7 +8019,6 @@ markedTagged = "Document is volledig getagd"
 markedTaggedHint = "Vertelt PDF-readers de toegankelijkheidstags te gebruiken. Vink dit aan zodra alles is getagd."
 markedWithUntagged = "Een deel van de content heeft geen tags, waardoor schermlezers dit mogelijk overslaan."
 missingDescriptions = "Ontbrekende beschrijvingen"
-mixedContent = "Figuur bevat andere inhoud"
 mixedTags = "Gemengd"
 needsDescriptionBadge = "Geen beschrijving"
 nextToReview = "Volgende te controleren"
@@ -7821,12 +8026,10 @@ notFigure = "Getagd als onderdeel van de tekst"
 removeTag = "Tag verwijderen"
 saveFailed = "Je wijzigingen voor toegankelijkheid konden niet worden opgeslagen, dus het bestand is niet opgeslagen. Maak ze ongedaan en probeer het opnieuw."
 selectedText = "Geselecteerde tekst"
-tagFormField = "Formulierveld taggen"
 tagging = "Pagina's taggen"
 tagLabel = "Tag"
 tagLinks_one = "Link taggen"
 tagLinks_other = "{{count}} links taggen"
-tagUntagged = "Document automatisch taggen"
 tagUntaggedHint = "Voegt automatisch toegankelijkheidstags in het hele document toe. Het resultaat is grof: controleer daarna koppen, lijsten en leesvolgorde."
 unknownTag = "Kan hier niet worden gelezen"
 unmarkedWithTags = "Sommige PDF-viewers zullen de tags toch gebruiken en kunnen content zonder tags overslaan."
@@ -7851,7 +8054,7 @@ heading = "Koppen"
 mixedNumbering = "Combineert genummerde en ongenummerde koppen"
 none = "Geen koppen"
 onPage = "Kop op pagina {{page}}"
-problems = "Problemen met koppen"
+problemCount = "{{count}} to fix"
 skippedLevel = "Slaat een niveau over na Kop {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Titel"
 allLanguages = "Alle talen"
 cannotSetDocument = "De taal van dit document kan niet worden gewijzigd."
 cannotSetText = "De taal van deze tekst kan niet worden gewijzigd."
-documentHint = "De taal die schermlezers gebruiken, tenzij een deel van de tekst zijn eigen taal instelt."
 documentLabel = "Taal"
 documentLocked = "De taal van een versleuteld document kan hier niet worden gewijzigd."
 inDocument = "In dit document"
 innerLabel = "Taal van tag {{number}}"
 label = "Taal"
-missing = "Geen taal ingesteld. Schermlezers zullen raden en kunnen het hele document met de verkeerde stem voorlezen."
 mixed = "Gemengd"
 noMatch = "Geen overeenkomende taal. Typ in plaats daarvan de code, zoals mt of en-IE."
 placeholder = "Taal selecteren"
@@ -7943,6 +8144,52 @@ renderFailed = "Pagina weergeven mislukt"
 [pdfTextEditor.password]
 incorrect = "Onjuist wachtwoord - probeer het opnieuw."
 label = "Wachtwoord"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Uitlijnhulplijn op {{value}} {{unit}} - sleep naar een liniaal om te verwijderen"
@@ -8124,6 +8371,10 @@ title = "Variantie in voorbeeldweergave"
 [pdfTextEditor.tooltip.textFocus]
 text = "Deze werkruimte richt zich op het bewerken van tekst en het verplaatsen van ingesloten afbeeldingen. Complexe pagina-ontwerpen, formulierwidgets en gelaagde graphics worden behouden voor export, maar zijn hier niet volledig bewerkbaar."
 title = "Focus op Tekst en Afbeeldingen"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF naar CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Categorie verbergen"
 labelCount = "labels"
 sharedNote = "Deze labels zijn ingebouwd en worden gedeeld met je hele team."
 showCategory = "Categorie tonen"
-
-[policies.pii]
-account = "Rekeningnummers (gelabeld)"
-card = "Credit-/debetkaarten"
-email = "E-mailadressen"
-fieldLabel = "PII om te redigeren"
-iban = "IBAN's"
-phone = "Telefoonnummers"
-placeholder = "Selecteer PII-typen"
-routing = "US-routingnummers (ABA)"
-ssn = "Social Security-nummers"
 
 [policy]
 badgeEnforcing = "{{name}} wordt afgedwongen..."
@@ -10317,6 +10557,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "Nieuwe aangepaste pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Alle pipelines"
 
@@ -12047,7 +12291,6 @@ label = "Leeshulpmiddelen"
 readAloud = "Voorlezen"
 rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
-search = "Zoeken in document"
 switchDocument = "Document wisselen"
 thumbnails = "Pagina's"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Kleur van het vak"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding"
 customPaddingLabel = "Aangepaste extra marge"
 useRegexLabel = "Regex gebruiken"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Alleen hele woorden"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Instellingen voor zwartlakken"
 
 [redact.auto.wordsToRedact]
 add = "Toevoegen"
-examples = "Voorbeelden: Vertrouwelijk, Topgeheim"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Voer een woord in"
 title = "Woorden om te zwartlakken"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Selecteer bestanden in bestandsbeheer om meerdere be
 manual = "Handmatig"
 mode = "Modus"
 title = "Methode voor zwartlakken"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Alleen tekst met dezelfde hoofdletters en kleine letters matchen. 'Secret' komt niet overeen met 'SECRET' wanneer ingeschakeld, en [A-Z] in een regex matcht alleen hoofdletters."
@@ -12147,19 +12401,6 @@ title = "Methode voor zwartlakken"
 text = "Klik en sleep om handmatig specifieke gebieden te selecteren om te zwartlakken. Geeft nauwkeurige controle over wat wordt zwartgelakt. (Binnenkort beschikbaar)"
 title = "Handmatig zwartlakken"
 
-[redact.tooltip.words]
-bullet1 = "Voeg één woord per keer toe"
-bullet2 = "Druk op Enter of klik op 'Nog een toevoegen' om toe te voegen"
-bullet3 = "Klik op × om woorden te verwijderen"
-
-[redact.tooltip.words.description]
-text = "Voer woorden of zinnen in om in uw document te vinden en te zwartlakken. Elk woord wordt afzonderlijk gezocht."
-title = "Tekstmatching"
-
-[redact.tooltip.words.examples]
-text = "Typische woorden om te zwartlakken zijn: bankgegevens, e-mailadressen of specifieke namen."
-title = "Veelvoorkomende voorbeelden"
-
 [redact.tooltip.words.header]
 title = "Woorden om te zwartlakken"
 
@@ -12176,15 +12417,6 @@ failed = "Er is een fout opgetreden bij het verwijderen van aantekeningen uit de
 
 [removeAnnotations.info]
 description = "Deze tool verwijdert alle aantekeningen (opmerkingen, markeringen, notities, enz.) uit uw PDF-documenten."
-
-[removeAnnotations.settings]
-title = "Instellingen"
-
-[removeAnnotations.tooltip.description]
-title = "Zo werkt het"
-
-[removeAnnotations.tooltip.header]
-title = "Over Aantekeningen verwijderen"
 
 [removeBlanks]
 submit = "Lege pagina's verwijderen"
@@ -12325,6 +12557,9 @@ tags = "herschikken,opnieuw ordenen,organiseren,reorganiseren,pagina's verplaats
 [reorganizePages.error]
 failed = "Pagina's ordenen is mislukt"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Pagina's geordend"
 
@@ -12406,6 +12641,7 @@ title = "Alle kleuren inverteren"
 rotateLeft = "Tegen de klok in draaien"
 rotateRight = "Met de klok mee draaien"
 selectRotation = "Selecteer rotatiehoek (met de klok mee)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Rotatie toepassen"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF roteren"
@@ -12516,8 +12752,7 @@ title = "Opschonen"
 failed = "Er is een fout opgetreden bij het opschonen van de PDF."
 
 [sanitize.options]
-note = "Selecteer de elementen die u uit de PDF wilt verwijderen. Er moet minstens één optie geselecteerd zijn."
-title = "Opschoonopties"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Alle bestanden die in de PDF zijn ingesloten verwijderen"
@@ -12649,6 +12884,7 @@ title = "PDF doorzoeken"
 hideTools = "Niet-beschikbare tools verbergen ▴"
 messageNoFallback = "Tools zijn niet beschikbaar totdat je server weer online is."
 messageWithFallback = "Sommige tools vereisen een serververbinding."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Niet-beschikbare tools bekijken ▾"
 title = "Je Stirling-PDF-server is onbereikbaar"
 toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\" is niet beschikbaar op de lokale backend."
@@ -13034,6 +13270,12 @@ title = "Sneltoetsen"
 mac = "Neem ⌘ (Command), ⌥ (Option) of een andere modificatietoets op in de sneltoets."
 windows = "Neem Ctrl, Alt of een andere modificatietoets op in de sneltoets."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Voorwaarden, privacybeleid en je cookievoorkeuren."
 label = "Juridisch"
@@ -13418,9 +13660,7 @@ image = "Uploaden"
 text = "Tekst"
 
 [sign.step]
-createDesc = "Kies hoe u de handtekening wilt maken"
 place = "Plaatsen en opslaan"
-placeDesc = "Plaats de handtekening op uw PDF"
 
 [sign.steps]
 configure = "Handtekening configureren"
@@ -13597,6 +13837,10 @@ rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
 trim = "Bijsnijden tot handtekening"
 trimHint = "Snijdt de lege ruimte eromheen weg"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Instellingen voor handtekeningweergave"
@@ -13959,7 +14203,6 @@ placeholder = "Voer het aantal horizontale secties in"
 
 [split-by-sections.splitMode]
 custom = "Aangepaste pagina's"
-description = "Kies hoe u de pagina's wilt verdelen"
 label = "Splits-modus"
 splitAll = "Alle pagina's splitsen"
 splitAllExceptFirst = "Alles splitsen behalve de eerste"
@@ -14210,10 +14453,8 @@ failed = "Er is een fout opgetreden bij het tijdstempelen van de PDF."
 
 [timestampPdf.options]
 note = "Alleen een SHA-256-hash van je document wordt naar de TSA-server gestuurd; het PDF-bestand zelf wordt nooit naar de TSA-server verzonden."
-title = "Tijdstempelserver (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Kies een vertrouwde Time Stamp Authority"
 label = "Selecteer een TSA-server"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Geen tools beschikbaar"
 
 [tooltip]
 close = "Tooltip sluiten"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Deze tool verwijdert alleen-lezenbeperkingen van PDF-formuliervelden, zodat ze bewerkbaar en invulbaar worden."
@@ -14706,6 +14961,9 @@ signatureDate = "Ondertekeningsdatum"
 
 [validateSignature.settings]
 certHint = "Upload een vertrouwd X.509-certificaat om te valideren tegen een aangepaste vertrouwensbron."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Validatie-instellingen"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
 copyRestricted = "Kopiëren is uitgeschakeld door de machtigingen van deze PDF."
 copyText = "Kopiëren"
 coverPageView = "Voorblad afzonderlijk weergeven"
-disableColorFilter = "Kleurfilter uitschakelen"
 documentUpdated = "Document bijgewerkt"
 dualPageView = "Dubbele paginaweergave"
 editText = "Tekst bewerken"
-enableDarkFilter = "Donkerfilter inschakelen"
-enableSepiaFilter = "Sepiafilter inschakelen"
 engineLoadError = "Kan PDF-viewerengine niet initialiseren"
 engineSlowWarning = "Het initialiseren van de PDF-engine duurt langer dan verwacht. Controleer de WebAssembly- en Worker-instellingen van je browser of laad de pagina opnieuw."
 firstPage = "Eerste pagina"
@@ -14736,20 +14991,27 @@ fitPage = "Aan pagina aanpassen"
 fitWidth = "Aan breedte aanpassen"
 lastPage = "Laatste pagina"
 loadingEngine = "PDF Engine laden..."
+menuSelected = "Selected"
 moreOptions = "Meer"
 nextPage = "Volgende pagina"
 noPdfProvided = "Geen PDF opgegeven"
 onlyPdfSupported = "Dit bestandsformaat wordt niet ondersteund voor voorbeeldweergave."
 pageNavigation = "Paginanavigatie"
+pageNumber = "Page number"
 previousPage = "Vorige pagina"
 readAloudFromHere = "Voorlezen vanaf hier"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Het document kon niet worden opgeslagen. Probeer het opnieuw."
 saveChangesErrorTitle = "Wijzigingen konden niet worden opgeslagen"
 singlePageView = "Enkele paginaweergave"
+tools = "Tools"
 unknownFile = "Onbekend bestand"
-view = "Weergave"
 zoom = "Zoomen"
 zoomIn = "Inzoomen"
+zoomLevel = "Zoom level"
 zoomOut = "Uitzoomen"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Handtekeningvoorbeeld"
 
 [viewer.signatureField]
 badge = "Handtekening"
+clickToSign = "Click to sign here"
 fieldTitle = "Handtekeningveld: {{name}}"
 signed = "Ondertekend"
 signedWithReason = "Ondertekend: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Niet-ondertekend handtekeningveld: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "{{restored}} van {{total}} bestanden hersteld. De rest is niet meer o
 
 [workbenchBar]
 activeFiles = "Actieve bestanden"
-annotations = "Annotaties"
+annotate = "Annotate"
 applyRedactionsFirst = "Eerst zwartlakken toepassen"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Alle bestanden sluiten"
 closePdf = "PDF sluiten"
+defaultZoom = "Default zoom"
 deselectAll = "Alles deselecteren"
 downloadAll = "Alles downloaden"
 editText = "Tekst bewerken"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Annotatiemodus verlaten"
 exitRedaction = "Zwartlakmodus afsluiten"
 findReplace = "Zoeken en vervangen"
 formFill = "Formuliereditor"
-hideToolbar = "Toolbar verbergen"
+layers = "Layers"
 moreActions = "Meer acties"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Pagina-editor"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Pan-modus"
 print = "PDF afdrukken"
 readAloud = "Voorlezen"
 readAloudLanguage = "Taal"
 readAloudSpeed = "Snelheid"
 redact = "Zwartlakken"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Linksom roteren"
 rotateRight = "Rechtsom roteren"
 ruler = "Liniaal / Meten"
+rulerScaleUnset = "Not set"
 rulerSettings = "Schaalinstellingen"
 save = "Opslaan"
 saveAll = "Alles opslaan"
@@ -15123,14 +15398,23 @@ selectLanguage = "Taal selecteren"
 share = "Delen"
 showAllTools = "Alle tools tonen"
 showFewerTools = "Werkbalk inklappen"
-showToolbar = "Toolbar tonen"
+thumbnails = "Pages"
 toggleAnnotations = "Annotaties tonen/verbergen"
-toggleAttachments = "Bijlagen tonen/verbergen"
-toggleBookmarks = "Bladwijzers (Inhoudsopgave)"
 toggleComments = "Opmerkingen"
-toggleLayers = "Lagen tonen/verbergen"
-toggleSidebar = "Zijbalk tonen/verbergen"
 viewer = "Viewer"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Uw toegang tot dit document is verlopen."

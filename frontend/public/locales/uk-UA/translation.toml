@@ -12,9 +12,11 @@ comingSoon = "Незабаром"
 confirm = "Підтвердити"
 confirmClose = "Підтвердити закриття"
 confirmCloseCancel = "Скасувати"
+confirmCloseCheckFailed = "Stirling PDF could not check your open files for unsaved changes."
 confirmCloseConfirm = "Закрити файл"
 confirmCloseDiscard = "Скасувати зміни і закрити"
 confirmCloseMessage = "Ви впевнені, що хочете закрити цей файл?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Зберегти і закрити"
 confirmCloseSaveFailed_one = "Збережено з помилками. {{count}} файл не вдалося зберегти."
 confirmCloseSaveFailed_other = "Збережено з помилками. Не вдалося зберегти {{count}} файлів."
@@ -44,7 +46,6 @@ fileSavedToDisk = "Файл збережено на диск"
 filesSelected = "{{count}} файлів"
 font = "Шрифт"
 fontSizeTooltip = "Розмір тексту номера сторінки у пунктах. Більші числа дають більший текст."
-fontTypeTooltip = "Гарнітура для номерів сторінок. Оберіть відповідно до стилю документа."
 green = "Зелений"
 help = "Допомога"
 incorrectPasswordMessage = "Поточний пароль невірний."
@@ -249,9 +250,7 @@ image = "Завантаження"
 text = "Текст"
 
 [addImage.step]
-createDesc = "Завантажте зображення, яке хочете додати"
 place = "Розмістити зображення"
-placeDesc = "Клацніть по PDF, щоб додати зображення"
 
 [addImage.steps]
 configure = "Налаштувати зображення"
@@ -276,7 +275,7 @@ fontName = "Назва шрифту"
 fontSize = "Розмір шрифту"
 numberPagesDesc = "наприклад, 1,3,5-8 або залиште порожнім для всіх сторінок"
 pagePreviewAlt = "Попередній перегляд сторінки"
-pagesAndStarting = "Сторінки та початковий номер"
+pagesToNumberInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1. Leave blank to number every page."
 positionAndPages = "Позиція та сторінки"
 preview = "Вибір позиції"
 previewDisclaimer = "Попередній перегляд орієнтовний. Підсумковий результат може відрізнятися через метрики шрифтів PDF."
@@ -300,6 +299,7 @@ title = "Результати нумерації сторінок"
 
 [addPassword]
 desc = "Зашифруйте свій PDF-документ паролем."
+submit = "Add Password"
 tags = "шифрувати,пароль,заблокувати,безпечний,захистити,безпека,шифрування,запобігання,конфіденційний,приватний,обмежити доступ"
 title = "Додати пароль"
 
@@ -342,15 +342,14 @@ stampPreviewAlt = "Попередній перегляд штампа"
 tags = "штамп,позначка,печатка,схвалено,відхилено,конфіденційно,інструмент штампа,гумовий штамп,штамп дати,штамп схвалення,отримано,недійсний,копія,оригінал"
 
 [AddStampRequest]
+adjustSetting = "Setting to adjust"
 alphabet = "Алфавіт"
-clickToExpand = "Натисніть, щоб розгорнути"
 customColor = "Користувацький колір тексту"
 customDateDesc = "Власний формат"
 customPosition = "Перетягніть штамп у бажане місце у вікні попереднього перегляду."
 dateDesc = "Поточна дата"
 datetimeDesc = "Дата й час разом"
 dateTimeVars = "Дата й час"
-dynamicVariables = "Динамічні змінні"
 examples = "Приклади"
 filenameDesc = "Ім’я файлу без розширення"
 filenameFullDesc = "Ім’я файлу з розширенням"
@@ -365,6 +364,8 @@ noStampSelected = "Штамп не вибрано. Поверніться до �
 opacity = "Прозорість"
 otherVars = "Інше"
 pageNumberDesc = "Номер поточної сторінки"
+pagesToStamp = "Pages to Stamp"
+pagesToStampInfo = "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1."
 pageVars = "Інформація про сторінку"
 position = "Позиція"
 positionAndFormatting = "Позиція та форматування"
@@ -378,9 +379,10 @@ quickPosition = "Виберіть позицію на сторінці для р
 rotation = "Обертання"
 selectedImageAlt = "Вибране зображення штампа"
 selectTemplate = "Виберіть шаблон..."
+size = "Size"
 stampSetup = "Налаштування штампа"
 stampText = "Текст печатки"
-stampTextDescription = "Використовуйте динамічні змінні нижче. Використовуйте @@ для буквального @. Використовуйте \\n для нових рядків."
+stampTextInfo = "Printed on every stamped page. Words starting with @, such as <code>@page_number</code>, are filled in when the stamp is applied. Type <code>\\n</code> for a new line and <code>@@</code> for a literal @."
 stampType = "Тип печатки"
 submit = "Додати штамп"
 tags = "штамп,додати зображення,центральне зображення,водяний знак,pdf,вставити,налаштувати"
@@ -389,7 +391,6 @@ title = "Поставити печатку на PDF"
 totalPagesDesc = "Загальна кількість сторінок"
 useTemplate = "Використати шаблон"
 uuidDesc = "Короткий унікальний ідентифікатор (8 символів)"
-variablesHelp = "Натисніть будь-яку змінну, щоб вставити її в текст штампа. Використовуйте @@ для буквального @."
 yearMonthDayDesc = "Окремі частини дати"
 
 [AddStampRequest.error]
@@ -397,6 +398,12 @@ failed = "Під час додавання штампа до PDF сталася 
 
 [AddStampRequest.results]
 title = "Результати додавання штампа"
+
+[AddStampRequest.stampTextTips]
+description = "This text is printed on every stamped page. Words that start with @ are variables, filled in when the stamp is applied."
+literalAt = "Type <code>@@</code> for a literal @"
+newLine = "Type <code>\\n</code> to start a new line"
+title = "What gets printed"
 
 [AddStampRequest.template]
 custom = "Власний"
@@ -410,6 +417,11 @@ legal-footer = "Юридичний нижній колонтитул"
 page-numbers = "Номери сторінок"
 pageNumberFooter = "Номер сторінки в нижньому колонтитулі"
 timestamp = "Мітка часу"
+
+[AddStampRequest.variablePicker]
+examplesHint = "Replaces the stamp text"
+help = "What each variable means"
+open = "Dynamic variables"
 
 [addText]
 applySignatures = "Застосувати текст"
@@ -462,9 +474,7 @@ image = "Завантаження"
 text = "Текст"
 
 [addText.step]
-createDesc = "Введіть текст, який хочете додати"
 place = "Розмістити текст"
-placeDesc = "Натисніть на PDF, щоб додати текст"
 
 [addText.steps]
 configure = "Налаштування тексту"
@@ -1233,6 +1243,18 @@ label = "Генерувати знову під час запуску"
 description = "Кількість днів дії сертифіката"
 label = "Строк дії сертифіката (дні)"
 
+[admin.settings.features.signatureLogo]
+current = "Current signature logo"
+customInUse = "Your organisation's logo"
+defaultInUse = "Stirling PDF logo (default)"
+description = "Drawn faded behind visible certificate signatures. The Stirling PDF logo is used until you upload your organisation's. PNG or JPEG, up to 2 MB."
+failed = "Could not update the signature logo"
+label = "Signature logo"
+reset = "Use the Stirling PDF logo"
+resetDone = "Back to the Stirling PDF logo"
+saved = "Signature logo saved"
+upload = "Upload logo"
+
 [admin.settings.folderAccess]
 description = "Каталоги, з яких джерелам папок і виходам папок дозволено читати та до яких дозволено записувати. Це межа безпеки: автоматизації ніколи не можна спрямувати на серверний шлях поза цим списком."
 securityNote = "Залиште порожнім, щоб повністю вимкнути джерела папок і виходи. Власний каталог конфігурації Stirling завжди заборонений."
@@ -1456,7 +1478,9 @@ label = "Ім’я користувача SMTP"
 
 [admin.settings.mcp]
 apikeyNote = "Клієнти надсилають ключ Stirling API у заголовку X-API-KEY (або Authorization: Bearer <key>). Ключ пов’язується з відповідним користувачем Stirling — доступ мають лише підготовлені облікові записи, а дії аудіюються від імені цього користувача. Керуйте ключами в Обліковий запис > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Надайте PDF-інструменти та AI-агентів Stirling клієнтам MCP через endpoint, захищений OAuth."
+endpointUrl = "MCP endpoint URL"
 title = "Сервер MCP"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -1471,22 +1495,45 @@ label = "Дозволені інструменти"
 description = "Ідентифікатори операцій, які потрібно приховати від MCP (через кому або пробіл), наприклад add-password remove-password. Залиште порожнім, щоб відкрити всі увімкнені інструменти."
 label = "Заблоковані інструменти"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "Коли вимкнено (типово), endpoint /mcp, метадані або beans MCP не завантажуються."
 label = "Увімкнути сервер MCP"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Введіть вище свій OAuth issuer + resource ID, збережіть і перезапустіть."
 step1ApiKey = "Створіть ключ API в Обліковий запис > API Keys (кожен користувач використовує власний)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "У вашому клієнті MCP додайте"
 step2b = "сервер, що вказує на:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "Клієнт автоматично виявляє OAuth з:"
 step3ApiKey = "Надішліть ключ у заголовку"
 step3ApiKeyb = "(або Authorization: Bearer <key>). OAuth або виявлення метаданих не використовується."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Підтвердьте вхід; клієнт повторить спробу з токеном. Інструменти з’являться згрупованими: convert, pages, misc, security, ai."
 step4ApiKey = "Інструменти з’являться згрупованими: convert, pages, misc, security, ai — і кожен виклик аудіюється як дія власника ключа."
 tip = "Порада: зареєструйте resource ID як дозволену аудиторію у вашому IdP. Протестовано з MCP Inspector і Claude Desktop."
 tipApiKey = "Порада: режим ключа API не потребує зовнішнього IdP — найпростіший варіант для self-host. Ключ пов’язується з відповідним користувачем Stirling."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Підключити клієнт MCP"
 
 [admin.settings.mcp.issuerUri]
@@ -1500,6 +1547,7 @@ placeholder = "Автоматично виявляється від видавц
 
 [admin.settings.mcp.mode]
 apikey = "API key (ключ Stirling для кожного користувача)"
+builtin = "Built-in OAuth 2.1"
 description = "OAuth потребує зовнішнього IdP. Ключ API використовує користувацький ключ Stirling API (X-API-KEY) — найпростіше для self-host."
 label = "Режим автентифікації"
 oauth = "OAuth 2.1 (зовнішній IdP)"
@@ -1515,6 +1563,18 @@ label = "ID ресурсу"
 [admin.settings.mcp.scopes]
 description = "Вимагати mcp.tools.read для операцій читання та mcp.tools.write для операцій запису/AI."
 label = "Застосовувати scopes OAuth"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, який зіставляється з іменем користувача Stirling (наприклад, sub, email, preferred_username)."
@@ -1943,9 +2003,6 @@ title = "Хочете допомогти зробити Stirling PDF кращи�
 tags = "анотувати,виділити,малювати,розмітка,коментар,нотатки,перегляд,redline,відгук,інструменти розмітки,стікери,фігури,стрілки,текстове поле,від руки"
 
 [annotation]
-alignCenter = "Вирівняти по центру"
-alignLeft = "Вирівняти ліворуч"
-alignRight = "Вирівняти праворуч"
 annotationStyle = "Стиль анотації"
 backgroundColor = "Колір фону"
 borderOff = "Рамка: вимкнено"
@@ -2016,18 +2073,61 @@ underline = "Підкреслення"
 undoDelete = "Скасувати"
 width = "Ширина"
 
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
+
 [app]
 description = "Безкоштовний приватний редактор PDF, який можна запускати на будь-якій інфраструктурі."
 
 [appBanner]
 dismiss = "Закрити"
 
+[archivePdf]
+accessibleFormat = "{{format}} (accessible)"
+signatureWarning = "This PDF is digitally signed. Converting it to PDF/A removes the signature."
+submit = "Convert to PDF/A"
+
+[archivePdf.error]
+failed = "An error occurred while converting the PDF to PDF/A."
+
+[archivePdf.options]
+stepTitle = "Settings"
+
+[archivePdf.outputFormat]
+desc = "PDF/A-2b suits most archives."
+label = "PDF/A version"
+
+[archivePdf.results]
+title = "PDF/A Results"
+
+[archivePdf.strict]
+desc = "Fails instead of returning a file that does not fully comply."
+label = "Strict mode"
+
+[archivePdf.tooltip.description]
+text = "PDF/A is the standard for keeping documents readable for decades. Fonts and colours are built into the file so it opens the same way everywhere."
+
+[archivePdf.tooltip.header]
+title = "About PDF/A"
+
+[archivePdf.tooltip.strict]
+text = "Checks the result against the standard and fails instead of returning a file that does not fully comply."
+title = "Strict mode"
+
+[archivePdf.tooltip.version]
+bullet1 = "PDF/A-1b: the oldest version, accepted almost everywhere"
+bullet2 = "PDF/A-2b: suits most archives"
+bullet3 = "PDF/A-3b: can also carry attached files, such as the data behind an e-invoice"
+bullet4 = "Accessible versions: also tag the document so screen readers can follow it"
+text = "Use the version your archive asks for. If it does not say, PDF/A-2b is the usual choice."
+title = "PDF/A version"
+
 [attachments]
 addAttachments = "Додати вкладення..."
 convertToPdfA3b = "Перетворити в PDF/A-3b"
 convertToPdfA3bTooltip = "PDF/A-3b — архівний формат для довгострокового зберігання. Дозволяє вбудовувати довільні формати файлів як вкладення. Перетворення потребує Ghostscript і може тривати довше для великих файлів."
-convertToPdfA3bTooltipHeader = "Про перетворення PDF/A-3b"
-convertToPdfA3bTooltipTitle = "Що це робить"
 discardChanges = "Скасувати"
 downloadSingle = "Скачати вкладення"
 duplicateName = "Вкладення з назвою '{{name}}' уже існує."
@@ -2208,7 +2308,6 @@ guest = "Гість"
 user = "Користувач"
 
 [auto-rename]
-description = "Автоматично знаходить назву у вмісті вашого PDF і використовує її як ім’я файлу."
 submit = "Автоматичне перейменування"
 tags = "автоматичне визначення,на основі заголовка,організація,зміна міток"
 title = "Автоматичне перейменування"
@@ -2218,21 +2317,6 @@ failed = "Під час автоматичного перейменування 
 
 [auto-rename.results]
 title = "Результати авто-перейменування"
-
-[auto-rename.settings]
-title = "Про"
-
-[auto-rename.tooltip.description]
-title = "Що це робить"
-
-[auto-rename.tooltip.header]
-title = "Як працює авто-перейменування"
-
-[auto-rename.tooltip.howItWorks]
-bullet1 = "Шукає текст, схожий на заголовок або титул"
-bullet2 = "Створює охайне, коректне ім’я файлу з визначеної назви"
-bullet3 = "Зберігає оригінальне ім’я, якщо відповідної назви не знайдено"
-title = "Розумне перейменування"
 
 [autoFormDetection]
 loading = "Виявлення полів форми..."
@@ -2327,6 +2411,9 @@ remove = "Видалити інструмент"
 selected = "Вибрані інструменти"
 selectTool = "Виберіть інструмент..."
 
+[automate.creation.tooltip.header]
+title = "About Automations"
+
 [automate.creation.unsavedChanges]
 cancel = "Скасувати"
 confirm = "Повернутися"
@@ -2360,6 +2447,10 @@ title = "Запустити автоматизацію"
 [automate.selection]
 title = "Вибір автоматизації"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "Frequent workflows"
+
 [automate.selection.createNew]
 title = "Створити нову автоматизацію"
 
@@ -2371,6 +2462,7 @@ title = "Запропоновані"
 
 [automate.sequence]
 finish = "Готово"
+needsConfiguring = "Edit this automation to finish configuring its steps."
 run = "Запустити автоматизацію"
 running = "Виконується автоматизація..."
 signInToRun = "Увійдіть, щоб запускати автоматизації."
@@ -2391,7 +2483,6 @@ secureWorkflow = "Робочий процес безпеки"
 secureWorkflowDesc = "Захищає документи PDF, видаляючи потенційно шкідливий вміст, як-от JavaScript та вбудовані файли, а потім додає захист паролем, щоб запобігти несанкціонованому доступу. Пароль за замовчуванням — 'password'."
 
 [autoRename]
-description = "Цей інструмент автоматично перейменує файли PDF на основі їхнього вмісту. Він аналізує документ, щоб знайти найвідповіднішу назву з тексту."
 tags = "автовизначення,на основі заголовка,організувати,перемаркувати,автоматичне перейменування,розумне перейменування,перейменувати за вмістом,ім’я файлу,називання файлів,визначити заголовок"
 
 [autoRotate]
@@ -2467,6 +2558,7 @@ tags = "pdf,розділити,документ,організація"
 [autoSplitPDF]
 dividerDownload2 = "Завантажити 'Auto Splitter Divider (with instructions).pdf'"
 duplexMode = "Дуплексний режим (сканування спереду і ззаду)"
+duplexModeDesc = "Turn on when the pages were scanned front and back."
 tags = "на основі qr,відокремити,сканувати сегмент,упорядкувати"
 title = "Автоматичне розділення PDF"
 
@@ -2528,9 +2620,6 @@ tooltip = "Додає рамки навколо кожної секції сто
 [bookletImposition.addGutter]
 label = "Додати внутрішнє поле (gutter)"
 tooltip = "Додає внутрішній відступ для палітурки"
-
-[bookletImposition.advanced]
-toggle = "Розширені параметри"
 
 [bookletImposition.doubleSided]
 label = "Двосторонній друк"
@@ -2714,14 +2803,15 @@ chooseJksFile = "Вибрати файл JKS"
 chooseP12File = "Вибрати файл PKCS12"
 choosePfxFile = "Вибрати файл PFX"
 choosePrivateKey = "Вибрати файл закритого ключа"
+companyLogoHidden = "Not shown"
+companyLogoShown = "Shown"
 declined = "Відхилено"
 fetchFailed = "Не вдалося завантажити дані підписання"
 finalized = "Завершено"
 location = "Місцезнаходження"
-logoTitle = "Логотип"
-name = "Ім'я"
-noLogo = "Без логотипу"
+locationInfo = "Where you signed, such as \"London Office\". Stored in the signature's details; it does not move the signature on the page."
 pageNumber = "Номер сторінки"
+pageNumberInfo = "The page the visible signature is drawn on. The first page is 1."
 password = "Пароль сертифіката"
 passwordOptional = "Залиште порожнім, якщо немає пароля"
 pemCertificateLabel = "Сертифікат (.pem / .crt)"
@@ -2729,8 +2819,8 @@ pemPrivateKeyLabel = "Приватний ключ (.pem / .key)"
 pending = "Очікується"
 readyToFinalize = "Готово до завершення"
 reason = "Причина"
+reasonInfo = "Why you are signing, such as \"Approval\". Stored in the signature's details."
 serverCertMessage = "Використовується серверний сертифікат - файли та пароль не потрібні"
-showLogo = "Показати логотип"
 signatureProgress = "{{signedCount}}/{{totalCount}} підписів"
 tags = "автентифікувати,PEM,P12,офіційний,шифрувати,підписати,сертифікат,PKCS12,JKS,сервер,вручну,авто"
 title = "Підпис сертифікатом"
@@ -2738,12 +2828,45 @@ viewed = "Переглянуто"
 
 [certSign.appearance]
 invisible = "Невидимий"
+showOnPage = "Show signature on page"
 stepTitle = "Вигляд підпису"
 visibility = "Видимість"
 visible = "Видимий"
 
+[certSign.appearance.details]
+remove = "Remove {{detail}}"
+
+[certSign.appearance.graphic]
+add = "Add"
+certificateDetails = "Certificate details"
+image = "Image"
+imageHint = "A handwritten signature or seal, PNG or JPEG"
+imageTitle = "Signature image"
+name = "Name"
+none = "None"
+savedFailed = "That signature could not be used. Try another or add a new one."
+title = "Beside the details"
+watermark = "Logo behind signature"
+
 [certSign.appearance.options]
-title = "Деталі підпису"
+signerName = "Signer name"
+signerNameInfo = "Shown as the large name on the signature. \"Digitally signed by\" always names the certificate's holder."
+signerNamePlaceholder = "Uses the name on the certificate"
+
+[certSign.appearance.placement]
+adjust = "Drag the box to move it, or drag a corner to resize it."
+cancel = "Cancel"
+clickPage = "Click the page where the signature should go."
+cornerPage = "Or the bottom-right corner of page"
+guide = "Signature position: drag to move, drag the corner to resize"
+place = "Place on the page"
+placeAgain = "Place again"
+placedOnPage = "Placed on page {{page}}"
+stampPreview = "How the signature will look"
+useCorner = "Use default corner"
+where = "Where to sign"
+yourName = "Your name"
+yourSubject = "CN=Your name, O=Your organisation"
 
 [certSign.appearance.tooltip.header]
 title = "Про вигляд підпису"
@@ -2762,9 +2885,6 @@ bullet3 = "Можна вибрати сторінку для розміщенн�
 bullet4 = "Можна додати логотип"
 text = "Показує блок підпису в PDF із вашим ім’ям, датою та додатковими деталями. Корисно, коли потрібно, щоб читачі чітко бачили, що документ підписано."
 title = "Видимі підписи"
-
-[certSign.certFiles]
-stepTitle = "Файли сертифіката"
 
 [certSign.certType.tooltip.convert]
 text = "Конвертуйте файл у Java keystore (.jks) за допомогою keytool, потім виберіть JKS."
@@ -2786,6 +2906,7 @@ text = "Виберіть формат, що відповідає вашому ф
 title = "Який варіант обрати?"
 
 [certSign.certTypeStep]
+formatLabel = "Format"
 stepTitle = "Формат сертифіката"
 
 [certSign.collab.addParticipants]
@@ -2970,31 +3091,38 @@ stepTitle = "Цей пристрій"
 [certSign.error]
 failed = "Під час обробки підписів сталася помилка."
 
-[certSign.format]
-pkcs11 = "USB-токен"
-windowsStore = "Сховище сертифікатів Windows"
-
 [certSign.hardware]
-certificate = "Сертифікат"
+allExpired = "None of the digital IDs here can sign today."
+backToDigitalIds = "Back to digital IDs"
+capabilitiesError = "Could not check which digital IDs this device can use."
 customLibrary = "Власний шлях до драйвера…"
+digitalId = "Digital ID"
 driver = "Драйвер PKCS#11"
 driverPath = "Шлях до бібліотеки драйвера"
 driverPathPlaceholder = "Повний шлях до вашого драйвера PKCS#11 (.dll, .so або .dylib)"
-expired = "термін дії минув"
-expires = "спливає"
+driverSetup = "Read card directly"
+expiredOn = "Expired {{date}}"
+expiresOn = "Expires {{date}}"
+hideExpired = "Hide expired"
 listCerts = "Показати сертифікати"
-loading = "Зчитування сертифікатів…"
+macLoadError = "Could not read the macOS keychain"
 noCerts = "Сертифікатів для підпису не знайдено"
 noDriver = "Драйвер PKCS#11 не виявлено. Встановіть драйвер вашого токена (наприклад, OpenSC), потім відкрийте це вікно знову - або введіть шлях до драйвера вручну нижче."
-notYetValid = "ще не дійсний"
+notListed = "Don't see your ID?"
+onDevice = "Stored on this device"
+onToken = "On a security key or smart card"
+osStoreHint = "Insert your smart card or security key, then choose your digital ID."
 pin = "PIN токена"
 pkcs11Hint = "Виберіть драйвер PKCS#11 вашого токена, введіть PIN, а потім перегляньте сертифікати на токені."
 pkcs11LoadError = "Не вдалося зчитати сертифікати з токена. Перевірте PIN і драйвер."
-refresh = "Оновити"
-selectCert = "Виберіть сертифікат"
+refreshList = "Refresh list"
+retry = "Try again"
 selectDriver = "Виберіть драйвер"
+serial = "Serial …{{serial}}"
+showExpired = "Show {{count}} expired"
 slot = "Слот (необов’язково)"
-windowsHint = "Виберіть сертифікат із вашого сховища сертифікатів Windows. Підписування використовує ключ на вашій картці/токені — Windows попросить ввести PIN."
+useDriver = "Read the card directly"
+validFrom = "Valid from {{date}}"
 windowsLoadError = "Не вдалося прочитати сховище сертифікатів Windows"
 
 [certSign.sessions]
@@ -3034,8 +3162,16 @@ title = "Загальне правило"
 device = "Цей пристрій"
 noOtherSources = "Інші джерела сертифікатів недоступні."
 server = "Сервер"
+serverCertUnavailable = "The server's signing certificate isn't available."
+signsAs = "Signs as"
 stepTitle = "Джерело сертифіката"
 upload = "Завантажити"
+
+[certSign.stamp]
+date = "Date:"
+location = "Location:"
+reason = "Reason:"
+signedBy = "Digitally signed by {{name}}"
 
 [changeCreds]
 changeUsername = "Оновіть ім’я користувача. Після оновлення вас буде виведено із системи."
@@ -3069,7 +3205,6 @@ placeholder = "Створювач документа"
 
 [changeMetadata.customFields]
 add = "Додати поле"
-description = "Додайте користувацькі поля метаданих до документа"
 key = "Ключ"
 keyPlaceholder = "Користувацький ключ"
 remove = "Видалити"
@@ -3135,10 +3270,6 @@ bullet1 = "Дата створення: коли створено початко
 bullet2 = "Дата зміни: коли востаннє змінено"
 text = "Коли документ був створений і змінений."
 title = "Поля дат"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Повне видалення метаданих для забезпечення приватності."
-title = "Видалити наявні метадані"
 
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Заголовок: назва або заголовок документа"
@@ -3260,12 +3391,12 @@ usage_limit_reached = "Ви досягли ліміту використання
 
 [checkAccessibility]
 aboutRow = "Відомості про {{label}}"
-checking = "Перевіряємо..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Завантажити звіт про доступність"
 fileFailed = "не вдалося"
+noFiles = "Select a PDF to check it."
 pickFile = "Показати результати для"
-submit = "Перевірити доступність"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Альтернативний текст"
@@ -3286,10 +3417,17 @@ structure = "Теги повідомляють скрінрідерам, що є
 [checkAccessibility.checks]
 label = "Пройдено перевірок: {{passed}} із {{total}}"
 
+[checkAccessibility.claim]
+declared = "Declared as PDF/UA-{{part}} compliant"
+hint = "Records in the file's metadata that it meets PDF/UA-{{part}}. Accessibility checkers look for this. Tick it once the file meets the standard."
+label = "Declare file as PDF/UA-{{part}} compliant"
+
 [checkAccessibility.error]
+conformanceClaim = "The PDF/UA claim couldn't be saved."
 download = "Не вдалося створити звіт про доступність. Спробуйте ще раз."
 fileTitle = "Цей файл не вдалося перевірити"
 partial = "Деякі файли не вдалося перевірити."
+unreachable = "The server didn't answer. Check it's running, then check again."
 
 [checkAccessibility.facts]
 declares = "Декларує PDF/UA"
@@ -3312,6 +3450,21 @@ title = "Файл має заголовок у своїх метаданих."
 [checkAccessibility.figures]
 summary_one = "{{count}} зображення потребує опису (сторінка {{pages}})"
 summary_other = "{{count}} зображень потребують опису (сторінки {{pages}})"
+
+[checkAccessibility.fix]
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+hide = "Hide tagging tool"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+show = "Show tagging tool"
+tagEverything = "Auto-tag"
+tagging = "Tagging... {{percent}}%"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
 
 [checkAccessibility.issue]
 appliesTo = "Стосується"
@@ -3465,19 +3618,7 @@ checking = "Перевіряємо {{current}} із {{total}}..."
 complete = "Перевірку завершено"
 
 [checkAccessibility.steps]
-results = "Результати"
 standard = "Стандарт"
-
-[checkAccessibility.tooltip.header]
-title = "Який стандарт перевіряти"
-
-[checkAccessibility.tooltip.ua1]
-text = "Перша версія PDF/UA, опублікована у 2012 році як ISO 14289-1, для файлів PDF 1.7."
-title = "PDF/UA-1"
-
-[checkAccessibility.tooltip.ua2]
-text = "Нова версія, опублікована у 2024 році як ISO 14289-2, для файлів PDF 2.0. Файл PDF 1.7, перевірений за нею, не пройде правила, що стосуються лише PDF 2.0."
-title = "PDF/UA-2"
 
 [checkAccessibility.where]
 annotation = "Анотація {{n}}"
@@ -3868,6 +4009,7 @@ title = "Виберіть колір"
 transparent = "Прозорий"
 
 [common]
+aboutField = "About {{field}}"
 actions = "Дії"
 back = "Назад"
 cancel = "Скасувати"
@@ -4206,7 +4348,9 @@ title = "Оновити ключі API"
 warning = "⚠️ Warning: Ця дія згенерує нові ключі API та зробить попередні ключі недійсними."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) дає змогу AI-помічникам, як-от Claude, використовувати ваші інструменти Stirling PDF безпосередньо. Підключіть клієнт один раз, і ваш помічник зможе конвертувати, редагувати, захищати та обробляти документи від вашого імені."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Гостьові користувачі не можуть підключати клієнтів MCP. Створіть обліковий запис, щоб використовувати сервер MCP і дозволити вашому AI-помічнику запускати інструменти Stirling PDF від вашого імені."
 navLabel = "Сервер MCP"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
@@ -4221,11 +4365,26 @@ tooltip = "Копіювати {{label}}"
 tooltipCopied = "{{label}} скопійовано"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Ваш endpoint MCP"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
+revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Додати до"
 hint = "Виберіть ваш клієнт, вставте фрагмент у показаний файл, а потім перезапустіть його. Під час першого використання ви ввійдете зі своїм обліковим записом Stirling — ключі копіювати не потрібно."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Підключіть вашого AI-помічника"
 
 [config.overview]
@@ -4350,12 +4509,8 @@ maintainAspectRatio = "Зберігати співвідношення стор�
 maxAttachmentSize = "Максимальний розмір вкладення (MB)"
 multiple = "Кілька"
 optimizeForEbook = "Оптимізувати PDF для рідерів електронних книг (використовує Ghostscript)"
+optimizeForEbookInfo = "Uses Ghostscript to reduce file size and improve rendering on ebook readers."
 output = "Вивід"
-outputFormat = "Вихідний формат"
-pdfaAccessibleFormat = "{{format}} (доступний)"
-pdfaDigitalSignatureWarning = "Цей PDF документ має цифровий підпис. Цей підпис буде видалений у наступному кроці."
-pdfaNote = "PDF/A-1b сумісніший, PDF/A-2b підтримує більше функцій, PDF/A-3b підтримує вбудовані файли."
-pdfaOptions = "Параметри PDF/A"
 pdfOptions = "Параметри PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
@@ -4383,8 +4538,6 @@ settings = "Налаштування"
 signInToUse = "Увійдіть, щоб скористатися"
 single = "Один"
 sourceFormatPlaceholder = "Вихідний формат"
-strictMode = "Суворий режим"
-strictModeDesc = "Помилка, якщо конвертація не ідеальна (використовує перевірку VeraPDF)"
 svgPdfOptions = "Параметри SVG у PDF"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "Файли SVG рендеряться як векторна графіка для чіткого результату за будь-якої роздільної здатності. Розміри з SVG визначають розмір сторінки PDF."
@@ -4396,9 +4549,7 @@ zoomLevel = "Рівень масштабування"
 
 [convert.ebookOptions]
 includePageNumbers = "Додати номери сторінок"
-includePageNumbersDesc = "Додати номери сторінок до створеного PDF"
 includeTableOfContents = "Додати зміст"
-includeTableOfContentsDesc = "Додати згенерований зміст до підсумкового PDF"
 optimizeForEbookPdf = "Оптимізувати для рідерів"
 optimizeForEbookPdfDesc = "Оптимізувати PDF для читання електронних книг (менший розмір файла, краще відтворення на eInk-пристроях)"
 
@@ -4407,7 +4558,6 @@ detectChapters = "Виявляти розділи"
 detectChaptersDesc = "Виявляти заголовки, схожі на розділи, і вставляти розриви сторінок EPUB"
 kindleEink = "Kindle e-Ink (оптимізовано для тексту)"
 outputFormat = "Формат виводу"
-outputFormatDesc = "Виберіть формат виводу для електронної книги"
 tabletPhone = "Планшет/Телефон (із зображеннями)"
 targetDevice = "Цільовий пристрій"
 targetDeviceDesc = "Виберіть профіль виводу, оптимізований для пристрою читання"
@@ -4469,8 +4619,24 @@ description = "Ці cookies необхідні для належної робо�
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting..."
+creating = "Creating..."
+failed = "Couldn't create the PDF"
+newPdf = "Create new PDF"
+openFailed = "The new PDF couldn't be opened."
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+
 [createPortfolio]
 coverTitle = "Заголовок титульної сторінки"
+coverTitleInfo = "The heading on the cover page that readers without portfolio support open to."
 coverTitlePlaceholder = "PDF-портфоліо"
 description = "Кожен вибраний файл зберігається повністю всередині нового PDF незалежно від його типу. Засоби перегляду, які не підтримують портфоліо, показують титульну сторінку з прикріпленими файлами."
 goToFileEditor = "Перейти до редактора файлів"
@@ -4488,6 +4654,9 @@ title = "Що це робить"
 
 [createPortfolio.tooltip.header]
 title = "Про PDF-портфоліо"
+
+[createPortfolio.tooltip.olderReaders]
+title = "Older readers"
 
 [crop]
 autoCrop = "Автообрізання білих полів"
@@ -4674,12 +4843,13 @@ clipboardUnavailable = "Доступ до буфера обміну недост
 export = "Експортувати закладки"
 exportClipboard = "Копіювати JSON у буфер обміну"
 exportJson = "Завантажити JSON"
+exportMenu = "Export"
 importClipboard = "Вставити JSON з буфера обміну"
 importJson = "Імпортувати JSON"
+importMenu = "Import"
 loadFromPdf = "Завантажити з вибраного PDF"
 noFile = "Виберіть PDF, щоб витягти наявні закладки."
 selectedFile = "Завантажено з {{file}}"
-source = "Завантажити закладки"
 
 [editTableOfContents.editor]
 addTopLevel = "Додати закладку верхнього рівня"
@@ -4740,6 +4910,9 @@ replaceExisting = "Замінити наявні закладки (зніміт�
 replaceExistingHint = "Якщо вимкнено, нову структуру буде додано після поточних закладок."
 title = "Закладки та структура"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Змінити PDF"
 filePrompt = "Щоб почати, виберіть PDF зі своєї бібліотеки або завантажте новий."
@@ -4753,7 +4926,6 @@ title = "Відкрийте інструмент, щоб почати редаг
 [encryptedPdfUnlock]
 actionIgnored = "Обмеження {{action}} проігноровано"
 actionUnlocked = "{{action}} розблоковано для цього сеансу"
-advanced = "Розширені"
 allowed = "Дозволено"
 annotations = "Анотації"
 authoriseAction = "Для використання {{action}} цей PDF потребує дозволу."
@@ -4801,7 +4973,6 @@ restricted = "Обмежено"
 restrictedActions = "обмежені дії"
 restrictedOperation = "Для цієї дії потрібен пароль дозволів."
 retainOwnerVerification = "Підтвердьте пароль дозволів, щоб залишити його без змін під час видалення пароля для відкриття. Це не видалить його."
-saveProtection = "Зберегти захист"
 securityChangeFailed = "Не вдалося змінити захист. Перевірте пароль дозволів і нові налаштування безпеки."
 sessionDetails = "Відкрито для цього сеансу. PDF залишається захищеним."
 sessionDetailsLabel = "Про розблокування сеансу"
@@ -4871,7 +5042,6 @@ title = "Щось пішло не так"
 tryAgain = "Спробувати ще раз"
 
 [extractImages]
-allowDuplicates = "Зберігати дублікати зображень"
 selectText = "Виберіть формат зображення для перетворення витягнутих зображень у"
 submit = "Витягнути"
 tags = "зображення,фото,збереження,архів,zip,захоплення,захоплення"
@@ -4927,12 +5097,15 @@ closeFile = "Закрити файл"
 
 [fileEditor]
 closedFile = "Закрито {{name}}"
+filesAdded_one = "Added {{count}} file"
+filesAdded_other = "Added {{count}} files"
 filesReordered_one = "Файл перевпорядковано"
 filesReordered_other = "{{count}} файлів перевпорядковано"
 loadedFromStorage_one = "Завантажено {{count}} файл зі сховища"
 loadedFromStorage_other = "Завантажено {{count}} файлів зі сховища"
 loadFromStorageFailed = "Не вдалося завантажити деякі файли зі сховища"
 pinnedFile = "Закріплено {{name}}"
+processFilesFailed = "Failed to process files"
 savedAndClosed = "Збережено й закрито {{name}}"
 saveFailed = "Не вдалося зберегти"
 unpinnedFile = "Відкріплено {{name}}"
@@ -5019,11 +5192,20 @@ locked = "Заблоковано"
 previewOf = "Попередній перегляд {{name}}"
 
 [files]
+addAtLeast = "Add at least {{count}} files"
 addFiles = "Додати файли"
 created = "Створено"
 notIncludedInToolRun = "Не включено в цей запуск інструмента"
 size = "Розмір файлу"
 title = "Файли"
+
+[files.source]
+computer = "Computer"
+fromComputer = "From computer"
+fromLibrary = "From library"
+fromPhone = "From phone"
+library = "Library"
+phone = "Phone"
 
 [fileSelectorPicker]
 empty = "Немає доступних файлів"
@@ -5104,6 +5286,7 @@ subtitle = "Показуйте або приховуйте категорії н
 title = "Категорії бічної панелі"
 
 [fileSidebar.rename]
+action = "Rename {{name}}"
 cancel = "Скасувати"
 error = "Не вдалося перейменувати файл."
 illegalCharacters = "Ім’я файлу не може містити \\ / : * ? \" < > |"
@@ -5607,7 +5790,6 @@ removeField = "Видалити поле"
 
 [formFill.editor]
 action = "Дія кнопки"
-actionHelp = "Що робить кнопка після натискання."
 actionNone = "Немає"
 actionPrint = "Друкувати"
 actionReset = "Скинути форму"
@@ -5629,7 +5811,6 @@ maxLengthHelp = "Обмежує кількість символів, відоб�
 multiline = "Багаторядкове"
 multilineHelp = "Дозволяє більше одного рядка тексту та переносить текст біля краю поля."
 multiSelect = "Дозволити множинний вибір"
-multiSelectHelp = "Дозволяє вибрати кілька варіантів одночасно."
 name = "Назва поля"
 nameHelp = "Внутрішня назва поля. Використовується під час експорту даних або заповнення форми з іншої системи, тому вона має бути унікальною і без пробілів."
 optionGap = "Інтервал між варіантами"
@@ -5902,6 +6083,11 @@ title = "Кольори/контраст"
 desc = "Підсвічуйте, малюйте, додавайте нотатки та фігури у переглядачі"
 tags = "анотувати,виділити,малювати,розмітка,коментар,нотатки,перегляд,виправлення,відгук,інструменти розмітки,стікери,фігури,стрілки,текстове поле,від руки"
 title = "Анотувати"
+
+[home.archivePdf]
+desc = "Convert PDFs to the PDF/A archival standard for long-term preservation"
+tags = "pdf/a,pdfa,archive,archival,long-term,preservation,records,retention,iso 19005,compliance,standard"
+title = "Prepare for Archive (PDF/A)"
 
 [home.autoFormDetection]
 desc = "Автоматично визначайте поля форми за допомогою AI і робіть ваш PDF придатним для заповнення."
@@ -6405,6 +6591,9 @@ sort = "Сортувати"
 [merge.sortFiles]
 title = "Сортувати файли"
 
+[merge.sortFiles.tooltip.header]
+title = "File Order"
+
 [merge.tooltip.header]
 title = "Огляд налаштувань злиття"
 
@@ -6548,6 +6737,9 @@ title = "Помилка автентифікації"
 message = "Можете закрити це вікно й повернутися до Stirling PDF."
 title = "Автентифікація успішна"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Дозволити доступ"
 approving = "Надання дозволу..."
@@ -6558,6 +6750,7 @@ loadFailed = "This authorisation request is invalid or has expired. Close this t
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
 redirecting = "Повертаємо вас до застосунку..."
+redirectsElsewhere = "Access goes to {{host}}, not {{domain}}, so only continue if you trust that site."
 requesting = "{{app}} хоче отримати доступ до вашого облікового запису Stirling PDF"
 scopesIntro = "Це дозволить {{app}}:"
 signedInAs = "Ви ввійшли як {{name}}"
@@ -6565,6 +6758,8 @@ signInButton = "Увійдіть, щоб продовжити"
 signInPrompt = "Увійдіть до свого облікового запису Stirling PDF, щоб продовжити підключення застосунку."
 title = "Authorise access"
 unknownApp = "Сторонній застосунок"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Діяти від вашого імені — усе, що робить {{app}}, виконується у вашому обліковому записі та зараховується до вашого використання"
@@ -6572,9 +6767,12 @@ tools = "Використовувати ваші інструменти Stirling
 
 [oauthConsent.scope]
 email = "Переглядати вашу email-адресу"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Підтвердити вашу особу"
 phone = "Переглядати ваш номер телефону"
 profile = "Переглядати основну інформацію вашого профілю"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Очищення сканування та виявлення тексту на зображеннях у файлі PDF та повторне додавання його як текст."
@@ -6956,6 +7154,10 @@ yourCloudAccess = "Ви станете учасником команди й вт
 [pageEdit]
 deselectAll = "Нічого"
 selectAll = "Позначити все"
+
+[pageEditor.toolbar]
+redo = "Redo"
+undo = "Undo"
 
 [pageExtracter]
 title = "Видобути сторінки"
@@ -7577,6 +7779,8 @@ stamp = "Анотація штампа — не текст сторінки, т�
 widget = "Поле форми — не текст сторінки, тому його не можна редагувати тут"
 
 [pdfTextEditor.commands]
+conformanceClaimLocked = "This file's PDF/UA claim can't be changed."
+declareConformanceClaim = "Declare PDF/UA-{{part}}"
 edit = "Редагувати"
 markTagged = "Позначити як повністю розмічений"
 matchScanFont = "Зіставити сканований текст із {{face}}"
@@ -7590,6 +7794,7 @@ tagPageContent = "Автоматично розмітити сторінку"
 typeInto = "Ввести в {{run}}"
 ungroupParagraph = "Розгрупувати абзац {{run}}"
 unmarkTagged = "Позначити як не повністю розмічений"
+withdrawConformanceClaim = "Withdraw the PDF/UA claim"
 wrap = "Перенести {{run}}"
 
 [pdfTextEditor.discard]
@@ -7601,10 +7806,12 @@ title = "Відкинути незбережені зміни?"
 
 [pdfTextEditor.error]
 decodeImage = "Не вдалося декодувати вибране зображення."
+documentLost = "The PDF engine stopped working, so this document was closed and its unsaved changes were lost. The file itself hasn't changed. Very large documents can cause this."
 duplicateDropsLetters = "Не вдається дублювати цей текст: жоден доступний шрифт не відображає всі його літери."
 formLiftChangesDrawing = "Не можна редагувати: це намальовано як частина групи, для якої під час зміни редактор не може зберегти обрізання або графічні параметри."
 insertImage = "Не вдалося вставити вибране зображення."
 needsShaping = "Редактор поки не може коректно відтворювати з’єднані літери та голосні знаки цього письма, тому зміну не виконано."
+reopenLost = "Open again"
 replaceClippedImage = "Не можна замінити це зображення: воно обрізане, і заміна покаже частини, які приховує обрізання."
 scanOffInk = "Не можна редагувати цей текст: розпізнані слова не збігаються зі сканом. Запустіть OCR ще раз."
 unsafeRtlEdit = "Неможливо внести цю зміну: редактор не може перемалювати текст цього рядка справа-наліво без змін."
@@ -7616,6 +7823,7 @@ pngFileType = "PNG зображення"
 close = "Закрити панель пошуку"
 count = "{{current}} з {{total}}"
 findPlaceholder = "Знайти"
+hideReplace = "Hide replace"
 ignoreAccents = "Ігнорувати акценти"
 matchCase = "З урахуванням регістру"
 next = "Наступний збіг"
@@ -7625,6 +7833,7 @@ replace = "Замінити"
 replaceAll = "Замінити все"
 replaced = "Замінено: {{count}}"
 replacePlaceholder = "Замінити на"
+showReplace = "Show replace"
 wholeWord = "Ціле слово"
 
 [pdfTextEditor.fontPicker]
@@ -7795,14 +8004,11 @@ cannotTagLink = "Це посилання не можна тегувати."
 cannotTagPage = "Вміст цієї сторінки не можна тегувати."
 contentGroup = "Вміст"
 customTag = "{{role}} (користувацький тег)"
-decorativeInfo = "Програми зчитування з екрана пропускають декоративні зображення. Використовуйте це для рамок, фонів та інших зображень, які не несуть інформації."
-decorativeLabel = "Декоративне зображення"
-description = "Опис зображення"
-descriptionInfo = "Програми зчитування з екрана читають це замість зображення."
+describeLinks_one = "Describe link"
+describeLinks_other = "Describe {{count}} links"
 encrypted = "Теги не можна редагувати в зашифрованому файлі"
 figureDescription = "Опис рисунка"
 figureDescriptionInfo = "Зчитувачі екрана зачитують це замість рисунка."
-formFieldDescription = "Опис поля"
 formulaDescription = "Опис формули"
 formulaDescriptionInfo = "Зчитувачі екрана зачитують це замість формули. Опишіть так, як сказали б уголос, наприклад: «ікс у квадраті плюс один»."
 heading = "Доступність"
@@ -7813,7 +8019,6 @@ markedTagged = "Документ повністю розмічений"
 markedTaggedHint = "Каже PDF‑читачам використовувати теги доступності. Позначте, коли все розмічено."
 markedWithUntagged = "Деякий вміст не має тегів, тож скрінрідери можуть його пропускати."
 missingDescriptions = "Відсутні описи"
-mixedContent = "Рисунок містить інший вміст"
 mixedTags = "Змішано"
 needsDescriptionBadge = "Немає опису"
 nextToReview = "Наступне для перевірки"
@@ -7821,12 +8026,10 @@ notFigure = "Позначено тегом як частину тексту"
 removeTag = "Видалити тег"
 saveFailed = "Не вдалося зберегти зміни доступності, тому файл не було збережено. Скасуйте їх і спробуйте ще раз."
 selectedText = "Вибраний текст"
-tagFormField = "Позначити поле форми"
 tagging = "Розмітка сторінок"
 tagLabel = "Тег"
 tagLinks_one = "Позначити посилання"
 tagLinks_other = "Позначити {{count}} посилань"
-tagUntagged = "Автоматично розмітити документ"
 tagUntaggedHint = "Автоматично додає теги доступності по всьому документу. Результат приблизний: перевірте заголовки, списки та порядок читання після цього."
 unknownTag = "Не можна прочитати тут"
 unmarkedWithTags = "Деякі переглядачі PDF однаково використовуватимуть теги й можуть пропускати вміст без них."
@@ -7851,7 +8054,7 @@ heading = "Заголовки"
 mixedNumbering = "Змішані нумеровані та ненумеровані заголовки"
 none = "Немає заголовків"
 onPage = "Заголовок на сторінці {{page}}"
-problems = "Проблеми із заголовками"
+problemCount = "{{count}} to fix"
 skippedLevel = "Пропущено рівень після Заголовка {{previous}}"
 
 [pdfTextEditor.inspector.accessibility.tagName]
@@ -7906,13 +8109,11 @@ title = "Назва"
 allLanguages = "Усі мови"
 cannotSetDocument = "Мову цього документа не можна змінити."
 cannotSetText = "Мову цього тексту не можна змінити."
-documentHint = "Мова, яку використовують скрінрідери, якщо частина тексту не задає власну."
 documentLabel = "Мова"
 documentLocked = "Мову зашифрованого документа тут не можна змінити."
 inDocument = "У цьому документі"
 innerLabel = "Мова тега {{number}}"
 label = "Мова"
-missing = "Мову не задано. Скрінрідери здогадуватимуться й можуть читати весь документ неправильним голосом."
 mixed = "Змішано"
 noMatch = "Немає відповідної мови. Введіть її код, наприклад mt або en-IE."
 placeholder = "Виберіть мову"
@@ -7943,6 +8144,52 @@ renderFailed = "Не вдалося відобразити сторінку"
 [pdfTextEditor.password]
 incorrect = "Неправильний пароль — спробуйте ще раз."
 label = "Пароль"
+
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+previous = "Previous untagged (Shift+N)"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+done = "Tagged"
+figureQuestion = "What does this figure show?"
+formulaPlaceholder = "For example: x squared plus one"
+formulaQuestion = "How is this formula read aloud?"
+imagePlaceholder = "Describe the image"
+imageQuestion = "What does this image show?"
+label = "Accessibility review"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
+[pdfTextEditor.review.summary]
+progress = "Tagging progress"
+tagged = "{{done}} of {{total}} tagged"
+title = "Tagging"
 
 [pdfTextEditor.rulers]
 guide = "Напрямна вирівнювання на {{value}} {{unit}} — перетягніть на лінійку, щоб видалити"
@@ -8124,6 +8371,10 @@ title = "Відмінності попереднього перегляду"
 [pdfTextEditor.tooltip.textFocus]
 text = "Це робоче середовище зосереджене на редагуванні тексту та переміщенні вбудованих зображень. Складні графічні елементи сторінок, віджети форм і багатошарова графіка зберігаються для експорту, але тут повністю не редагуються."
 title = "Фокус на тексті та зображеннях"
+
+[pdfTextEditor.trail]
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF в CSV"
@@ -8383,17 +8634,6 @@ hideCategory = "Приховати категорію"
 labelCount = "мітки"
 sharedNote = "Ці мітки вбудовані та спільні для всієї вашої команди."
 showCategory = "Показати категорію"
-
-[policies.pii]
-account = "Номери рахунків (позначені)"
-card = "Кредитні / дебетові картки"
-email = "Адреси електронної пошти"
-fieldLabel = "PII для редагування з приховуванням"
-iban = "IBAN"
-phone = "Номери телефонів"
-placeholder = "Виберіть типи PII"
-routing = "Маршрутні номери США (ABA)"
-ssn = "Номери соціального страхування"
 
 [policy]
 badgeEnforcing = "{{name}} застосовується..."
@@ -10317,6 +10557,10 @@ title = "Конвеєри"
 [portal.pipelines.actions]
 newCustomPipeline = "Новий користувацький пайплайн"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "Frequent workflows"
+
 [portal.pipelines.all]
 title = "Усі пайплайни"
 
@@ -12047,7 +12291,6 @@ label = "Інструменти читання"
 readAloud = "Читати вголос"
 rotateLeft = "Повернути ліворуч"
 rotateRight = "Повернути праворуч"
-search = "Знайти в документі"
 switchDocument = "Перемкнути документ"
 thumbnails = "Сторінки"
 
@@ -12062,6 +12305,7 @@ colorLabel = "Колір рамки"
 convertPDFToImageLabel = "Перетворити PDF на PDF-Image"
 customPaddingLabel = "Користувацький додатковий відступ"
 useRegexLabel = "Використовувати Regex"
+useRegexLockedTooltip = "Common types are regular expressions, so Use Regex stays on while any are selected."
 wholeWordSearchLabel = "Пошук цілих слів"
 
 [redact.auto.settings]
@@ -12070,7 +12314,7 @@ title = "Налаштування приховування"
 
 [redact.auto.wordsToRedact]
 add = "Додати"
-examples = "Приклади: Confidential, Top-Secret"
+info = "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret."
 placeholder = "Введіть слово"
 title = "Слова для приховування"
 
@@ -12092,6 +12336,16 @@ automaticDisabledTooltip = "Виберіть файли у менеджері ф
 manual = "Ручний"
 mode = "Режим"
 title = "Метод приховування"
+
+[redact.presets]
+account = "Labelled account numbers"
+card = "Credit / debit cards"
+email = "Email addresses"
+iban = "IBANs"
+phone = "Phone numbers"
+routing = "US routing numbers"
+ssn = "Social Security numbers"
+title = "Common types"
 
 [redact.tooltip.advanced.caseSensitive]
 text = "Знаходити лише текст із таким самим регістром. Якщо ввімкнено, 'Secret' не збігатиметься з 'SECRET', а [A-Z] у regex збігатиметься лише з великими літерами."
@@ -12147,19 +12401,6 @@ title = "Метод приховування"
 text = "Клацніть і тягніть, щоб вручну вибрати конкретні області для приховування. Надає точний контроль над тим, що буде приховано. (Незабаром)"
 title = "Ручне приховування"
 
-[redact.tooltip.words]
-bullet1 = "Додавайте по одному слову за раз"
-bullet2 = "Натисніть Enter або «Додати ще», щоб додати"
-bullet3 = "Натисніть ×, щоб видалити слова"
-
-[redact.tooltip.words.description]
-text = "Введіть слова або фрази для пошуку та приховування у вашому документі. Кожне слово шукається окремо."
-title = "Відповідність тексту"
-
-[redact.tooltip.words.examples]
-text = "Типові слова для приховування: банківські реквізити, адреси електронної пошти або конкретні імена."
-title = "Поширені приклади"
-
 [redact.tooltip.words.header]
 title = "Слова для приховування"
 
@@ -12176,15 +12417,6 @@ failed = "Під час видалення анотацій з PDF сталас�
 
 [removeAnnotations.info]
 description = "Цей інструмент видалить усі анотації (коментарі, підсвічування, нотатки тощо) з ваших PDF-документів."
-
-[removeAnnotations.settings]
-title = "Налаштування"
-
-[removeAnnotations.tooltip.description]
-title = "Що це робить"
-
-[removeAnnotations.tooltip.header]
-title = "Про видалення анотацій"
 
 [removeBlanks]
 submit = "Видалити порожні сторінки"
@@ -12325,6 +12557,9 @@ tags = "переставити,змінити порядок,організув�
 [reorganizePages.error]
 failed = "Не вдалося переорганізувати сторінки"
 
+[reorganizePages.pageOrder]
+info = "A comma-separated list of page numbers, ranges such as 4-8, or functions such as 2n+1. For Duplicate all pages, enter how many copies of each page to make."
+
 [reorganizePages.results]
 title = "Сторінки переорганізовано"
 
@@ -12406,6 +12641,7 @@ title = "Інвертувати всі кольори"
 rotateLeft = "Повернути проти годинникової стрілки"
 rotateRight = "Повернути за годинниковою стрілкою"
 selectRotation = "Виберіть кут повороту (за годинниковою)"
+selectRotationDirection = "Pages are rotated clockwise by the selected angle."
 submit = "Застосувати обертання"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Повернути PDF"
@@ -12516,8 +12752,7 @@ title = "Санітизація"
 failed = "Сталася помилка під час санітизації PDF."
 
 [sanitize.options]
-note = "Виберіть елементи, які хочете видалити з PDF. Потрібно вибрати щонайменше одну опцію."
-title = "Параметри санітизації"
+noneSelected = "Select at least one element to remove."
 
 [sanitize.options.removeEmbeddedFiles]
 desc = "Видалити всі файли, вбудовані в PDF"
@@ -12649,6 +12884,7 @@ title = "Пошук у PDF"
 hideTools = "Сховати недоступні інструменти ▴"
 messageNoFallback = "Інструменти недоступні, доки ваш сервер не повернеться онлайн."
 messageWithFallback = "Деякі інструменти потребують підключення до сервера."
+serverSigning = "Your Stirling-PDF server is offline. Signing with the server's certificate needs it, so reconnect and try again."
 showTools = "Показати недоступні інструменти ▾"
 title = "Ваш сервер Stirling-PDF недоступний"
 toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн і \"{{endpoint}}\" недоступний у локальному бекенді."
@@ -13034,6 +13270,12 @@ title = "Комбінації клавіш"
 mac = "Додайте ⌘ (Command), ⌥ (Option) або інший модифікатор до комбінації."
 windows = "Додайте Ctrl, Alt або інший модифікатор до комбінації."
 
+[settings.leaveDraft]
+leave = "Open settings"
+message = "What you were editing here has not been saved and will be lost."
+stay = "Stay"
+title = "Leave without saving?"
+
 [settings.legal]
 description = "Умови, політика конфіденційності та ваші налаштування cookie."
 label = "Юридичне"
@@ -13418,9 +13660,7 @@ image = "Завантаження"
 text = "Текст"
 
 [sign.step]
-createDesc = "Виберіть спосіб створення підпису"
 place = "Розмістити й зберегти"
-placeDesc = "Розташуйте підпис на своєму PDF"
 
 [sign.steps]
 configure = "Налаштувати підпис"
@@ -13597,6 +13837,10 @@ rotateLeft = "Повернути ліворуч"
 rotateRight = "Повернути праворуч"
 trim = "Обрізати до підпису"
 trimHint = "Обрізає порожній простір навколо"
+
+[signatureFields]
+customPosition = "Custom position"
+page = "Page {{page}}"
 
 [signatureSettings.tooltip]
 header = "Параметри вигляду підпису"
@@ -13959,7 +14203,6 @@ placeholder = "Введіть кількість горизонтальних р
 
 [split-by-sections.splitMode]
 custom = "Вибрані сторінки"
-description = "Виберіть спосіб поділу сторінок"
 label = "Режим поділу"
 splitAll = "Розділити всі сторінки"
 splitAllExceptFirst = "Розділити всі, крім першої"
@@ -14210,10 +14453,8 @@ failed = "Під час позначення PDF міткою часу стал�
 
 [timestampPdf.options]
 note = "Лише хеш SHA-256 вашого документа надсилається на сервер TSA; сам файл PDF ніколи не надсилається на сервер TSA."
-title = "Сервер міток часу (TSA)"
 
 [timestampPdf.options.tsaUrl]
-desc = "Виберіть довірену службу міток часу"
 label = "Виберіть сервер TSA"
 
 [timestampPdf.steps]
@@ -14332,6 +14573,20 @@ noTools = "Немає доступних інструментів"
 
 [tooltip]
 close = "Закрити підказку"
+
+[toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
+
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
 
 [unlockPDFForms]
 description = "Цей інструмент зніме обмеження \"лише для читання\" з полів форм PDF, зробивши їх придатними для редагування та заповнення."
@@ -14706,6 +14961,9 @@ signatureDate = "Дата підпису"
 
 [validateSignature.settings]
 certHint = "Завантажте довірений сертифікат X.509 для перевірки проти власного джерела довіри."
+certOnly = "Signatures are checked against this certificate only ({{size}} KB)."
+noCert = "No trusted certificate. Signatures are checked against the server's trusted certificates."
+removeCert = "Remove certificate"
 title = "Налаштування перевірки"
 
 [validateSignature.signature]
@@ -14723,12 +14981,9 @@ cannotPreviewFile = "Не вдається переглянути файл"
 copyRestricted = "Копіювання вимкнено дозволами цього PDF."
 copyText = "Копіювати"
 coverPageView = "Показувати обкладинку окремо"
-disableColorFilter = "Вимкнути кольоровий фільтр"
 documentUpdated = "Документ оновлено"
 dualPageView = "Парний перегляд"
 editText = "Редагувати текст"
-enableDarkFilter = "Увімкнути темний фільтр"
-enableSepiaFilter = "Увімкнути фільтр сепії"
 engineLoadError = "Не вдалося ініціалізувати рушій переглядача PDF"
 engineSlowWarning = "Ініціалізація рушія PDF триває довше, ніж очікувалося. Перевірте налаштування WebAssembly і Worker у вашому браузері або перезавантажте сторінку."
 firstPage = "Перша сторінка"
@@ -14736,20 +14991,27 @@ fitPage = "Підігнати до сторінки"
 fitWidth = "Підігнати за шириною"
 lastPage = "Остання сторінка"
 loadingEngine = "Завантаження рушія PDF..."
+menuSelected = "Selected"
 moreOptions = "Більше"
 nextPage = "Наступна сторінка"
 noPdfProvided = "PDF не надано"
 onlyPdfSupported = "Цей формат файлу не підтримується для попереднього перегляду."
 pageNavigation = "Навігація сторінками"
+pageNumber = "Page number"
 previousPage = "Попередня сторінка"
 readAloudFromHere = "Читати вголос звідси"
+resetZoomFitPage = "Reset zoom: fit to page"
+resetZoomFitWidth = "Reset zoom: fit to width"
+resetZoomPercent = "Reset zoom: {{percent}}%"
+rotate = "Rotate"
 saveChangesErrorBody = "Не вдалося зберегти документ. Спробуйте ще раз."
 saveChangesErrorTitle = "Не вдалося зберегти зміни"
 singlePageView = "Одинарний перегляд"
+tools = "Tools"
 unknownFile = "Невідомий файл"
-view = "Вигляд"
 zoom = "Масштаб"
 zoomIn = "Збільшити"
+zoomLevel = "Zoom level"
 zoomOut = "Зменшити"
 
 [viewer.attachments]
@@ -14919,9 +15181,11 @@ previewAlt = "Попередній перегляд підпису"
 
 [viewer.signatureField]
 badge = "Підпис"
+clickToSign = "Click to sign here"
 fieldTitle = "Поле підпису: {{name}}"
 signed = "Підписано"
 signedWithReason = "Підписано: {{reason}}"
+signHere = "Sign here: {{name}}"
 unsignedFieldTitle = "Непідписане поле підпису: {{name}}"
 withTime = "{{label}} ({{time}})"
 
@@ -15089,10 +15353,13 @@ partial = "Відновлено {{restored}} з {{total}} файлів. Решт
 
 [workbenchBar]
 activeFiles = "Активні файли"
-annotations = "Анотації"
+annotate = "Annotate"
 applyRedactionsFirst = "Спочатку застосувати затемнення"
+attachments = "Attachments"
+bookmarks = "Bookmarks"
 closeAll = "Закрити всі файли"
 closePdf = "Закрити PDF"
+defaultZoom = "Default zoom"
 deselectAll = "Скасувати вибір"
 downloadAll = "Завантажити всі"
 editText = "Редагувати текст"
@@ -15100,18 +15367,26 @@ exitAnnotations = "Вийти з режиму анотацій"
 exitRedaction = "Вийти з режиму затемнення"
 findReplace = "Пошук і заміна"
 formFill = "Редактор форм"
-hideToolbar = "Сховати панель інструментів"
+layers = "Layers"
 moreActions = "Більше дій"
+pageColourDark = "Dark"
+pageColourNormal = "Normal"
+pageColours = "Page colours"
+pageColourSepia = "Sepia"
 pageEditor = "Редактор сторінок"
+pageLayout = "Layout"
+pageView = "View"
 panMode = "Режим переміщення"
 print = "Надрукувати PDF"
 readAloud = "Читати вголос"
 readAloudLanguage = "Мова"
 readAloudSpeed = "Швидкість"
 redact = "Затемнити"
+reviewAccessibility = "Accessibility"
 rotateLeft = "Повернути ліворуч"
 rotateRight = "Повернути праворуч"
 ruler = "Лінійка / Вимірювання"
+rulerScaleUnset = "Not set"
 rulerSettings = "Налаштування масштабу"
 save = "Зберегти"
 saveAll = "Зберегти всі"
@@ -15123,14 +15398,23 @@ selectLanguage = "Вибрати мову"
 share = "Надати спільний доступ"
 showAllTools = "Показати всі інструменти"
 showFewerTools = "Згорнути панель інструментів"
-showToolbar = "Показати панель інструментів"
+thumbnails = "Pages"
 toggleAnnotations = "Перемкнути видимість анотацій"
-toggleAttachments = "Перемкнути вкладення"
-toggleBookmarks = "Закладки (зміст)"
 toggleComments = "Коментарі"
-toggleLayers = "Перемкнути шари"
-toggleSidebar = "Перемкнути бічну панель"
 viewer = "Переглядач"
+
+[workbenchBar.docMenu]
+close = "Close document"
+compress = "Compress"
+document = "Document"
+duplicated = "Copy saved to your file library"
+info = "Document info"
+metadata = "Edit properties"
+more = "More document actions"
+password = "Add password"
+protect = "Protect and optimise"
+rename = "Rename…"
+sign = "Sign"
 
 [workflow.participant]
 accessExpired = "Ваш доступ до цього документа закінчився."
