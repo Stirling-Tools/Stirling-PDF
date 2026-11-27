@@ -8,6 +8,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -55,6 +56,40 @@ class NativeLicenseLoaderTest {
         try (URLClassLoader both = new URLClassLoader(urls, null)) {
             return NativeLicenseLoader.loadNativeLicenses(both);
         }
+    }
+
+    @Test
+    void longWhitespaceInNoticeMetadataDoesNotBacktrack(@TempDir Path tempDir) throws Exception {
+        Path jar = tempDir.resolve("whitespace.jar");
+        String spaces = "\t".repeat(50_000);
+        writeJar(
+                jar,
+                Map.of(
+                        "licenses/NOTICE.txt",
+                        "9. "
+                                + spaces
+                                + "\u2028\n1. "
+                                + spaces
+                                + "Codec"
+                                + spaces
+                                + "\n-"
+                                + spaces
+                                + "Copyright"
+                                + spaces
+                                + "Contributors\n-"
+                                + spaces
+                                + "License:"
+                                + spaces
+                                + "MIT\n"));
+
+        assertTimeoutPreemptively(
+                Duration.ofSeconds(2),
+                () -> {
+                    List<Dependency> dependencies = loadFromJars(jar);
+                    assertEquals(1, dependencies.size());
+                    assertEquals("Codec", dependencies.get(0).getModuleName());
+                    assertEquals("MIT", dependencies.get(0).getModuleLicense());
+                });
     }
 
     @Test
