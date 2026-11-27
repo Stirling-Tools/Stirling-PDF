@@ -1880,7 +1880,7 @@ export function LocalEmbedPDF({
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
-          <ThumbnailAPIBridge />
+          <ThumbnailAPIBridge layout={pageLayer ? pageLayout : null} />
           <RotateAPIBridge />
           <EditingBridges
             enableAnnotations={enableAnnotations}

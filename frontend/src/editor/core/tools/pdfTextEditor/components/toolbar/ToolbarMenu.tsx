@@ -32,7 +32,12 @@ export function ToolbarMenu({
   target,
 }: ToolbarMenuProps) {
   return (
-    <Menu shadow="md" position={position} withinPortal={!inPopover}>
+    <Menu
+      shadow="md"
+      position={position}
+      withinPortal={!inPopover}
+      disabled={disabled}
+    >
       <Menu.Target>
         {target ?? (
           <Tooltip label={tooltip}>

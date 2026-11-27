@@ -169,10 +169,13 @@ function PageSetupModal({
   const [ownSizeNamed, setOwnSizeNamed] = useState(true);
   const [orientation, setOrientation] = useState<PageOrientation>("portrait");
   const [scope, setScope] = useState<"page" | "all">("page");
+  const [pageIndex, setPageIndex] = useState(0);
   useEffect(() => {
     if (!open) return;
     setScope("page");
-    const current = session?.pageSize(visiblePageIndex());
+    const shown = visiblePageIndex();
+    setPageIndex(shown);
+    const current = session?.pageSize(shown);
     if (!current) return;
     setOrientation(current.width > current.height ? "landscape" : "portrait");
     const named = namedSize(current.width, current.height);
@@ -191,8 +194,8 @@ function PageSetupModal({
     onClose();
     void session?.changeDocument({
       kind: "pageSetup",
-      pages: scope === "all" ? "all" : visiblePageIndex(),
-      inView: visiblePageIndex(),
+      pages: scope === "all" ? "all" : pageIndex,
+      inView: pageIndex,
       size,
       orientation,
     });

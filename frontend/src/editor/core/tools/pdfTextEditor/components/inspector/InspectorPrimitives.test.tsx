@@ -38,6 +38,8 @@ describe("lengths", () => {
     expect(lengthUnitFor("en-US")).toBe("in");
     expect(lengthUnitFor("en-GB")).toBe("mm");
     expect(lengthUnitFor("de")).toBe("mm");
+    expect(lengthUnitFor("en-Latn-US")).toBe("in");
+    expect(lengthUnitFor("zh-Hant")).toBe("mm");
   });
 
   it("shows points as mm and commits a typed mm value as points", () => {

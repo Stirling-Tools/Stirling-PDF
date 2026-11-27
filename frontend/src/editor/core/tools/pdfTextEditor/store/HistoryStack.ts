@@ -116,6 +116,7 @@ export class HistoryStack {
     this.undoStack.push(
       steps.length === 1 ? steps[0] : new CompositeCommand(steps),
     );
+    this.stepsAdded -= steps.length - 1;
     this.lastCoalesceKey = null;
   }
 

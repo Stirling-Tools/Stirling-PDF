@@ -2013,6 +2013,10 @@ const EmbedPdfViewerContent = ({
     contentPanelWidthRem +
     (isThumbnailSidebarVisible ? THUMBNAIL_SIDEBAR_WIDTH_REM : 0);
   const rightInsetRem = pageTool?.rightInsetRem ?? 0;
+  const toolPageLayout =
+    pageTool && pageTool.fileId === currentFileStableId
+      ? (pageTool.pageLayout ?? null)
+      : null;
   const pagesPastInset = usePagesPastInset(
     pdfContainerRef,
     rightInsetRem,
@@ -2169,11 +2173,7 @@ const EmbedPdfViewerContent = ({
                   ? pageTool.PageLayer
                   : null
               }
-              pageLayout={
-                pageTool && pageTool.fileId === currentFileStableId
-                  ? (pageTool.pageLayout ?? null)
-                  : null
-              }
+              pageLayout={toolPageLayout}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}
@@ -2271,6 +2271,7 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileId={activeFileId}
+        pageLayout={toolPageLayout}
         rightOffsetRem={contentPanelWidthRem}
       />
       <BookmarkSidebar

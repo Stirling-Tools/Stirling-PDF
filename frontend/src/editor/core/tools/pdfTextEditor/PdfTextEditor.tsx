@@ -416,6 +416,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const saveBeforeLeaving = useCallback(async () => {
+    while (savingRef.current) await saveSettledRef.current;
     const doc = store.document;
     if (doc && !(await confirmRisks(doc)))
       throw new Error("Save cancelled at the risk warning");
@@ -907,7 +908,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         const doc = store.document;
         if (!doc || doc.positionOf(pageIndex) < 0) return null;
         const { cropWidth, cropHeight, rotate } = doc.page(pageIndex).display;
-        return rotate % 180 === 0
+        return rotate % 2 === 0
           ? { width: cropWidth, height: cropHeight }
           : { width: cropHeight, height: cropWidth };
       },

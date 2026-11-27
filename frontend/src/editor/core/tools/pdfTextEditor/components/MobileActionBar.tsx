@@ -131,7 +131,7 @@ export function MobileActionBar({ store, controller, mode, findOpen }: Props) {
               onClick={() => store.toggleMode("addText")}
               data-testid="pdf-editor-add-text"
             />
-            <Menu shadow="md" position="top">
+            <Menu shadow="md" position="top" withinPortal>
               <Menu.Target>
                 <BarButton
                   icon="shapes"
@@ -144,7 +144,8 @@ export function MobileActionBar({ store, controller, mode, findOpen }: Props) {
                 <Menu.Item
                   leftSection={<Icon name="table" size={18} />}
                   onClick={() => store.toggleMode("addTable")}
-                  aria-pressed={addTableArmed}
+                  role="menuitemcheckbox"
+                  aria-checked={addTableArmed}
                   data-testid="pdf-editor-add-table"
                 >
                   {t("pdfTextEditor.sidebar.table", "Table")}

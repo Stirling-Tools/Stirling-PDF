@@ -106,7 +106,7 @@ function signatureOf(m: WrappedPdfiumModule, run: TextRun): string {
     )
     .join(";");
   const { r, g, b, a } = run.fill;
-  return `${run.align ?? ""}|${run.listIndent}|${run.underline ? "u" : ""}|${r},${g},${b},${a}|${run.text}|${lines}`;
+  return `${run.align ?? ""}|${run.listIndent}|${run.underline ? "u" : ""}|${r},${g},${b},${a}|${run.wrapWidthPt ?? ""}|${run.text}|${lines}`;
 }
 
 export class SetParagraphFormatCommand implements Command {
@@ -247,6 +247,7 @@ export class SyncParagraphFormatCommand implements Command {
       this.dropUnderline(doc, page, runId);
       if (!run || !canFormatParagraph(page, run)) continue;
       if (followMoves) this.followMove(page, run, lineBoxes(m, run));
+      this.followWidth(run);
       this.layoutLines(doc, page, run);
       if (run.underline) this.drawUnderline(doc, page, run);
       page.formatSignatures.set(runId, signatureOf(m, run));
@@ -283,7 +284,7 @@ export class SyncParagraphFormatCommand implements Command {
     page.formatLayouts.clear();
     for (const [id, layout] of this.prevLayouts)
       page.formatLayouts.set(id, layout);
-    for (const { runId, frame } of this.movedFrames) {
+    for (const { runId, frame } of [...this.movedFrames].reverse()) {
       const run = page.findRun(runId);
       if (run) run.alignFrame = frame;
     }
@@ -308,6 +309,15 @@ export class SyncParagraphFormatCommand implements Command {
     if (!uniform) return;
     this.movedFrames.push({ runId: run.id, frame });
     run.alignFrame = { left: frame.left + dx, right: frame.right + dx };
+  }
+
+  private followWidth(run: TextRun): void {
+    const frame = run.alignFrame;
+    const width = run.wrapWidthPt;
+    if (!frame || !width) return;
+    if (Math.abs(frame.right - frame.left - width) < MIN_SHIFT_PT) return;
+    this.movedFrames.push({ runId: run.id, frame });
+    run.alignFrame = { left: frame.left, right: frame.left + width };
   }
 
   private layoutLines(doc: EditorDocument, page: Page, run: TextRun): void {

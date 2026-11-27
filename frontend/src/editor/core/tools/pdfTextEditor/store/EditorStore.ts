@@ -483,6 +483,7 @@ export class EditorStore {
   }
 
   batchNow(changes: () => void): void {
+    this.history.breakCoalescing();
     const mark = this.history.mark;
     try {
       changes();
@@ -492,6 +493,7 @@ export class EditorStore {
   }
 
   async batch(changes: () => Promise<unknown>): Promise<void> {
+    this.history.breakCoalescing();
     const mark = this.history.mark;
     this.batching++;
     try {

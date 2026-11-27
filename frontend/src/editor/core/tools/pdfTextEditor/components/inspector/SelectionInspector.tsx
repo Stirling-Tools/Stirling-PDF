@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -11,7 +10,10 @@ import {
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import {
+  displayedTopLeft,
+  type SelectionGeometry,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
@@ -268,23 +270,10 @@ function GeometrySection({
       </Section>
     );
   }
-  const { bounds, display, setX, setY, setWidth, setHeight } = geometry.single;
+  const { bounds, display, moveDisplayed, setWidth, setHeight } =
+    geometry.single;
   const unit = lengthUnitFor(navigator.language);
-  const transform = DisplayTransform.fromData(display);
-  const corners = [
-    [bounds.x, bounds.y],
-    [bounds.x + bounds.width, bounds.y],
-    [bounds.x, bounds.y + bounds.height],
-    [bounds.x + bounds.width, bounds.y + bounds.height],
-  ].map(([x, y]) => transform.apply(x, y));
-  const left = Math.min(...corners.map((c) => c.x));
-  const top = transform.displayHeight - Math.max(...corners.map((c) => c.y));
-  const moveTo = (nextLeft: number, nextTop: number) => {
-    const from = transform.invert(left, transform.displayHeight - top);
-    const to = transform.invert(nextLeft, transform.displayHeight - nextTop);
-    if (Math.abs(to.x - from.x) > 1e-3) setX(bounds.x + to.x - from.x);
-    if (Math.abs(to.y - from.y) > 1e-3) setY(bounds.y + to.y - from.y);
-  };
+  const { left, top } = displayedTopLeft(display, bounds);
   return (
     <Section testId="pdf-editor-geometry-section">
       <SectionLabel>
@@ -296,7 +285,7 @@ function GeometrySection({
             <PointsInput
               unit={unit}
               value={left}
-              onCommit={(next) => moveTo(next, top)}
+              onCommit={(next) => moveDisplayed({ left: next })}
               label={t("pdfTextEditor.inspector.x", "X")}
               testId="pdf-editor-pos-x"
             />
@@ -305,7 +294,7 @@ function GeometrySection({
             <PointsInput
               unit={unit}
               value={top}
-              onCommit={(next) => moveTo(left, next)}
+              onCommit={(next) => moveDisplayed({ top: next })}
               label={t("pdfTextEditor.inspector.y", "Y")}
               testId="pdf-editor-pos-y"
             />

@@ -2,7 +2,9 @@ import { beforeEach, expect, test } from "vitest";
 import { allowConsole } from "@editor/tests/failOnConsole";
 import { degrees, PDFDocument } from "@cantoo/pdf-lib";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
+import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -189,6 +191,88 @@ test("lines that flow again from the same paragraph join its continuation, not a
   expect(doc.displayOrder()).toEqual(order);
   expect(doc.page(0).findRun(runId)?.text).toBe("Line one");
   expect(doc.page(1).runs.map((run) => run.text)).toEqual([
-    "Line one and a half Line two",
+    "Line one and a half\nLine two",
   ]);
+});
+
+test("a continuation keeps the paragraph's line spacing instead of growing it", async () => {
+  const { store, runId } = await typedNearBottom();
+  store.dispatch(new SetLineSpacingCommand({ pageIndex: 0, runId, factor: 2 }));
+  const source = store.document!.page(0).findRun(runId)!;
+  const lineHeight = source.paragraphLineHeight;
+  const before = runBottom(source);
+  store.dispatch(
+    new EditTextCommand({
+      pageIndex: 0,
+      runId,
+      nextText: "Line one\nLine two\nLine three",
+    }),
+  );
+  expect(flowPastBottom(store, 0, runId, before)).toBe("moved");
+  const [moved] = store.document!.page(1).runs;
+  expect(moved.paragraphLineHeight).toBeCloseTo(lineHeight, 1);
+});
+
+test("a locked continuation keeps its text and the overflow stays on the source page", async () => {
+  const { store, runId } = await typedNearBottom();
+  expect(edit(store, runId, "Line one\nLine two")).toBe("moved");
+  const [continuation] = store.document!.page(1).runs;
+  continuation.locked = true;
+
+  expect(edit(store, runId, "Line one\nLine one and a half")).toBe("none");
+  expect(store.document!.page(0).findRun(runId)?.text).toBe(
+    "Line one\nLine one and a half",
+  );
+  expect(store.document!.page(1).runs.map((run) => run.text)).toEqual([
+    "Line two",
+  ]);
+});
+
+test("a line with no wrap width wraps inside the next page's margins when it flows", async () => {
+  const { store, runId } = await typedNearBottom();
+  expect(store.document!.page(0).findRun(runId)!.wrapWidthPt).toBeNull();
+  const long = Array.from({ length: 40 }, (_, i) => `word${i}`).join(" ");
+  expect(edit(store, runId, `Line one\n${long}`)).toBe("moved");
+  const next = store.document!.page(1);
+  const [moved] = next.runs;
+  expect(moved.text.replace(/\s+/g, " ")).toBe(long);
+  expect(moved.text).toContain("\n");
+  expect(moved.bounds.x + moved.bounds.width).toBeLessThanOrEqual(
+    next.display.cropRight,
+  );
+});
+
+function editWrapped(
+  store: Awaited<ReturnType<typeof typedNearBottom>>["store"],
+  runId: string,
+  text: string,
+) {
+  const run = store.document!.page(0).findRun(runId)!;
+  const before = runBottom(run);
+  store.dispatch(new EditTextCommand({ pageIndex: 0, runId, nextText: text }));
+  store.dispatch(
+    new ReflowWrapCommand({ pageIndex: 0, runId, maxWidthPt: 120 }),
+  );
+  return flowPastBottom(store, 0, runId, before);
+}
+
+test("a wrapped paragraph that flows again rejoins its continuation with a space", async () => {
+  const { store, runId } = await typedNearBottom();
+  const words = (from: number, to: number) =>
+    Array.from({ length: to - from }, (_, i) => `w${from + i}`).join(" ");
+  expect(editWrapped(store, runId, words(0, 30))).toBe("moved");
+  const doc = store.document!;
+  const source = doc.page(0).findRun(runId)!;
+  const continuation = doc.page(1).runs[0].text;
+  const flat = (text: string) => text.replace(/\s+/g, " ");
+  expect(`${flat(source.text)} ${flat(continuation)}`).toBe(words(0, 30));
+
+  const kept = flat(source.text);
+  expect(editWrapped(store, runId, `${kept} extra words here`)).toBe("moved");
+  const sourceAfter = doc.page(0).findRun(runId)!.text;
+  const continuationAfter = doc.page(1).runs[0].text;
+  expect(continuationAfter).not.toContain(`\n${continuation.split("\n")[0]}`);
+  expect(`${flat(sourceAfter)} ${flat(continuationAfter)}`).toBe(
+    `${kept} extra words here ${flat(continuation)}`,
+  );
 });

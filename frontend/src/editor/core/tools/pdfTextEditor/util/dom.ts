@@ -83,15 +83,25 @@ export function focusRunWhenPainted(
   revealOnPage?: number,
 ): void {
   let frames = 0;
+  const request = ++latestFocusRequest;
+  const origin = document.activeElement;
   const attempt = () => {
     const el = runBox(runId);
+    if (request !== latestFocusRequest) {
+      heldKeys?.();
+      return;
+    }
+    if (!stillFocused(origin, el)) {
+      typeIntoFocusedRun(heldKeys?.() ?? "");
+      return;
+    }
     if (!el) {
       if (revealOnPage !== undefined && frames % REVEAL_EVERY_FRAMES === 0)
         currentEditorSession()?.revealPage(revealOnPage);
       const limit =
         revealOnPage === undefined ? FOCUS_WAIT_FRAMES : REVEAL_WAIT_FRAMES;
       if (++frames < limit) requestAnimationFrame(attempt);
-      else heldKeys?.();
+      else typeIntoFocusedRun(heldKeys?.() ?? "");
       return;
     }
     el.focus({ preventScroll: true });
@@ -106,6 +116,32 @@ export function focusRunWhenPainted(
     if (revealOnPage !== undefined) keepCaretInView(el, REVEAL_MARGIN_PX);
   };
   requestAnimationFrame(attempt);
+}
+
+let latestFocusRequest = 0;
+
+function stillFocused(
+  origin: Element | null,
+  target: HTMLElement | null,
+): boolean {
+  const active = document.activeElement;
+  return (
+    !active ||
+    active === document.body ||
+    active === origin ||
+    active === target
+  );
+}
+
+function typeIntoFocusedRun(text: string): void {
+  const active = document.activeElement;
+  if (
+    text &&
+    active instanceof HTMLElement &&
+    active.isConnected &&
+    active.hasAttribute("data-run-id")
+  )
+    typeKeys(text);
 }
 
 const CARET_MARGIN_PX = 16;

@@ -33,6 +33,7 @@ export interface ViewerLayoutPage {
 export interface ViewerPageLayout {
   subscribe: (listener: () => void) => () => void;
   pages: () => readonly ViewerLayoutPage[] | null;
+  renderThumbnail: (pageIndex: number, widthPx: number) => Promise<Blob>;
 }
 
 /**

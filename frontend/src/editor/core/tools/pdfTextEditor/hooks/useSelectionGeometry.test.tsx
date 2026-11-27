@@ -109,3 +109,49 @@ describe("useSelectionGeometry width", () => {
     expect(widthFor({ renderMode: 3, matrix: TURNED })).toBeUndefined();
   });
 });
+
+describe("useSelectionGeometry moveDisplayed", () => {
+  const TURNED_HALF = {
+    a: -1,
+    b: 0,
+    c: 0,
+    d: -1,
+    e: 200,
+    f: 300,
+    cropLeft: 0,
+    cropBottom: 0,
+    cropWidth: 200,
+    cropHeight: 300,
+    rotate: 2,
+    displayWidth: 200,
+    displayHeight: 300,
+  };
+
+  function pageWith(width: number): EditorViewState {
+    return {
+      pages: [
+        {
+          pageIndex: 0,
+          display: TURNED_HALF,
+          runs: [{ id: "r1", bounds: { x: 0, y: 0, width, height: 10 } }],
+          images: [],
+        },
+      ],
+    } as unknown as EditorViewState;
+  }
+
+  it("places the shown edge from the run's width now, not the panel's snapshot", () => {
+    const live = pageWith(100);
+    const dispatch = vi.fn();
+    const store = {
+      getState: () => live,
+      dispatch,
+    } as unknown as EditorStore;
+    const { result } = renderHook(() =>
+      useSelectionGeometry(store, pageWith(50), selected({ runIds: ["r1"] })),
+    );
+    result.current.single!.moveDisplayed({ left: 10 });
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch.mock.calls[0][0]).toMatchObject({ dx: 90, dy: 0 });
+  });
+});

@@ -17,7 +17,10 @@ import {
   isDocumentFontId,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
-import { SetLineSpacingCommand } from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
+import {
+  lineSpacingFactor,
+  SetLineSpacingCommand,
+} from "@editor/tools/pdfTextEditor/commands/SetLineSpacingCommand";
 import { SetParagraphFormatCommand } from "@editor/tools/pdfTextEditor/commands/paragraphFormat";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import {
@@ -51,6 +54,7 @@ export function runBottom(run: TextRun): number {
 interface Split {
   keep: string;
   overflow: string;
+  softBreak: boolean;
 }
 
 function splitAtMargin(page: Page, run: TextRun): Split | null {
@@ -70,7 +74,11 @@ function splitAtMargin(page: Page, run: TextRun): Split | null {
     )
     .join("");
   if (!overflow.trim()) return null;
-  return { keep: lines.slice(0, first).join("\n"), overflow };
+  return {
+    keep: lines.slice(0, first).join("\n"),
+    overflow,
+    softBreak: soft[first] ?? false,
+  };
 }
 
 function takesFlow(page: Page): boolean {
@@ -125,6 +133,7 @@ export function flowPastBottom(
   const following = nextIndex !== null ? doc.page(nextIndex) : null;
   const continued = following && continuationOn(doc, following, runId);
   if (following && continued) {
+    if (continued.locked || continued.textReadOnly) return "none";
     crossedRuns.delete(runId);
     return prependOverflow(store, page, run, following, continued, split)
       ? "moved"
@@ -161,6 +170,7 @@ function flowInto(
   flowState(store.document!).continuations.set(run.id, {
     pageIndex: next.index,
     runId: inserted,
+    softBreak: split.softBreak,
   });
   return "moved";
 }
@@ -184,6 +194,9 @@ function prependOverflow(
   split: Split,
 ): boolean {
   const bottomBefore = runBottom(continued);
+  const continuations = flowState(store.document!).continuations;
+  const known = continuations.get(run.id);
+  const join = known?.softBreak ? " " : "\n";
   store.batchNow(() => {
     store.dispatch(
       new EditTextCommand({
@@ -197,11 +210,13 @@ function prependOverflow(
       new EditTextCommand({
         pageIndex: next.index,
         runId: continued.id,
-        nextText: `${split.overflow} ${continued.text}`,
+        nextText: `${split.overflow}${join}${continued.text}`,
         explicit: true,
       }),
     );
   });
+  if (known)
+    continuations.set(run.id, { ...known, softBreak: split.softBreak });
   const heldKeys = holdKeystrokes();
   store.selection.selectOne(continued.id);
   focusRunWhenPainted(
@@ -219,7 +234,10 @@ export type FlowResult = "moved" | "none";
 
 interface FlowState {
   crossedRuns: Set<string>;
-  continuations: Map<string, { pageIndex: number; runId: string }>;
+  continuations: Map<
+    string,
+    { pageIndex: number; runId: string; softBreak: boolean }
+  >;
 }
 
 const flowStates = new WeakMap<EditorDocument, FlowState>();
@@ -244,7 +262,6 @@ function moveOverflow(
   next: Page,
   split: Split,
 ): string | null {
-  const width = run.wrapWidthPt ?? 0;
   const x =
     (run.paragraphLineSlots[0]?.matrixE ?? run.bounds.x) -
     page.display.cropLeft +
@@ -254,6 +271,9 @@ function moveOverflow(
     next.display.cropHeight -
     topMargin(page) -
     run.fontSize;
+  const usableWidth = next.display.cropRight - MIN_MARGIN_PT - x;
+  const width = Math.min(run.wrapWidthPt ?? usableWidth, usableWidth);
+  const spacing = lineSpacingFactor(run.fontSize, run.paragraphLineHeight);
   let insertedId: string | null = null;
   store.batchNow(() => {
     const insert = new InsertTextCommand({
@@ -296,12 +316,12 @@ function moveOverflow(
           explicit: true,
         }),
       );
-    if (run.paragraphLineHeight > 0 && run.fontSize > 0)
+    if (spacing !== null)
       store.dispatch(
         new SetLineSpacingCommand({
           pageIndex: next.index,
           runId: insertedId,
-          factor: run.paragraphLineHeight / run.fontSize,
+          factor: spacing,
         }),
       );
     if (run.align || run.underline || run.listIndent > 0)

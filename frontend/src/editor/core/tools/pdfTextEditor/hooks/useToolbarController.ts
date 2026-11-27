@@ -564,6 +564,11 @@ export function useToolbarController(
     (size: number) => flowingSelection(store, () => sel.changeFontSize(size)),
     [store, sel],
   );
+  const onSetLineSpacing = useCallback(
+    (factor: number) =>
+      flowingSelection(store, () => sel.setLineSpacing(factor)),
+    [store, sel],
+  );
 
   const onApplyTextStyle = useCallback(
     (name: TextStyleName) => {
@@ -574,7 +579,9 @@ export function useToolbarController(
       return flowingSelection(store, () =>
         store.batch(async () => {
           const selection = store.selection.value;
+          const doc = store.document;
           await sel.changeFontSize(style.size);
+          if (store.document !== doc) return;
           store.selection.set(selection);
           failure = await sel.setBold(style.bold);
           if (tagged && store.document?.treatAsTagged()) setTag(style.tag);
@@ -653,7 +660,7 @@ export function useToolbarController(
     onApplyTextStyle,
     onSetAlign: sel.setAlign,
     onToggleUnderline: sel.toggleUnderline,
-    onSetLineSpacing: sel.setLineSpacing,
+    onSetLineSpacing,
     onToggleList: sel.toggleList,
     onChangeFontSize,
     onChangeFill: sel.changeFill,

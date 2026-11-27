@@ -9,10 +9,16 @@ import type {
 
 const NO_LAYOUT = () => () => undefined;
 
-export function useToolOwnsPages(layout: ViewerPageLayout | null): boolean {
+export function useLaidOutPages(
+  layout: ViewerPageLayout | null,
+): readonly ViewerLayoutPage[] | null {
   return useSyncExternalStore(layout ? layout.subscribe : NO_LAYOUT, () =>
-    layout ? layout.pages() !== null : false,
+    layout ? layout.pages() : null,
   );
+}
+
+export function useToolOwnsPages(layout: ViewerPageLayout | null): boolean {
+  return useLaidOutPages(layout) !== null;
 }
 
 function laidOut(

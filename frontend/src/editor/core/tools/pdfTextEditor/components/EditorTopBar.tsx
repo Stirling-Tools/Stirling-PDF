@@ -27,11 +27,25 @@ import {
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 const COMPACT_BELOW_PX = 640;
+const FORMAT_SECTION_WAIT_FRAMES = 10;
+
 function showFormattingPanel() {
+  const tab = document.querySelector<HTMLElement>(
+    '[data-testid="pdf-editor-tab-selected"]',
+  );
+  if (tab?.getAttribute("aria-selected") === "false") tab.click();
+  focusFormattingSection(FORMAT_SECTION_WAIT_FRAMES);
+}
+
+function focusFormattingSection(framesLeft: number) {
   const section = document.querySelector<HTMLElement>(
     '[data-testid="pdf-editor-format-section"]',
   );
-  if (!section) return;
+  if (!section) {
+    if (framesLeft > 0)
+      requestAnimationFrame(() => focusFormattingSection(framesLeft - 1));
+    return;
+  }
   section.scrollIntoView({ block: "nearest", behavior: "smooth" });
   section.querySelector<HTMLElement>("input, button")?.focus({
     preventScroll: true,
@@ -225,7 +239,8 @@ export function EditorTopBar({
                     leftSection={<Icon name="table" size={20} />}
                     onClick={onToggleAddTable}
                     data-testid="pdf-editor-add-table"
-                    aria-pressed={addTableArmed}
+                    role="menuitemcheckbox"
+                    aria-checked={addTableArmed}
                   >
                     {addTableLabel}
                   </Menu.Item>

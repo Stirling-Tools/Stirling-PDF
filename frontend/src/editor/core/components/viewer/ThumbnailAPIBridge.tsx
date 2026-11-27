@@ -2,21 +2,44 @@ import { useEffect } from "react";
 import { useRegistry } from "@embedpdf/core/react";
 import { useRenderCapability } from "@embedpdf/plugin-render/react";
 import type { RenderCapability } from "@embedpdf/plugin-render";
+import { PdfErrorCode, PdfTaskHelper } from "@embedpdf/models";
 import { useThumbnailCapability } from "@embedpdf/plugin-thumbnail/react";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import type { ViewerPageLayout } from "@editor/contexts/viewer/ViewerPageTool";
 
 // Matches the thumbnail plugin's default width; LocalEmbedPDF registers it without config.
 const THUMB_WIDTH = 150;
 
 type ThumbTask = ReturnType<RenderCapability["renderPageRect"]>;
 
+function renderToolThumb(
+  layout: ViewerPageLayout,
+  pageIndex: number,
+  dpr: number,
+): ThumbTask {
+  const task = PdfTaskHelper.create<Blob>();
+  layout.renderThumbnail(pageIndex, Math.round(THUMB_WIDTH * dpr)).then(
+    (blob) => task.resolve(blob),
+    (error: unknown) =>
+      task.reject({
+        code: PdfErrorCode.Unknown,
+        message: error instanceof Error ? error.message : String(error),
+      }),
+  );
+  return task;
+}
+
 /**
  * ThumbnailAPIBridge - Updated for embedPDF v2.6.0
  * Provides thumbnail generation functionality.
  */
-export function ThumbnailAPIBridge() {
+export function ThumbnailAPIBridge({
+  layout = null,
+}: {
+  layout?: ViewerPageLayout | null;
+}) {
   const { provides: thumbnail } = useThumbnailCapability();
   const { provides: render } = useRenderCapability();
   const { registry } = useRegistry();
@@ -35,6 +58,7 @@ export function ThumbnailAPIBridge() {
           ...thumbnail,
           // Thumbnails have no form overlay, so always bake field values in.
           renderThumb: (pageIndex: number, dpr: number) => {
+            if (layout?.pages()) return renderToolThumb(layout, pageIndex, dpr);
             const core = registry.getStore().getState().core;
             const documentId = core.activeDocumentId ?? "";
             const page = core.documents[documentId]?.document?.pages[pageIndex];
@@ -71,6 +95,7 @@ export function ThumbnailAPIBridge() {
     documentReady,
     activeDocumentId,
     registerBridge,
+    layout,
   ]);
 
   return null;

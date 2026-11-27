@@ -1,5 +1,8 @@
 import { useMemo } from "react";
-import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import {
+  DisplayTransform,
+  type DisplayTransformData,
+} from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
   canResizeRun,
@@ -23,6 +26,7 @@ export interface SingleSelectionGeometry {
   display: DisplayTransformData;
   setX: (next: number) => void;
   setY: (next: number) => void;
+  moveDisplayed: (next: { left?: number; top?: number }) => void;
   setWidth?: (next: number) => void;
   /** Absent for text runs: their height follows the type, not a handle. */
   setHeight?: (next: number) => void;
@@ -40,16 +44,63 @@ export interface SelectionGeometry {
  * value for a mixed selection, so the panel shows a hint instead.
  */
 // The panel may draw a deferred snapshot, so setters read bounds from the store when they run.
+function liveRun(store: EditorStore, runId: string) {
+  for (const page of store.getState().pages) {
+    const run = page.runs.find((r) => r.id === runId);
+    if (run) return run;
+  }
+  return null;
+}
+
 function liveRunBounds(
   store: EditorStore,
   runId: string,
   fallback: PageRect,
 ): PageRect {
-  for (const page of store.getState().pages) {
-    const run = page.runs.find((r) => r.id === runId);
-    if (run) return run.bounds;
-  }
-  return fallback;
+  return liveRun(store, runId)?.bounds ?? fallback;
+}
+
+function shownRunBounds(run: { bounds: PageRect; wrapWidthPt?: number }) {
+  return run.wrapWidthPt
+    ? { ...run.bounds, width: run.wrapWidthPt }
+    : run.bounds;
+}
+
+export function displayedTopLeft(
+  display: DisplayTransformData,
+  bounds: PageRect,
+): { left: number; top: number } {
+  const transform = DisplayTransform.fromData(display);
+  const corners = [
+    [bounds.x, bounds.y],
+    [bounds.x + bounds.width, bounds.y],
+    [bounds.x, bounds.y + bounds.height],
+    [bounds.x + bounds.width, bounds.y + bounds.height],
+  ].map(([x, y]) => transform.apply(x, y));
+  return {
+    left: Math.min(...corners.map((c) => c.x)),
+    top: transform.displayHeight - Math.max(...corners.map((c) => c.y)),
+  };
+}
+
+function displayedMover(
+  display: DisplayTransformData,
+  liveBounds: () => PageRect,
+  setX: (next: number) => void,
+  setY: (next: number) => void,
+) {
+  return (next: { left?: number; top?: number }) => {
+    const bounds = liveBounds();
+    const transform = DisplayTransform.fromData(display);
+    const now = displayedTopLeft(display, bounds);
+    const from = transform.invert(now.left, transform.displayHeight - now.top);
+    const to = transform.invert(
+      next.left ?? now.left,
+      transform.displayHeight - (next.top ?? now.top),
+    );
+    if (Math.abs(to.x - from.x) > 1e-3) setX(bounds.x + to.x - from.x);
+    if (Math.abs(to.y - from.y) > 1e-3) setY(bounds.y + to.y - from.y);
+  };
 }
 
 function liveImage(
@@ -83,31 +134,40 @@ export function useSelectionGeometry(
         const run = page.runs.find((r) => r.id === runId);
         if (!run) continue;
         const pageIndex = page.pageIndex;
-        const bounds = run.wrapWidthPt
-          ? { ...run.bounds, width: run.wrapWidthPt }
-          : run.bounds;
+        const bounds = shownRunBounds(run);
+        const setX = (next: number) =>
+          store.dispatch(
+            new MoveTextRunCommand({
+              pageIndex,
+              runId,
+              dx: next - liveRunBounds(store, runId, bounds).x,
+              dy: 0,
+            }),
+          );
+        const setY = (next: number) =>
+          store.dispatch(
+            new MoveTextRunCommand({
+              pageIndex,
+              runId,
+              dx: 0,
+              dy: next - liveRunBounds(store, runId, bounds).y,
+            }),
+          );
         return {
           single: {
             bounds,
             display: page.display,
-            setX: (next) =>
-              store.dispatch(
-                new MoveTextRunCommand({
-                  pageIndex,
-                  runId,
-                  dx: next - liveRunBounds(store, runId, bounds).x,
-                  dy: 0,
-                }),
-              ),
-            setY: (next) =>
-              store.dispatch(
-                new MoveTextRunCommand({
-                  pageIndex,
-                  runId,
-                  dx: 0,
-                  dy: next - liveRunBounds(store, runId, bounds).y,
-                }),
-              ),
+            setX,
+            setY,
+            moveDisplayed: displayedMover(
+              page.display,
+              () => {
+                const live = liveRun(store, runId);
+                return live ? shownRunBounds(live) : bounds;
+              },
+              setX,
+              setY,
+            ),
             // Narrowing a run is exactly the wrap gesture, so it reuses the
             // same command the canvas resize handle drives.
             setWidth: canResizeRun(run)
@@ -143,12 +203,20 @@ export function useSelectionGeometry(
             }),
           );
         };
+        const setX = (next: number) => set({ x: next });
+        const setY = (next: number) => set({ y: next });
         return {
           single: {
             bounds,
             display: page.display,
-            setX: (next) => set({ x: next }),
-            setY: (next) => set({ y: next }),
+            setX,
+            setY,
+            moveDisplayed: displayedMover(
+              page.display,
+              () => visibleImageBounds(liveImage(store, imageId, img)),
+              setX,
+              setY,
+            ),
             setWidth: (next) => set({ width: Math.max(1, next) }),
             setHeight: (next) => set({ height: Math.max(1, next) }),
           },

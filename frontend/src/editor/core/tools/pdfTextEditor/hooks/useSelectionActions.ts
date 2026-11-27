@@ -412,7 +412,7 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const dispatchPerRun = useCallback(
-    (build: (run: SelectedRun) => Command | null, redraws = false) => {
+    (build: (run: TextRun) => Command | null, redraws = false) => {
       const targets: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
         targets.push({ page, run: run as TextRun });
@@ -828,7 +828,7 @@ export function useSelectionActions(store: EditorStore) {
             const live = liveRuns(store);
             return outlined.flatMap(({ fit, bold }) => {
               const run = live.get(fit.run.id);
-              if (!run || run.locked) return [];
+              if (!run || run !== fit.run || run.locked) return [];
               return [
                 new SetTextOutlineCommand({
                   pageIndex: run.pageIndex,
@@ -847,7 +847,7 @@ export function useSelectionActions(store: EditorStore) {
             const live = liveRuns(store);
             return slanted.flatMap(({ fit, oblique }) => {
               const run = live.get(fit.run.id);
-              if (!run || run.locked) return [];
+              if (!run || run !== fit.run || run.locked) return [];
               return [
                 new SetObliqueCommand({
                   pageIndex: run.pageIndex,
@@ -1054,8 +1054,8 @@ export function useSelectionActions(store: EditorStore) {
   }, [dispatchPerRun, store]);
 
   const setLineSpacing = useCallback(
-    (factor: number) => {
-      void dispatchPerRun(
+    (factor: number) =>
+      dispatchPerRun(
         (run) =>
           new SetLineSpacingCommand({
             pageIndex: run.pageIndex,
@@ -1063,8 +1063,7 @@ export function useSelectionActions(store: EditorStore) {
             factor,
           }),
         true,
-      );
-    },
+      ),
     [dispatchPerRun],
   );
 
@@ -1076,11 +1075,9 @@ export function useSelectionActions(store: EditorStore) {
       if (isFocusInContentEditable())
         (document.activeElement as HTMLElement).blur();
       const listed = dispatchPerRun((run) => {
-        const live = liveRuns(store).get(run.id);
         const doc = store.document;
-        if (!live) return null;
-        const nextText = toggledListText(live.text, softStartsOf(live), kind);
-        if (nextText === live.text) return null;
+        const nextText = toggledListText(run.text, softStartsOf(run), kind);
+        if (nextText === run.text) return null;
         const list = new CompositeCommand([
           new EditTextCommand({
             pageIndex: run.pageIndex,
@@ -1095,7 +1092,7 @@ export function useSelectionActions(store: EditorStore) {
               doc && mayBeList(nextText)
                 ? listIndentFor(
                     nextText,
-                    lineWidthIn(doc, doc.page(run.pageIndex), live),
+                    lineWidthIn(doc, doc.page(run.pageIndex), run),
                   )
                 : 0,
           }),

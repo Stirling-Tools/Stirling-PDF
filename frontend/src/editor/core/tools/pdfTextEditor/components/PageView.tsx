@@ -491,6 +491,7 @@ export const PageView = memo(function PageView({
         );
       }}
       onPointerCancel={() => setTextBoxDraft(null)}
+      onLostPointerCapture={() => setTextBoxDraft(null)}
       onClick={(e) => {
         if (drewTextBoxRef.current) {
           drewTextBoxRef.current = false;

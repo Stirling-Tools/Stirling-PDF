@@ -75,10 +75,14 @@ function collectFonts(
   }
 }
 
-function fontsOnPage(m: ResolverContext["module"], pagePtr: number): number[] {
+function fontsOnPage(
+  m: ResolverContext["module"],
+  pagePtr: number,
+  fresh = false,
+): number[] {
   const objects = m.FPDFPage_CountObjects(pagePtr);
   const cached = pageFonts.get(pagePtr);
-  if (cached && cached.objects === objects) return cached.fonts;
+  if (!fresh && cached && cached.objects === objects) return cached.fonts;
   const fonts = new Set<number>();
   collectFonts(
     m,
@@ -92,6 +96,33 @@ function fontsOnPage(m: ResolverContext["module"], pagePtr: number): number[] {
   return entry.fonts;
 }
 
+function siblingsDrawing(
+  ch: string,
+  likeFontPtr: number,
+  face: string,
+  ctx: ResolverContext,
+  fresh: boolean,
+): number[] {
+  return fontsOnPage(ctx.module, ctx.pagePtr, fresh).filter(
+    (font) =>
+      font !== likeFontPtr &&
+      faceOf(ctx.module, font) === face &&
+      drawsChar(font, ch, ctx),
+  );
+}
+
+function sameFaceSiblings(
+  ch: string,
+  likeFontPtr: number,
+  face: string,
+  ctx: ResolverContext,
+): number[] {
+  const cached = siblingsDrawing(ch, likeFontPtr, face, ctx, false);
+  return cached.length > 0
+    ? cached
+    : siblingsDrawing(ch, likeFontPtr, face, ctx, true);
+}
+
 export function sameFaceFontsForChar(
   ch: string,
   likeFontPtr: number,
@@ -101,14 +132,7 @@ export function sameFaceFontsForChar(
   const fonts = drawsChar(likeFontPtr, ch, ctx) ? [likeFontPtr] : [];
   const face = faceOf(ctx.module, likeFontPtr);
   if (face === null) return fonts;
-  for (const font of fontsOnPage(ctx.module, ctx.pagePtr))
-    if (
-      font !== likeFontPtr &&
-      faceOf(ctx.module, font) === face &&
-      drawsChar(font, ch, ctx)
-    )
-      fonts.push(font);
-  return fonts;
+  return [...fonts, ...sameFaceSiblings(ch, likeFontPtr, face, ctx)];
 }
 
 export function sameFaceFontForChar(
@@ -120,11 +144,7 @@ export function sameFaceFontForChar(
   if (drawsChar(likeFontPtr, ch, ctx)) return likeFontPtr;
   const face = faceOf(ctx.module, likeFontPtr);
   if (face === null) return null;
-  for (const font of fontsOnPage(ctx.module, ctx.pagePtr)) {
-    if (font === likeFontPtr || faceOf(ctx.module, font) !== face) continue;
-    if (drawsChar(font, ch, ctx)) return font;
-  }
-  return null;
+  return sameFaceSiblings(ch, likeFontPtr, face, ctx)[0] ?? null;
 }
 
 export function sameFaceFontsFor(

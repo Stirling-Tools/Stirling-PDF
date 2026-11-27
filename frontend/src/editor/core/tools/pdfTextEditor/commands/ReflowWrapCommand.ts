@@ -6,8 +6,6 @@ import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import type { PageRect } from "@editor/tools/pdfTextEditor/types";
-import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -28,6 +26,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
+  landsOnUnmoved,
   type PushRecord,
   pushRecords,
   runsPulledBack,
@@ -391,39 +390,12 @@ export class ReflowWrapCommand implements Command {
 
   // What the added lines now cover that was clear of the run before and did not move out of their way.
   private landsOnUnmoved(page: Page, run: TextRun): boolean {
-    const prev = this.prev;
-    if (!prev) return false;
-    const added = {
-      x: run.bounds.x,
-      y: run.bounds.y,
-      width: run.bounds.width,
-      height: prev.bounds.y - run.bounds.y,
-    };
-    if (added.height <= 0) return false;
-    const covers = (r: PageRect) =>
-      overlaps(r, added) && !overlaps(r, prev.bounds);
-    // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
-    const slack = run.fontSize * TEXT_OVERLAP_EM;
-    const textBand = {
-      ...added,
-      y: added.y + slack,
-      height: added.height - slack,
-    };
-    const moved = new Set(this.pushes?.map((p) => p.runId) ?? []);
-    const textHit = page.runs.some(
-      (r) =>
-        r !== run &&
-        !moved.has(r.id) &&
-        textBand.height > 0 &&
-        overlaps(r.bounds, textBand) &&
-        !overlaps(r.bounds, prev.bounds),
-    );
-    return (
-      textHit ||
-      page.rules.some(covers) ||
-      page.fills.some(covers) ||
-      page.shapes.some((s) => covers(s.bounds)) ||
-      page.images.some((i) => covers(i.bounds))
+    if (!this.prev) return false;
+    return landsOnUnmoved(
+      page,
+      run,
+      this.prev.bounds,
+      this.pushes?.map((p) => p.runId) ?? [],
     );
   }
 
@@ -465,8 +437,10 @@ export class ReflowWrapCommand implements Command {
       const width = lineWidthIn(doc, page, run);
       const fits = (line: string) =>
         line === "" || width(line) <= maxWidth + 0.5;
+      const joinable =
+        this.explicit || this.pullUp || this.relayout ? softStartsOf(run) : [];
       const wrapped = wrapEachLine(
-        joinSoftLines(run.text, softStartsOf(run), fits),
+        joinSoftLines(run.text, joinable, fits),
         fits,
       );
       if (wrapped === run.text && !this.explicit && !this.relayout) return;
@@ -589,7 +563,6 @@ export function layoutBefore(run: TextRun): { width: number; lines: number } {
   return { width: run.bounds.width, lines: lineCount(run.text) };
 }
 
-const TEXT_OVERLAP_EM = 0.25;
 const BOX_ASCENT_EM = 0.95;
 
 function lineCount(text: string): number {

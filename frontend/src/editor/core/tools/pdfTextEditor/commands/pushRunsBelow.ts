@@ -3,6 +3,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 
 // Lines set tighter than their own boxes already overlap the line above a little; that much is the document's layout, not a collision.
 const TOUCH_TOLERANCE_EM = 0.25;
@@ -12,6 +13,7 @@ const BOX_ESTIMATE_EM = 0.5;
 const CLEARANCE_EM = 0.1;
 const AMONG_LINES_SHARE = 0.5;
 const ATTACHED_EM = 0.6;
+const TEXT_OVERLAP_EM = 0.25;
 
 const top = (run: TextRun) => run.bounds.y + run.bounds.height;
 
@@ -96,6 +98,45 @@ export function runsPushedBelow(
   const runIds = withRunsLandedOn(page, edited, pushed, drop);
   if (!runIds || drawnWith(page, edited, runIds)) return none;
   return { runIds, dy: -drop };
+}
+
+export function landsOnUnmoved(
+  page: Page,
+  edited: TextRun,
+  before: PageRect,
+  movedRunIds: Iterable<string>,
+): boolean {
+  const added = {
+    x: edited.bounds.x,
+    y: edited.bounds.y,
+    width: edited.bounds.width,
+    height: before.y - edited.bounds.y,
+  };
+  if (added.height <= 0) return false;
+  const covers = (r: PageRect) => overlaps(r, added) && !overlaps(r, before);
+  // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
+  const slack = edited.fontSize * TEXT_OVERLAP_EM;
+  const textBand = {
+    ...added,
+    y: added.y + slack,
+    height: added.height - slack,
+  };
+  const moved = new Set(movedRunIds);
+  const textHit = page.runs.some(
+    (r) =>
+      r !== edited &&
+      !moved.has(r.id) &&
+      textBand.height > 0 &&
+      overlaps(r.bounds, textBand) &&
+      !overlaps(r.bounds, before),
+  );
+  return (
+    textHit ||
+    page.rules.some(covers) ||
+    page.fills.some(covers) ||
+    page.shapes.some((s) => covers(s.bounds)) ||
+    page.images.some((i) => covers(i.bounds))
+  );
 }
 
 function drawnWith(page: Page, edited: TextRun, runIds: string[]): boolean {

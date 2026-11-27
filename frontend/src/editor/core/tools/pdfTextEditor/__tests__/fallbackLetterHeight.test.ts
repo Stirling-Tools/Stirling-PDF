@@ -152,5 +152,13 @@ test("words typed across the gap between two drawn pieces keep the space between
 
   const drawn = letterHeights(doc, run.id).map((h) => h.text);
   expect(drawn).toEqual(expect.arrayContaining(["Mixwordz", "sev"]));
-  expect(drawn.join(" ")).not.toContain("Mixwordzsev");
+
+  const saved = await EditorDocument.open(
+    new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+  );
+  opened.push(saved);
+  PdfiumTextReader.populate(saved, saved.page(0));
+  expect(
+    saved.page(0).runs.find((r) => r.text.startsWith("Editing"))?.text,
+  ).toContain("Mixwordz sev QQ eral");
 });

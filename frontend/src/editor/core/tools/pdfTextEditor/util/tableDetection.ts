@@ -936,16 +936,22 @@ function buildTable(
 }
 
 function headsSections(block: Row[], colEdges: number[]): boolean {
+  const body = block.slice(1);
   const bodySizes = new Map<number, number[]>();
-  block.slice(1).forEach((row) => {
+  for (const row of body) {
     for (const c of row.cands) {
       const col = edgeIndex(colEdges, c.cx);
       bodySizes.set(col, [...(bodySizes.get(col) ?? []), c.run.fontSize]);
     }
-  });
-  return [...bodySizes.values()].some((sizes) => {
-    const usual = median(sizes);
-    return sizes.some((size) => size >= usual * SECTION_HEADING_SCALE);
+  }
+  const usual = new Map(
+    [...bodySizes].map(([col, sizes]) => [col, median(sizes)]),
+  );
+  return body.some((row) => {
+    if (row.cands.length !== 1) return false;
+    const [c] = row.cands;
+    const size = usual.get(edgeIndex(colEdges, c.cx)) ?? c.run.fontSize;
+    return c.run.fontSize >= size * SECTION_HEADING_SCALE;
   });
 }
 

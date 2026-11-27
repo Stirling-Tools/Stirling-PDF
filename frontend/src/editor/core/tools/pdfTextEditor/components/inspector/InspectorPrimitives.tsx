@@ -115,7 +115,11 @@ const DECIMALS: Record<LengthUnit, number> = { mm: 1, in: 2 };
 const INCH_REGIONS = new Set(["US", "LR", "MM"]);
 
 export function lengthUnitFor(locale: string): LengthUnit {
-  const region = locale.split(/[-_]/)[1]?.toUpperCase();
+  const region = locale
+    .split(/[-_]/)
+    .slice(1)
+    .find((part) => /^([a-z]{2}|\d{3})$/i.test(part))
+    ?.toUpperCase();
   return region && INCH_REGIONS.has(region) ? "in" : "mm";
 }
 
