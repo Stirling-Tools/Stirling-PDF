@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import type { FileId } from "@editor/types/file";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import type {
@@ -21,11 +20,7 @@ export function useReviewMarkedTaggedBridge(
 ): void {
   const doc = store.document;
   const ready =
-    ACCESSIBILITY_EDITING &&
-    reviewing &&
-    !state.loading &&
-    state.hasDocument &&
-    doc !== null;
+    reviewing && !state.loading && state.hasDocument && doc !== null;
   const editable = ready && doc.canSetMarkedTagged();
   const set = useCallback(
     (marked: boolean) => {

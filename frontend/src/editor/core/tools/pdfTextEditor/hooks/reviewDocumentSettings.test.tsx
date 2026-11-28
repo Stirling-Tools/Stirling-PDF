@@ -32,10 +32,6 @@ import {
 // The report's document-wide settings land in the review as unsaved edits: saving
 // them at once would also save every tag edit still pending, past Discard's reach.
 
-vi.mock("@editor/constants/featureFlags", () => ({
-  ACCESSIBILITY_EDITING: true,
-}));
-
 const FILE_ID = "file-1" as FileId;
 
 /** One page, with a structure tree but not flagged as tagged, in English. */
