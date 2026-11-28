@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useSignatureFieldPicker } from "@editor/contexts/SignatureFieldPickerContext";
 import { isStirlingFile } from "@editor/types/fileContext";
 import "@editor/components/viewer/SignatureFieldOverlay.css";
+import { UprightStampImage } from "@editor/components/viewer/UprightStampImage";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
@@ -271,10 +272,11 @@ function SignatureFieldOverlayInner({
               }}
               {...pickProps}
             >
-              <img
+              <UprightStampImage
                 src={pick.preview}
-                alt=""
-                style={{ width: "100%", height: "100%", display: "block" }}
+                width={width}
+                height={height}
+                turns={pick.previewRotation}
               />
             </div>
           );

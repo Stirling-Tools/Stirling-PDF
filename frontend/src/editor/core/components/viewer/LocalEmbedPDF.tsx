@@ -716,6 +716,11 @@ function PageLayers({
   readOnlySignaturePreviews,
 }: PageGeometry & PageLayerOptions) {
   const { isAnnotationMode } = useViewer();
+  const previewDocument = useDocumentState(documentId);
+  const previewPageRotation = normalizePageRotation(
+    previewDocument?.document?.pages?.[pageIndex]?.rotation,
+  );
+  const previewViewRotation = normalizePageRotation(previewDocument?.rotation);
   const [covered, setCovered] = useState(false);
   const toolCovers = !!PageLayer && covered;
   const overlays = (
@@ -778,6 +783,8 @@ function PageLayers({
           pageIndex={pageIndex}
           pageWidth={width}
           pageHeight={height}
+          pageRotation={previewPageRotation}
+          viewRotation={previewViewRotation}
           previews={readOnlySignaturePreviews}
           readOnly
           placementMode={false}
@@ -790,6 +797,8 @@ function PageLayers({
           pageIndex={pageIndex}
           pageWidth={width}
           pageHeight={height}
+          pageRotation={previewPageRotation}
+          viewRotation={previewViewRotation}
           {...signatureOverlay}
         />
       )}

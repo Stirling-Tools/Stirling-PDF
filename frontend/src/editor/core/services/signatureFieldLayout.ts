@@ -24,6 +24,18 @@ export interface EmptySignatureField {
 export interface SignatureLayout {
   emptyFields: EmptySignatureField[];
   cropBoxes: PdfBox[];
+  /** Each page's /Rotate as clockwise quarter turns (0-3). */
+  rotations: number[];
+}
+
+/** A box's size as shown on a page turned by `turns` quarter turns; swapping is its own inverse. */
+export function shownSize<T extends { width: number; height: number }>(
+  size: T,
+  turns: number,
+): { width: number; height: number } {
+  return turns % 2 === 1
+    ? { width: size.height, height: size.width }
+    : { width: size.width, height: size.height };
 }
 
 /**
@@ -41,6 +53,9 @@ export async function readSignatureLayout(
   });
   const pages = doc.getPages();
   const cropBoxes = pages.map((page) => page.getCropBox());
+  const rotations = pages.map(
+    (page) => ((Math.round(page.getRotation().angle / 90) % 4) + 4) % 4,
+  );
 
   const pageOfAnnotation = new Map<PDFRef, number>();
   pages.forEach((page, index) => {
@@ -84,7 +99,7 @@ export async function readSignatureLayout(
       b.box.y + b.box.height - (a.box.y + a.box.height) ||
       a.box.x - b.box.x,
   );
-  return { emptyFields, cropBoxes };
+  return { emptyFields, cropBoxes, rotations };
 }
 
 function normalised(rect: PdfBox): PdfBox {

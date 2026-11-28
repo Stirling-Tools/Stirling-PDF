@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  degrees,
   PDFDocument,
   PDFName,
   PDFPage,
@@ -8,6 +9,7 @@ import {
 } from "@cantoo/pdf-lib";
 import {
   readSignatureLayout,
+  shownSize,
   viewerRectToPdfBox,
 } from "@editor/services/signatureFieldLayout";
 
@@ -166,5 +168,25 @@ describe("viewerRectToPdfBox", () => {
         { x: 20, y: 30, width: 500, height: 600 },
       ),
     ).toEqual({ x: 60, y: 480, width: 200, height: 50 });
+  });
+});
+
+describe("page rotation", () => {
+  test("reads each page's /Rotate as quarter turns", async () => {
+    const doc = await PDFDocument.create();
+    for (const angle of [0, 90, 180, 270, -90]) {
+      doc.addPage([612, 792]).setRotation(degrees(angle));
+    }
+    const layout = await readSignatureLayout(await doc.save());
+    expect(layout.rotations).toEqual([0, 1, 2, 3, 3]);
+  });
+
+  test.each([
+    [0, { width: 200, height: 50 }],
+    [1, { width: 50, height: 200 }],
+    [2, { width: 200, height: 50 }],
+    [3, { width: 50, height: 200 }],
+  ])("swaps a box's size on quarter turns (%i)", (turns, expected) => {
+    expect(shownSize({ width: 200, height: 50 }, turns)).toEqual(expected);
   });
 });

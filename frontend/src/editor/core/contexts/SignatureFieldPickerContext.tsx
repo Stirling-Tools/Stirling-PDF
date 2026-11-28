@@ -5,6 +5,8 @@ export interface SignatureFieldPick {
   fieldNames: ReadonlySet<string>;
   selected: string | null;
   preview: string | null;
+  /** The selected field's page /Rotate in quarter turns; `preview` is drawn upright for it. */
+  previewRotation: number;
   flash: number;
   choose: (fieldName: string) => void;
 }
@@ -29,8 +31,11 @@ export interface StampGuide {
   rect: StampGuideRect | null;
   /** Each page's crop box size in points, indexed by page. */
   pageSizes: { width: number; height: number }[];
+  /** Each page's /Rotate in quarter turns; the stamp is drawn upright as the page is shown. */
+  pageRotations: number[];
+  /** As shown on the page; swapped into page space on quarter-turned pages. */
   defaultSize: { width: number; height: number };
-  /** The stamp drawn at `rect`'s size, or at `defaultSize` while placing. */
+  /** The stamp drawn at `rect`'s shown size, or at `defaultSize` while placing. */
   preview: string | null;
   onChange: (pageIndex: number, rect: StampGuideRect) => void;
 }

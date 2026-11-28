@@ -60,6 +60,14 @@ interface SignatureAnnotation {
   data?: unknown;
   customData?: unknown;
   asset?: unknown;
+  /** EmbedPDF's clockwise rotation in degrees; Sign stamps are counter-rotated to stand upright. */
+  rotation?: number;
+}
+
+/** EmbedPDF's clockwise degrees as counter-clockwise quarter turns in PDF space; 0 if not a quarter. */
+function counterClockwiseTurns(rotation: number | undefined): number {
+  if (!rotation || rotation % 90 !== 0) return 0;
+  return (((-rotation / 90) % 4) + 4) % 4;
 }
 
 interface SignatureFlatteningOptions {
@@ -318,11 +326,13 @@ export async function embedSignatureImages(
           let imageDataUrl = getAnnotationImageData(annotation, getImageData);
           if (!imageDataUrl) throw new Error("Signature image is unavailable");
 
+          const turns = counterClockwiseTurns(annotation.rotation);
+          const quarterTurn = turns % 2 === 1;
           if (imageDataUrl.startsWith("data:image/svg+xml")) {
             const pngBytes = await rasteriseSvgToPng(
               imageDataUrl,
-              width * 2,
-              height * 2,
+              (quarterTurn ? height : width) * 2,
+              (quarterTurn ? width : height) * 2,
             );
             if (!pngBytes) throw new Error("Could not render signature image");
             imageDataUrl = `data:image/png;base64,${uint8ArrayToBase64(pngBytes)}`;
@@ -343,6 +353,7 @@ export async function embedSignatureImages(
             pdfY,
             width,
             height,
+            turns,
           );
           if (!appended) throw new Error("Could not embed signature image");
         }
@@ -412,6 +423,7 @@ function appendStampAnnotation(
   pdfY: number,
   width: number,
   height: number,
+  turns: number,
 ): boolean {
   const annotationIndex = m.FPDFPage_GetAnnotCount(pagePtr);
   const annotPtr = m.FPDFPage_CreateAnnot(pagePtr, FPDF_ANNOT_STAMP);
@@ -441,6 +453,11 @@ function appendStampAnnotation(
         height,
       ) ?? 0;
     if (!imageObjPtr) return false;
+    if (
+      turns &&
+      !turnImageInBox(m, imageObjPtr, pdfX, pdfY, width, height, turns)
+    )
+      return false;
 
     if (!m.FPDFAnnot_AppendObject(annotPtr, imageObjPtr)) return false;
     imageObjPtr = 0; // The annotation owns the object after a successful append.
@@ -456,6 +473,32 @@ function appendStampAnnotation(
     if (imageObjPtr) m.FPDFPageObj_Destroy(imageObjPtr);
     m.FPDFPage_CloseAnnot(annotPtr);
     if (!appended) m.FPDFPage_RemoveAnnot(pagePtr, annotationIndex);
+  }
+}
+
+/** Fills the box with the image turned `turns` quarter turns counter-clockwise, as EmbedPDF showed it. */
+function turnImageInBox(
+  m: Awaited<ReturnType<typeof getPdfiumModule>>,
+  imageObjPtr: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  turns: number,
+): boolean {
+  const matrices: Record<number, number[]> = {
+    1: [0, height, -width, 0, x + width, y],
+    2: [-width, 0, 0, -height, x + width, y + height],
+    3: [0, -height, width, 0, x, y + height],
+  };
+  const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+  try {
+    matrices[turns].forEach((value, index) =>
+      m.pdfium.setValue(matrixPtr + index * 4, value, "float"),
+    );
+    return m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr);
+  } finally {
+    m.pdfium.wasmExports.free(matrixPtr);
   }
 }
 
