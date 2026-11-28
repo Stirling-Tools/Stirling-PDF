@@ -563,6 +563,47 @@
   gap: 0.5rem;
 }
 
+.runOnFolder {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.runOnFolder:hover {
+  background: var(--c-surface-raised);
+  border-color: var(--c-border-strong);
+}
+
+.runOnFolder:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.runOnFolderText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.runOnFolderTitle {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.runOnFolderHint {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
 .stepsHeader {
   display: flex;
   align-items: center;

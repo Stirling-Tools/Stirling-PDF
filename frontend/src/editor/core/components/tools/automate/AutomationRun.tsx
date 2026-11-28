@@ -41,6 +41,8 @@ interface AutomationRunProps {
   editAction: { label: string; icon: IconName; onClick: () => void };
   /** Told when a run starts and when it settles, including the wait before it begins. */
   onRunningChange?: (running: boolean) => void;
+  /** Offered after a successful run; omitted where the Processor cannot take this automation. */
+  onRunOnFolder?: () => void;
   onBack: () => void;
   onDone: () => void;
   /** Opens the builder on a step, offered when that step fails. */
@@ -73,6 +75,7 @@ export default function AutomationRun({
   automateOperation,
   actions,
   editAction,
+  onRunOnFolder,
   onRunningChange,
   onBack,
   onDone,
@@ -481,6 +484,30 @@ export default function AutomationRun({
                 {t("automate.run.done", "Done")}
               </Button>
             </div>
+            {onRunOnFolder && (
+              <button
+                type="button"
+                className={classes.runOnFolder}
+                onClick={onRunOnFolder}
+              >
+                <Icon name="folder-input" size={16} />
+                <span className={classes.runOnFolderText}>
+                  <span className={classes.runOnFolderTitle}>
+                    {t(
+                      "automate.run.runOnFolderTitle",
+                      "Run this on every new file",
+                    )}
+                  </span>
+                  <span className={classes.runOnFolderHint}>
+                    {t(
+                      "automate.run.runOnFolderHint",
+                      "Make it a pipeline in the PDF Processor",
+                    )}
+                  </span>
+                </span>
+                <Icon name="arrow-right" size={14} />
+              </button>
+            )}
           </div>
           <section className={classes.section}>
             <h3 className={classes.sectionLabel} data-flush>

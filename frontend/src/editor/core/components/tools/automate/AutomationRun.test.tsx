@@ -368,4 +368,24 @@ describe("AutomationRun", () => {
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(handlers.onDone).toHaveBeenCalledTimes(1);
   });
+
+  test("after a run, offers running it on every new file only where the Processor can take it", () => {
+    files.selected = [new File(["a"], "a.pdf")];
+    const onRunOnFolder = vi.fn();
+    renderRun(operation({ files: [new File(["out"], "out.pdf")] }), {
+      onRunOnFolder,
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Run this on every new file/ }),
+    );
+    expect(onRunOnFolder).toHaveBeenCalledTimes(1);
+  });
+
+  test("no folder prompt without the Processor", () => {
+    files.selected = [new File(["a"], "a.pdf")];
+    renderRun(operation({ files: [new File(["out"], "out.pdf")] }));
+
+    expect(screen.queryByText("Run this on every new file")).toBeNull();
+  });
 });
