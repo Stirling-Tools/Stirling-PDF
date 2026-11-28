@@ -34,16 +34,6 @@
   border-radius: 999px;
 }
 
-.review-card__status--todo {
-  background: var(--c-warning-subtle);
-  color: var(--c-warning-solid, var(--c-warning));
-}
-
-.review-card__status--done {
-  background: var(--c-success-subtle);
-  color: var(--c-success-solid, var(--c-success));
-}
-
 .review-card__count {
   flex: 1;
   font-size: 12px;
@@ -140,11 +130,18 @@
 
 .review-stepper__label {
   flex: 1;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 500;
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
+}
+
+.review-stepper[data-done="true"] .review-stepper__label {
+  color: var(--c-success);
 }
 
 .review-card__hint {

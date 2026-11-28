@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@editor/ui/Checkbox";
 import { Chip } from "@editor/ui/Chip";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ProgressBar } from "@editor/ui/ProgressBar";
 import { SectionHeader } from "@editor/ui/SectionHeader";
-import { Tooltip } from "@editor/components/shared/Tooltip";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 import type { AccessibilityProgress } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
@@ -20,11 +18,6 @@ export interface ReviewSummaryProps {
   review: AccessibilityReview | null;
   /** Read pages with content left untagged. */
   untaggedPages: number;
-  /** Whether the file declares itself tagged; null when that can't be changed. */
-  markedTagged: boolean | null;
-  onSetMarkedTagged: (marked: boolean) => void;
-  /** Whether the saved file will hold any tags. */
-  hasTags: boolean;
   /** Null when there is nothing to check. */
   headingOutline: HeadingOutline | null;
   onSelectHeading: (index: number) => void;
@@ -35,9 +28,6 @@ export function ReviewSummary({
   progress,
   review,
   untaggedPages,
-  markedTagged,
-  onSetMarkedTagged,
-  hasTags,
   headingOutline,
   onSelectHeading,
 }: ReviewSummaryProps) {
@@ -79,20 +69,14 @@ export function ReviewSummary({
               {
                 icon: "file-text",
                 label: t(
-                  "pdfTextEditor.inspector.accessibility.untaggedPages",
-                  "Pages to tag",
+                  "pdfTextEditor.review.summary.untaggedPages",
+                  "Pages with untagged content",
                 ),
                 count: untaggedPages,
               },
             ]}
           />
         )}
-        <MarkedTaggedCheckbox
-          marked={markedTagged}
-          onChange={onSetMarkedTagged}
-          untaggedPages={untaggedPages}
-          hasTags={hasTags}
-        />
       </section>
       {headingOutline && (
         <section className="review-summary__section">
@@ -192,78 +176,6 @@ function TaggingProgress({
         {!complete &&
           ` - ${t("pdfTextEditor.review.counting", "still counting")}`}
       </span>
-    </div>
-  );
-}
-
-/**
- * The file's claim to be tagged, which readers that honour it read the tags
- * by. Separate from the tags so a half-tagged file does not make the rest of
- * its content unreadable. Absent when the file's flag can't be changed.
- */
-function MarkedTaggedCheckbox({
-  marked,
-  onChange,
-  untaggedPages,
-  hasTags,
-}: {
-  marked: boolean | null;
-  onChange: (marked: boolean) => void;
-  untaggedPages: number;
-  hasTags: boolean;
-}) {
-  const { t } = useTranslation();
-  if (marked === null) return null;
-  const hint = t(
-    "pdfTextEditor.inspector.accessibility.markedTaggedHint",
-    "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged.",
-  );
-  const warning = marked
-    ? untaggedPages > 0 &&
-      t(
-        "pdfTextEditor.inspector.accessibility.markedWithUntagged",
-        "Some content has no tags, so screen readers may skip it.",
-      )
-    : hasTags &&
-      t(
-        "pdfTextEditor.inspector.accessibility.unmarkedWithTags",
-        "Some PDF viewers will use the tags anyway and may skip content without them.",
-      );
-  return (
-    <div className="review-summary__marked" data-fix-target="markedTagged">
-      <Checkbox
-        checked={marked}
-        onChange={(event) => onChange(event.currentTarget.checked)}
-        label={
-          <Tooltip
-            content={hint}
-            position="top"
-            sidebarTooltip={false}
-            offset={6}
-            arrow
-            portalTarget={document.body}
-          >
-            <span data-testid="pdf-editor-document-accessibility-marked-label">
-              {t(
-                "pdfTextEditor.inspector.accessibility.markedTagged",
-                "Document is fully tagged",
-              )}
-            </span>
-          </Tooltip>
-        }
-        // The tooltip opens on hover only; the input carries the hint for keyboard and screen readers.
-        aria-description={hint}
-        data-testid="pdf-editor-document-accessibility-marked"
-      />
-      {warning && (
-        <p
-          className="review-summary__warning"
-          data-testid="pdf-editor-document-accessibility-marked-warning"
-        >
-          <Icon name="triangle-alert" size={14} />
-          <span>{warning}</span>
-        </p>
-      )}
     </div>
   );
 }

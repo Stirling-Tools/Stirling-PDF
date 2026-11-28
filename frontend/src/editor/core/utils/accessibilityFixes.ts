@@ -15,7 +15,7 @@ export type AccessibilityFixTarget =
   | "heading"
   /** The first untagged link, with Tag link focused; tagging also writes its description. */
   | "link"
-  /** The "Document is fully tagged" checkbox. */
+  /** Flags the document as tagged, an edit that waits for Save like a tag; nothing to go to. */
   | "markedTagged";
 
 export const PAGE_SCOPED_TARGETS: ReadonlySet<AccessibilityFixTarget> = new Set(
@@ -34,6 +34,12 @@ const FIX_TARGETS: Record<string, AccessibilityFixTarget> = {
   linkNoDescription: "link",
   notMarkedTagged: "markedTagged",
 };
+
+export function hasUntaggedContent(
+  issues: readonly AccessibilityIssue[],
+): boolean {
+  return issues.some((issue) => fixTargetFor(issue) === "untagged");
+}
 
 /** Where the editor fixes `issue`; null when it cannot. */
 export function fixTargetFor(

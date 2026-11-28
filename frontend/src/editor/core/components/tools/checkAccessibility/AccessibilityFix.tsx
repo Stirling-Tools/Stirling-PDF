@@ -1,10 +1,14 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useId } from "react";
 import { Tooltip } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
+import {
+  MarkedTaggedCaution,
+  useMarkedTagged,
+} from "@editor/components/tools/checkAccessibility/MarkedTaggedFix";
 import {
   reviewMode,
   useReviewMode,
@@ -50,8 +54,7 @@ export function FixInDocumentButton({
     return (
       <Button
         className={className}
-        variant="primary"
-        accent="danger"
+        variant="secondary"
         leftSection={<Icon name="eye-off" size={16} />}
         onClick={() => reviewMode.requestClose()}
         data-testid="a11y-pause-fixing"
@@ -122,24 +125,48 @@ export function TagEverythingButton({
   );
 }
 
+/**
+ * Whether the report shown still finds untagged content. Readers that honour the
+ * tagged flag read only the tags, so the flag's fix says what it would hide.
+ */
+export const UntaggedContentContext = createContext(false);
+
 /** The editor's fix for `issue`; nothing when the editor cannot fix it. */
 export function IssueFixButton({ issue }: { issue: AccessibilityIssue }) {
   const { t } = useTranslation();
   const fix = useContext(AccessibilityFixContext);
+  const untaggedLeft = useContext(UntaggedContentContext);
+  const markedTagged = useMarkedTagged();
+  const cautionId = useId();
   const target = fixTargetFor(issue);
   if (!fix || !target) return null;
   const page = PAGE_SCOPED_TARGETS.has(target) ? issue.pages?.[0] : undefined;
-  return (
+  const flag = target === "markedTagged" ? markedTagged : null;
+  const caution = target === "markedTagged" && untaggedLeft;
+  const button = (
     <Button
       size="sm"
       variant="secondary"
-      leftSection={<Icon name="locate-fixed" size={14} />}
-      onClick={() => fix(target, page)}
+      leftSection={
+        <Icon name={flag?.marked ? "check" : "locate-fixed"} size={14} />
+      }
+      disabled={flag ? flag.marked || !flag.editable : false}
+      onClick={() => (flag ? flag.set(true) : fix(target, page))}
+      aria-describedby={caution ? cautionId : undefined}
       data-testid="a11y-fix-issue"
       data-fix={target}
     >
-      {fixLabel(t, target, page)}
+      {flag?.marked
+        ? t("checkAccessibility.fix.markedTaggedDone", "Marked as tagged")
+        : fixLabel(t, target, page)}
     </Button>
+  );
+  if (!caution) return button;
+  return (
+    <div className="a11y-issue__fix">
+      {button}
+      <MarkedTaggedCaution id={cautionId} testId="a11y-fix-caution" />
+    </div>
   );
 }
 

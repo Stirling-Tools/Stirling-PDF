@@ -21,6 +21,7 @@ interface EditorWindow {
     document: {
       structure: (pageIndex: number) => {
         alt: (mcid: number) => string | null;
+        describableType: (mcid: number) => string | null;
         decorative: (mcid: number) => boolean;
         links: () => { annotation: number; holder: string | null }[];
         linkContents: (annotation: number) => string | null;
@@ -131,6 +132,44 @@ test.describe("PDF accessibility review", () => {
     expect(alt).toBe("Revenue by region, third quarter");
   });
 
+  test("tags an image of an equation as a Formula, keeping its description", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const image = await page.evaluate(FIRST_IMAGE);
+    await page.getByTestId(`pdf-editor-image-${image.id}`).click();
+    const figure = card.getByTestId("pdf-editor-quick-tag-image-type-Figure");
+    const formula = card.getByTestId("pdf-editor-quick-tag-image-type-Formula");
+    await expect(figure).toHaveAttribute("aria-pressed", "true");
+    // The card follows the image while the page settles, so a press can land
+    // beside the chip; pressing Formula again is a no-op.
+    await expect(async () => {
+      await formula.click();
+      await expect(formula).toHaveAttribute("aria-pressed", "true", {
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      card.getByRole("textbox", { name: "Read aloud as" }),
+    ).toHaveValue("Bar chart of revenue by region");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (mcid) =>
+            (window as unknown as EditorWindow).__editor_store.document
+              .structure(0)
+              .describableType(mcid),
+          image.mcid!,
+        ),
+      )
+      .toBe("Formula");
+  });
+
   test("shows a failed open's error while the editor runs hidden", async ({
     page,
   }) => {
@@ -223,12 +262,15 @@ test.describe("PDF accessibility review", () => {
     await page.getByTestId(`pdf-editor-run-${runId}`).click();
     const formula = card.getByRole("button", { name: /^Formula/ });
     await expect(formula).toHaveAttribute("aria-pressed", "false");
-    await formula.click();
-    await expect(formula).toHaveAttribute("aria-pressed", "true");
-    await expect(card.getByText("Needs attention")).toBeVisible();
-    const description = card.getByRole("textbox", {
-      name: "How is this formula read aloud?",
-    });
+    // The card follows the selected text while the page settles, so a press can
+    // land beside the chip; tagging it Formula again is a no-op.
+    await expect(async () => {
+      await formula.click();
+      await expect(formula).toHaveAttribute("aria-pressed", "true", {
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 20_000 });
+    const description = card.getByRole("textbox", { name: "Read aloud as" });
     await description.fill("a is the rate");
     await card.getByRole("button", { name: "Save description" }).click();
 
@@ -241,6 +283,111 @@ test.describe("PDF accessibility review", () => {
         ),
       )
       .toBe("a is the rate");
+  });
+
+  test("sets the language of a selected block from the card", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const [first, second] = await page.evaluate(() =>
+      (window as unknown as EditorWindow).__editor_store.state.pages[0].runs
+        .filter((run) => run.text.trim().length >= 8)
+        .slice(0, 2)
+        .map((run) => run.id),
+    );
+    const run = page.getByTestId(`pdf-editor-run-${first}`);
+    const picker = card
+      .getByTestId("pdf-editor-quick-tag-block-language")
+      .getByRole("textbox");
+    await expect(async () => {
+      await run.click({ timeout: 2_000 });
+      await expect(picker).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(
+      card.getByTestId("pdf-editor-quick-tag-selected-language"),
+    ).toHaveCount(0);
+
+    await expect(async () => {
+      await run.click({ timeout: 2_000 });
+      await picker.click({ timeout: 2_000 });
+      await picker.fill("fr-FR");
+      await page
+        .getByRole("option", { name: /\(fr-FR\)$/ })
+        .click({ timeout: 2_000 });
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    // Another block, then back: the language is the block's own, not the picker's.
+    await expect(async () => {
+      await page
+        .getByTestId(`pdf-editor-run-${second}`)
+        .click({ timeout: 2_000 });
+      await expect(picker).not.toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+      await run.click({ timeout: 2_000 });
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+  });
+
+  test("sets the language of a few words inside a block from the card", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    const card = page.getByTestId("pdf-editor-quick-tag");
+    await expect(card).toBeVisible({ timeout: 15_000 });
+
+    const runId = await page.evaluate(
+      () =>
+        (
+          window as unknown as EditorWindow
+        ).__editor_store.state.pages[0].runs.find(
+          (run) => run.text.trim().length >= 8,
+        )!.id,
+    );
+    const run = page.getByTestId(`pdf-editor-run-${runId}`);
+    await run.click();
+    const selectWords = () =>
+      run.evaluate((el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        while (node && (node.textContent ?? "").trim().length < 4) {
+          node = walker.nextNode();
+        }
+        if (!node) throw new Error("no text in the run");
+        const start = (node.textContent ?? "").search(/\S/);
+        window.getSelection()!.setBaseAndExtent(node, start, node, start + 4);
+      });
+    const picker = card
+      .getByTestId("pdf-editor-quick-tag-selected-language")
+      .getByRole("textbox");
+    // The words are read-only in the review, but still selectable.
+    await expect(async () => {
+      await selectWords();
+      await expect(picker).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(picker).toHaveValue("");
+
+    // The card follows the page while it settles, so a pick can land as it
+    // redraws; picking the same language again is harmless.
+    await expect(async () => {
+      await selectWords();
+      await picker.click({ timeout: 2_000 });
+      await picker.fill("fr-FR");
+      await page
+        .getByRole("option", { name: /\(fr-FR\)$/ })
+        .click({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    // Tagging the words as a Span clears the selection; selecting them again
+    // finds that span, in the language just given.
+    await expect(async () => {
+      await selectWords();
+      await expect(picker).toHaveValue(/\(fr-FR\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
   });
 
   test("the save prompt covers the card, so tags can't change under it", async ({
@@ -269,7 +416,7 @@ test.describe("PDF accessibility review", () => {
     await page.getByTestId(`pdf-editor-run-${runId}`).click();
     await card.getByRole("button", { name: /^Quote/ }).click();
 
-    await page.getByTestId("pdf-editor-review-close").click();
+    await page.getByTestId("viewer-review-accessibility").click();
     await expect(
       page.getByRole("dialog", { name: "Save your tags?" }),
     ).toBeVisible();

@@ -42,12 +42,10 @@
   list-style: none;
 }
 
-/* Indented past the breakdown's chevron column, so the icons line up with its rows. */
 .review-summary__row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding-left: 1.5rem;
   color: var(--c-text-muted);
 }
 
@@ -56,26 +54,4 @@
   min-width: 0;
   font-size: 0.8125rem;
   color: var(--c-text);
-}
-
-.review-summary__marked {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 0.25rem;
-}
-
-.review-summary__warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.375rem;
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: var(--c-warning);
-}
-
-.review-summary__warning svg {
-  flex-shrink: 0;
-  margin-top: 0.1rem;
 }

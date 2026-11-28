@@ -7,6 +7,7 @@ import {
   type ReviewModeState,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { goToFix } from "@editor/tools/pdfTextEditor/util/reviewFix";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
 import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -45,6 +46,15 @@ export function useReviewStart({
     const doc = store.document;
     if (!ready || !doc || !session) return;
     reviewMode.set({ startAt: null });
+    if (startAt.target === "markedTagged") {
+      // A document-wide setting with no control to go to. Like a tag, it waits
+      // for Save, so a save never carries tag edits the user has not chosen to keep.
+      const marked = startAt.marked ?? true;
+      if (doc.canSetMarkedTagged() && doc.markedTagged() !== marked) {
+        store.dispatch(new SetMarkedTaggedCommand(marked));
+      }
+      return;
+    }
     if (startAt.autoTag) {
       void autoTag(store).then(() =>
         goToFix(store, startAt.pageIndex, startAt.target),

@@ -6,11 +6,11 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { reviewLanguage } from "@editor/tools/pdfTextEditor/store/reviewLanguage";
-import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 /**
  * While reviewing, publishes the open file's language for the report, and applies a
- * language the report picked for that file once its document is open, saving it.
+ * language the report picked for that file once its document is open, as an undoable
+ * edit that waits for Save like any tag.
  */
 export function useReviewLanguageBridge(
   store: EditorStore,
@@ -30,7 +30,6 @@ export function useReviewLanguageBridge(
         if (control.editable && requested.language !== control.language) {
           // The dispatch changes the control, and this effect runs again with it.
           control.onSet(requested.language);
-          currentEditorSession()?.autosave();
           return;
         }
       }

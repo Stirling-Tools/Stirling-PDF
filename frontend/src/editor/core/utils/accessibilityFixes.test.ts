@@ -3,6 +3,7 @@ import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
 import {
   conformanceClaimFixFor,
   fixTargetFor,
+  hasUntaggedContent,
   profilePart,
 } from "@editor/utils/accessibilityFixes";
 
@@ -49,6 +50,22 @@ describe("fixTargetFor", () => {
     ["content language", "PDF/UA-2", "8.4.4", "1"],
   ])("offers no fix for a %s rule", (_name, spec, clause, test) => {
     expect(fixTargetFor(issue(spec, clause, test))).toBeNull();
+  });
+});
+
+describe("hasUntaggedContent", () => {
+  it("finds untagged content under either profile", () => {
+    expect(hasUntaggedContent([issue("PDF/UA-1", "7.1", "3")])).toBe(true);
+    expect(hasUntaggedContent([issue("PDF/UA-2", "8.2.2", "1")])).toBe(true);
+  });
+
+  it("ignores every other failure, the tagged flag's included", () => {
+    expect(
+      hasUntaggedContent([
+        issue("PDF/UA-1", "6.2", "1"),
+        issue("PDF/UA-1", "7.3", "1"),
+      ]),
+    ).toBe(false);
   });
 });
 

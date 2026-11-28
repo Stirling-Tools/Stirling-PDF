@@ -36,7 +36,6 @@ const PdfAccessibility = (props: BaseToolProps) => {
     props,
   );
   const operation = base.operation as CheckAccessibilityOperationHook;
-  const hasReports = operation.results.length > 0;
   const [selectedFileId, setSelectedFileId] = useState<FileId | null>(null);
   const hasFiles = base.selectedFiles.length > 0;
   useCheckWhenIdle(
@@ -75,7 +74,10 @@ const PdfAccessibility = (props: BaseToolProps) => {
           {t("checkAccessibility.retry", "Check again")}
         </Button>
       )}
-      {(hasReports || operation.isLoading) && (
+      {/* Mounted while there are files, not only while there is a report: a
+          save clears the report a render before its re-check starts, and
+          unmounting there would lose the manual checklist. */}
+      {hasFiles && (
         <AccessibilityResults
           operation={operation}
           selectedFileId={selectedFileId}

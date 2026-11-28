@@ -18,6 +18,8 @@ export interface ReviewModeState {
     target: AccessibilityFixTarget;
     /** Tag every page automatically (tagAllPages) before going to `target`. */
     autoTag?: boolean;
+    /** For "markedTagged", the flag to set; true when absent. */
+    marked?: boolean;
   } | null;
   /** How far an automatic tagging of every page has got; null when none runs. */
   autoTagProgress: { current: number; total: number } | null;

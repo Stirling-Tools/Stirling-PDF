@@ -53,9 +53,11 @@ test("sets the document language from the report's Language area", async ({
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.route("**/api/v1/security/accessibility-report", (route) =>
-    route.fulfill({ json: REPORT }),
-  );
+  let checks = 0;
+  await page.route("**/api/v1/security/accessibility-report", (route) => {
+    checks += 1;
+    return route.fulfill({ json: REPORT });
+  });
   await page.getByTestId("file-input").setInputFiles(FIXTURE);
   await page
     .getByText("PDF accessibility", { exact: true })
@@ -125,16 +127,16 @@ test("sets the document language from the report's Language area", async ({
     )
     .toBe("en-IE");
   await expect(picker).toHaveValue(/\(en-IE\)$/);
-  // A document-wide setting saves at once, with no Save to press.
-  await expect
-    .poll(
+  // Waits for Save like a tag edit, so it never saves tag edits still pending.
+  const dirty = () =>
+    page.evaluate(
       () =>
-        page.evaluate(
-          () =>
-            (window as unknown as EditorWindow).__editor_store?.getState()
-              .dirty ?? true,
-        ),
-      { timeout: 30_000 },
-    )
-    .toBe(false);
+        (window as unknown as EditorWindow).__editor_store?.getState().dirty ??
+        null,
+    );
+  expect(await dirty()).toBe(true);
+  expect(checks).toBe(1);
+  await page.getByTestId("pdf-editor-trail-save").click();
+  await expect.poll(dirty, { timeout: 30_000 }).toBe(false);
+  await expect.poll(() => checks, { timeout: 30_000 }).toBe(2);
 });

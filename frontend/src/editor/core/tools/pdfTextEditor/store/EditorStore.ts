@@ -93,6 +93,8 @@ export interface EditorViewState {
   languagesInUse: string[];
   /** The PDF/UA part the session declares; null for none. */
   conformanceClaim: number | null;
+  /** Whether the saved file will declare itself tagged (EditorDocument.markedTagged). */
+  markedTagged: boolean;
   /** Async lifecycle markers. */
   loading: boolean;
   /** True once the first page's bitmap has actually painted in PageView. */
@@ -138,6 +140,7 @@ const INITIAL: EditorViewState = {
   documentLanguage: null,
   languagesInUse: [],
   conformanceClaim: null,
+  markedTagged: false,
   loading: false,
   firstPageRendered: false,
   progress: null,
@@ -383,6 +386,7 @@ export class EditorStore {
       documentLanguage: doc.documentLanguage(),
       languagesInUse: doc.languagesInUse(),
       conformanceClaim: doc.conformanceClaim(),
+      markedTagged: doc.markedTagged(),
       loading: false,
       firstPageRendered: false,
       error: null,
@@ -744,6 +748,10 @@ export class EditorStore {
     const conformanceClaim = doc.conformanceClaim();
     if (conformanceClaim !== this.state.conformanceClaim) {
       this.patch({ conformanceClaim });
+    }
+    const markedTagged = doc.markedTagged();
+    if (markedTagged !== this.state.markedTagged) {
+      this.patch({ markedTagged });
     }
     let changed = false;
     const pages: PageSnapshot[] = this.state.pages.map((p) => {

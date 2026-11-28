@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
@@ -41,6 +42,142 @@ const REPORT: AccessibilityReport = {
     encrypted: false,
   },
 };
+
+test("flags the document as tagged from the report's fix, saved with Save, and unflags it", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  let checks = 0;
+  await page.route("**/api/v1/security/accessibility-report", (route) => {
+    checks += 1;
+    return route.fulfill({
+      json: {
+        ...REPORT,
+        issues: [
+          {
+            specification: "PDF/UA-1",
+            clause: "6.2",
+            testNumber: "1",
+            message: "MarkInfo /Marked is not true",
+            severity: "error",
+            occurrences: 1,
+            autoFixable: false,
+          },
+        ],
+      } satisfies AccessibilityReport,
+    });
+  });
+  // Renaming the key, at the same length so the xref offsets hold, leaves the
+  // file tagged but not flagged as tagged.
+  const unflagged = Buffer.from(
+    (await readFile(FIXTURE))
+      .toString("latin1")
+      .replace("/Marked true", "/Xarked true"),
+    "latin1",
+  );
+  await page.getByTestId("file-input").setInputFiles({
+    name: "unflagged.pdf",
+    mimeType: "application/pdf",
+    buffer: unflagged,
+  });
+  await page
+    .getByText("PDF accessibility", { exact: true })
+    .first()
+    .click({ timeout: 60_000 });
+  await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
+    timeout: 30_000,
+  });
+
+  const store = () =>
+    page.evaluate(() => {
+      const editor = (
+        window as unknown as {
+          __editor_store?: {
+            document: { markedTagged: () => boolean } | null;
+            getState: () => { dirty: boolean; loading: boolean };
+          };
+        }
+      ).__editor_store;
+      return {
+        marked: editor?.document?.markedTagged() ?? null,
+        dirty: editor?.getState().dirty ?? null,
+      };
+    });
+  await expect.poll(async () => (await store()).marked).toBe(false);
+  const report = page.getByTestId("a11y-report");
+  const manual = report.getByTestId("a11y-manual-checks");
+  await manual
+    .getByRole("button", { name: "Manual checks", exact: true })
+    .click();
+  const readingOrder = manual.getByRole("checkbox", {
+    name: "Is the reading order correct?",
+  });
+  await manual.getByText("Is the reading order correct?").click();
+  await expect(readingOrder).toBeChecked();
+  await report
+    .getByRole("button", {
+      name: "Tags & structure",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  await report
+    .getByRole("button", {
+      name: "Not flagged as tagged",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  // Nothing else fails, so there is no untagged content to warn about.
+  await expect(report.getByTestId("a11y-fix-caution")).toHaveCount(0);
+  const markFix = page.locator(
+    '[data-testid="a11y-fix-issue"][data-fix="markedTagged"]',
+  );
+  await markFix.click();
+
+  // An unsaved edit like a tag: saving it at once would also save every tag
+  // edit still pending, which Discard could then no longer drop.
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: true, dirty: true });
+  // The report shows the unsaved flag, as it does an unsaved PDF/UA claim.
+  await expect(markFix).toBeDisabled();
+  await expect(markFix).toHaveText("Marked as tagged");
+  const save = page.getByTestId("pdf-editor-trail-save");
+  await expect(save).toBeEnabled();
+  expect(checks).toBe(1);
+  await save.click();
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: true, dirty: false });
+  // No checkbox to hunt for: the review carries the flag itself.
+  await expect(
+    page.getByTestId("pdf-editor-review-summary").getByRole("checkbox"),
+  ).toHaveCount(0);
+  // The save re-checks the saved version, keeping the manual checks answered.
+  await expect.poll(() => checks, { timeout: 30_000 }).toBe(2);
+  await expect(manual.getByTestId("a11y-manual-status")).toHaveText("Done", {
+    timeout: 30_000,
+  });
+
+  // Unticking under the PDF/UA claim withdraws the flag, again as an unsaved edit.
+  await report
+    .getByRole("button", {
+      name: "Metadata & settings",
+      exact: true,
+      expanded: false,
+    })
+    .click();
+  const flag = report.getByTestId("a11y-marked-tagged");
+  await expect(flag).toBeChecked();
+  await report
+    .getByText("Mark the document as tagged", { exact: true })
+    .click();
+  await expect
+    .poll(store, { timeout: 30_000 })
+    .toEqual({ marked: false, dirty: true });
+  await expect(flag).not.toBeChecked();
+});
 
 test("lays the panel out in reading order, and pauses the review from its footer", async ({
   page,

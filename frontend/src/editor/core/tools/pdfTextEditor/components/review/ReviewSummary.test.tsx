@@ -1,5 +1,5 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   ReviewSummary,
@@ -15,9 +15,6 @@ function renderSummary(props: Partial<ReviewSummaryProps> = {}) {
         progress={{ done: 3, total: 5, complete: true }}
         review={NOTHING_TO_REVIEW}
         untaggedPages={0}
-        markedTagged={false}
-        onSetMarkedTagged={vi.fn()}
-        hasTags={false}
         headingOutline={null}
         onSelectHeading={vi.fn()}
         {...props}
@@ -28,8 +25,7 @@ function renderSummary(props: Partial<ReviewSummaryProps> = {}) {
 
 const KEY = "pdfTextEditor.inspector.accessibility";
 const SUMMARY = "pdf-editor-document-accessibility-summary";
-const MARKED = "pdf-editor-document-accessibility-marked";
-const MARKED_WARNING = "pdf-editor-document-accessibility-marked-warning";
+const PAGES = "pdfTextEditor.review.summary.untaggedPages";
 
 describe("ReviewSummary", () => {
   it("shows how much is tagged and how much is left", () => {
@@ -52,7 +48,7 @@ describe("ReviewSummary", () => {
       untaggedPages: 3,
     });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
-      `${KEY}.missingDescriptions2${KEY}.untaggedImages1${KEY}.untaggedPages3`,
+      `${KEY}.missingDescriptions2${KEY}.untaggedImages1${PAGES}3`,
     );
   });
 
@@ -70,9 +66,7 @@ describe("ReviewSummary", () => {
       review: { needsDescription: 0, untagged: 0, untaggable: 0 },
       untaggedPages: 1,
     });
-    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
-      `${KEY}.untaggedPages1`,
-    );
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(`${PAGES}1`);
     expect(screen.getByTestId(SUMMARY)).not.toHaveTextContent(
       `${KEY}.missingDescriptions`,
     );
@@ -88,48 +82,9 @@ describe("ReviewSummary", () => {
     expect(screen.queryByTestId(SUMMARY)).not.toBeInTheDocument();
   });
 
-  it("ticks the fully-tagged box to mark the document", () => {
-    const onSetMarkedTagged = vi.fn();
-    renderSummary({ onSetMarkedTagged });
-    const box = screen.getByTestId(MARKED);
-    expect(box).not.toBeChecked();
-    fireEvent.click(box);
-    expect(onSetMarkedTagged).toHaveBeenCalledWith(true);
-  });
-
-  it("keeps the box's explanation in a tooltip, and on the box for screen readers", () => {
+  it("has no fully-tagged checkbox: the report's fix flags the document", () => {
     renderSummary();
-    expect(
-      screen.queryByText(`${KEY}.markedTaggedHint`),
-    ).not.toBeInTheDocument();
-    expect(screen.getByTestId(MARKED)).toHaveAttribute(
-      "aria-description",
-      `${KEY}.markedTaggedHint`,
-    );
-  });
-
-  it("leaves the box out when the file's flag can't be changed", () => {
-    renderSummary({ markedTagged: null });
-    expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
-  });
-
-  it("warns when marked tagged while content is untagged", () => {
-    renderSummary({ markedTagged: true, untaggedPages: 2 });
-    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
-      `${KEY}.markedWithUntagged`,
-    );
-  });
-
-  it("warns when tags exist but the document isn't marked tagged", () => {
-    renderSummary({ hasTags: true });
-    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
-      `${KEY}.unmarkedWithTags`,
-    );
-  });
-
-  it("shows no warning when the flag matches the tags", () => {
-    renderSummary({ markedTagged: true });
-    expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
   it("flags heading problems beside the Headings title", () => {

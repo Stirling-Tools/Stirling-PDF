@@ -22,6 +22,7 @@ function makeDoc(): EditorDocument {
     loadedPages: () => [],
     documentLanguage: () => null,
     conformanceClaim: () => null,
+    markedTagged: () => false,
     languagesInUse: () => [],
     onArtifactKinds: () => () => {},
     dispose: () => {},
