@@ -27,6 +27,7 @@ vi.mock("@editor/services/wasmPrecompiler", async () => {
 });
 
 import {
+  getPdfiumModule,
   renderButtonFieldAppearances,
   renderSignatureFieldAppearances,
   withUnrotatedPage,
@@ -45,6 +46,22 @@ beforeAll(() => {
     (globalThis as { ImageData?: unknown }).ImageData = TestImageData;
   }
 });
+
+// The whole-page FFLDraw fallback bakes page content in; widgets must come from the annot path.
+async function expectNoPageFallback<T>(render: () => Promise<T>): Promise<T> {
+  const m = await getPdfiumModule();
+  const pageRender = vi.spyOn(m, "FPDF_RenderPageBitmap");
+  const formDraw = vi.spyOn(m, "FPDF_FFLDraw");
+  try {
+    const result = await render();
+    expect(pageRender).not.toHaveBeenCalled();
+    expect(formDraw).not.toHaveBeenCalled();
+    return result;
+  } finally {
+    pageRender.mockRestore();
+    formDraw.mockRestore();
+  }
+}
 
 const W = 120;
 const H = 60;
@@ -160,8 +177,9 @@ describe.each([0, 90, 180, 270])(
   "widget appearances on /Rotate %i",
   (rotate) => {
     it("renders the signature image in unrotated orientation", async () => {
-      const [sig] = await renderSignatureFieldAppearances(
-        await buildPdf("Sig", rotate),
+      const pdf = await buildPdf("Sig", rotate);
+      const [sig] = await expectNoPageFallback(() =>
+        renderSignatureFieldAppearances(pdf),
       );
       expect(sig).toMatchObject({
         x: RECT.x,
@@ -199,8 +217,9 @@ describe.each([0, 90, 180, 270])(
     });
 
     it("renders push-button appearances in unrotated orientation", async () => {
-      const [btn] = await renderButtonFieldAppearances(
-        await buildPdf("Btn", rotate, { x: 40, y: 30 }),
+      const pdf = await buildPdf("Btn", rotate, { x: 40, y: 30 });
+      const [btn] = await expectNoPageFallback(() =>
+        renderButtonFieldAppearances(pdf),
       );
       expect(btn).toMatchObject({ x: RECT.x, width: W, height: H });
       expectUnrotatedQuadrants(btn.imageData);

@@ -70,6 +70,7 @@ function PickableFields({ children }: { children: ReactNode }) {
       fieldNames: new Set(["Company signature", "Supplier signature"]),
       selected,
       preview: null,
+      previewRotation: 0,
       flash: 0,
       choose: setSelected,
     });

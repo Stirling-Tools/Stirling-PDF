@@ -5,6 +5,8 @@ import {
   type StampGuideRect,
 } from "@editor/contexts/SignatureFieldPickerContext";
 import { isStirlingFile } from "@editor/types/fileContext";
+import { shownSize } from "@editor/services/signatureFieldLayout";
+import { UprightStampImage } from "@editor/components/viewer/UprightStampImage";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import "@editor/components/viewer/StampGuideLayer.css";
 
@@ -26,6 +28,8 @@ type Drag =
 
 const MIN_WIDTH = 40;
 const MIN_HEIGHT = 16;
+/** .stamp-guide-box border, inside which the image sits. */
+const BOX_BORDER = 2;
 
 function clampRect(
   rect: StampGuideRect,
@@ -82,6 +86,8 @@ export function StampGuideLayer({
 
   const scaleX = pageWidth / page.width;
   const scaleY = pageHeight / page.height;
+  const turns = guide.pageRotations[pageIndex] ?? 0;
+  const defaultSize = shownSize(guide.defaultSize, turns);
   const toPoints = (event: MouseEvent<HTMLElement>): Point => ({
     x: event.nativeEvent.offsetX / scaleX,
     y: event.nativeEvent.offsetY / scaleY,
@@ -89,9 +95,9 @@ export function StampGuideLayer({
   const centredAt = (point: Point): StampGuideRect =>
     clampRect(
       {
-        ...guide.defaultSize,
-        x: point.x - guide.defaultSize.width / 2,
-        y: point.y - guide.defaultSize.height / 2,
+        ...defaultSize,
+        x: point.x - defaultSize.width / 2,
+        y: point.y - defaultSize.height / 2,
       },
       page,
     );
@@ -101,6 +107,15 @@ export function StampGuideLayer({
     width: rect.width * scaleX,
     height: rect.height * scaleY,
   });
+  const stampImage = (rect: StampGuideRect) =>
+    guide.preview && (
+      <UprightStampImage
+        src={guide.preview}
+        width={rect.width * scaleX - 2 * BOX_BORDER}
+        height={rect.height * scaleY - 2 * BOX_BORDER}
+        turns={turns}
+      />
+    );
 
   const onSurfaceMove = (event: PointerEvent<HTMLDivElement>) => {
     const point = toPoints(event);
@@ -162,9 +177,7 @@ export function StampGuideLayer({
           )}
           role="img"
         >
-          {guide.preview && (
-            <img src={guide.preview} alt="" draggable={false} />
-          )}
+          {stampImage(guide.rect)}
           <span
             className="stamp-guide-handle"
             onPointerDown={(event) => startDrag(event, "resize", guide.rect!)}
@@ -186,7 +199,7 @@ export function StampGuideLayer({
               className="stamp-guide-box stamp-guide-box--ghost"
               style={toStyle(centredAt(hover))}
             >
-              <img src={guide.preview} alt="" draggable={false} />
+              {stampImage(centredAt(hover))}
             </div>
           )}
         </div>

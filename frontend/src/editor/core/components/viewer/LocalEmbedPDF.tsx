@@ -154,7 +154,6 @@ import type { ViewerPageLayerProps } from "@editor/contexts/viewer/ViewerPageToo
 import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
-import { usePageScale } from "@editor/tools/formFill/usePageScale";
 import SignatureFieldOverlay from "@editor/components/viewer/SignatureFieldOverlay";
 import { StampGuideLayer } from "@editor/components/viewer/StampGuideLayer";
 import { CommentsSidebar } from "@editor/components/viewer/CommentsSidebar";
@@ -717,12 +716,11 @@ function PageLayers({
   readOnlySignaturePreviews,
 }: PageGeometry & PageLayerOptions) {
   const { isAnnotationMode } = useViewer();
-  const { rotation: previewRotation } = usePageScale(
-    documentId,
-    pageIndex,
-    width,
-    height,
+  const previewDocument = useDocumentState(documentId);
+  const previewPageRotation = normalizePageRotation(
+    previewDocument?.document?.pages?.[pageIndex]?.rotation,
   );
+  const previewViewRotation = normalizePageRotation(previewDocument?.rotation);
   const [covered, setCovered] = useState(false);
   const toolCovers = !!PageLayer && covered;
   const overlays = (
@@ -785,7 +783,8 @@ function PageLayers({
           pageIndex={pageIndex}
           pageWidth={width}
           pageHeight={height}
-          rotation={previewRotation}
+          pageRotation={previewPageRotation}
+          viewRotation={previewViewRotation}
           previews={readOnlySignaturePreviews}
           readOnly
           placementMode={false}
@@ -798,7 +797,8 @@ function PageLayers({
           pageIndex={pageIndex}
           pageWidth={width}
           pageHeight={height}
-          rotation={previewRotation}
+          pageRotation={previewPageRotation}
+          viewRotation={previewViewRotation}
           {...signatureOverlay}
         />
       )}

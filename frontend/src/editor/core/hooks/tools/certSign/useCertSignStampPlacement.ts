@@ -22,6 +22,7 @@ import {
 } from "@editor/services/signatureStampPreview";
 import {
   readSignatureLayout,
+  shownSize,
   viewerRectToPdfBox,
   type SignatureLayout,
 } from "@editor/services/signatureFieldLayout";
@@ -64,7 +65,8 @@ function useSignatureLayout(file: StirlingFile | null) {
       })
       .catch((error) => {
         console.warn("Could not read signature fields:", error);
-        if (!cancelled) setLayout({ emptyFields: [], cropBoxes: [] });
+        if (!cancelled)
+          setLayout({ emptyFields: [], cropBoxes: [], rotations: [] });
       });
     return () => {
       cancelled = true;
@@ -243,7 +245,14 @@ export function useCertSignStampPlacement({
     [layout, onParameterChange],
   );
 
-  const guideSize = placed?.rect ?? DEFAULT_STAMP_SIZE;
+  // The stamp is drawn upright at its shown size; the server swaps the box the same way.
+  const turnsOf = useCallback(
+    (pageIndex: number) => layout?.rotations[pageIndex] ?? 0,
+    [layout],
+  );
+  const guideSize = placed
+    ? shownSize(placed.rect, turnsOf(placed.pageIndex))
+    : DEFAULT_STAMP_SIZE;
   const guidePreview = useMemo(
     () => renderStamp(guideSize.width, guideSize.height),
     [renderStamp, guideSize.width, guideSize.height],
@@ -273,6 +282,7 @@ export function useCertSignStampPlacement({
       pageIndex: placed?.pageIndex ?? null,
       rect: placed?.rect ?? null,
       pageSizes,
+      pageRotations: layout.rotations,
       defaultSize: DEFAULT_STAMP_SIZE,
       preview: guidePreview,
       onChange: moveTo,
@@ -319,22 +329,20 @@ export function useCertSignStampPlacement({
   const fieldName = parameters.fieldName ?? null;
   const chosenField = emptyFields.find((field) => field.name === fieldName);
   const stampBox = parameters.stampBox;
-  const fieldPreview = useMemo(
-    () =>
-      chosenField
-        ? renderStamp(chosenField.box.width, chosenField.box.height)
-        : null,
-    [chosenField, renderStamp],
-  );
-  const preview = useMemo(
-    () =>
-      fieldPreview ??
-      renderStamp(
-        stampBox?.width ?? DEFAULT_STAMP_SIZE.width,
-        stampBox?.height ?? DEFAULT_STAMP_SIZE.height,
-      ),
-    [fieldPreview, stampBox, renderStamp],
-  );
+  const fieldRotation = chosenField ? turnsOf(chosenField.pageIndex) : 0;
+  const fieldPreview = useMemo(() => {
+    if (!chosenField) return null;
+    const size = shownSize(chosenField.box, fieldRotation);
+    return renderStamp(size.width, size.height);
+  }, [chosenField, fieldRotation, renderStamp]);
+  const preview = useMemo(() => {
+    if (fieldPreview) return fieldPreview;
+    const size =
+      stampBox && stampPage !== undefined
+        ? shownSize(stampBox, turnsOf(stampPage))
+        : DEFAULT_STAMP_SIZE;
+    return renderStamp(size.width, size.height);
+  }, [fieldPreview, stampBox, stampPage, turnsOf, renderStamp]);
   const selectField = useCallback(
     (name: string) => onParameterChange("fieldName", name),
     [onParameterChange],
@@ -346,6 +354,7 @@ export function useCertSignStampPlacement({
     selected: fieldName,
     onSelect: selectField,
     preview: fieldPreview,
+    previewRotation: fieldRotation,
   });
 
   return {

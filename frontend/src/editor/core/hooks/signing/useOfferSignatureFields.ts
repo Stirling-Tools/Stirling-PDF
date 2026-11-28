@@ -14,6 +14,8 @@ interface OfferSignatureFieldsOptions {
   onSelect: (fieldName: string) => void;
   /** Drawn inside the selected field on the page. */
   preview: string | null;
+  /** The selected field's page /Rotate in quarter turns. */
+  previewRotation?: number;
 }
 
 /**
@@ -28,6 +30,7 @@ export function useOfferSignatureFields({
   selected,
   onSelect,
   preview,
+  previewRotation = 0,
 }: OfferSignatureFieldsOptions): void {
   const { setPick } = useSignatureFieldPicker();
   const { setWorkbench } = useNavigation();
@@ -47,13 +50,24 @@ export function useOfferSignatureFields({
       fieldNames: new Set(fields.map((field) => field.name)),
       selected,
       preview,
+      previewRotation,
       flash,
       choose: (name) => {
         chosenOnPage.current = name;
         onSelect(name);
       },
     });
-  }, [enabled, file, fields, selected, preview, flash, onSelect, setPick]);
+  }, [
+    enabled,
+    file,
+    fields,
+    selected,
+    preview,
+    previewRotation,
+    flash,
+    onSelect,
+    setPick,
+  ]);
   useEffect(() => () => setPick(null), [setPick]);
 
   const shownField = useRef<string | null>(null);

@@ -25,8 +25,10 @@ export interface SignaturePreviewLayerProps {
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
-  /** Clockwise quarter turns applied by the enclosing <Rotate>. */
-  rotation?: number;
+  /** The page's own /Rotate in clockwise quarter turns; previews live in that displayed orientation. */
+  pageRotation?: number;
+  /** Extra clockwise quarter turns from rotating the view. */
+  viewRotation?: number;
   /** All previews across all pages; this layer renders only those matching pageIndex. */
   previews: SignaturePreview[];
   /** If true, previews cannot be moved, resized, or deleted. */
@@ -45,12 +47,14 @@ export interface SignaturePreviewLayerProps {
   onSelect?: (id: string | null) => void;
 }
 
-/** Per-page overlay for signature previews; supports click-to-place, drag, resize, and delete. Coordinates are FRACTIONS (0–1) of the page. */
+/** Per-page signature previews (place, drag, resize, delete) as fractions of the page shown with
+ * its /Rotate, which is how the signing backend reads them. */
 export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
   pageIndex,
-  pageWidth,
-  pageHeight,
-  rotation = 0,
+  pageWidth: unrotatedWidth,
+  pageHeight: unrotatedHeight,
+  pageRotation = 0,
+  viewRotation = 0,
   previews,
   readOnly,
   placementMode,
@@ -66,9 +70,12 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
   // Track if a drag operation just occurred to prevent click from firing.
   const isDraggingRef = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  // Pointer in this layer's unrotated pixel space; screen deltas are wrong under <Rotate>.
+  const quarterTurn = pageRotation % 2 === 1;
+  const pageWidth = quarterTurn ? unrotatedHeight : unrotatedWidth;
+  const pageHeight = quarterTurn ? unrotatedWidth : unrotatedHeight;
+  // Pointer in the displayed page's pixel space; only the view rotation is left to undo.
   const localPoint = (e: { clientX: number; clientY: number }) =>
-    getLocalPoint(e, rootRef.current, rotation);
+    getLocalPoint(e, rootRef.current, viewRotation);
 
   // Track cursor position over this page for the ghost hover preview.
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(
@@ -114,9 +121,17 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
   return (
     <div
       ref={rootRef}
+      data-signature-preview-page={pageIndex}
       style={{
         position: "absolute",
-        inset: 0,
+        // Counter-rotates the enclosing <Rotate> by the page's /Rotate, so this frame is the displayed page.
+        left: (unrotatedWidth - pageWidth) / 2,
+        top: (unrotatedHeight - pageHeight) / 2,
+        width: pageWidth,
+        height: pageHeight,
+        transform: pageRotation
+          ? `rotate(${-90 * pageRotation}deg)`
+          : undefined,
         cursor: canPlace ? "crosshair" : "default",
         // Let clicks fall through to the page except in placement mode, where we
         // need to capture click-to-place. Individual previews opt back in below.

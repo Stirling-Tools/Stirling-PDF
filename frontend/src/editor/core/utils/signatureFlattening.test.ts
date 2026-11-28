@@ -16,6 +16,11 @@ import {
   flattenSignatures,
 } from "@editor/utils/signatureFlattening";
 import type { SignatureAPI } from "@editor/components/viewer/viewerTypes";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  openRawDocumentSafe,
+} from "@editor/services/pdfiumService";
 
 const ONE_PIXEL_PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -235,4 +240,88 @@ describe("signatureFlattening", () => {
       ),
     ).rejects.toThrow("Could not decode signature image");
   });
+
+  // EmbedPDF inserts Sign stamps upright, counter-rotated against the page's /Rotate.
+  test.each([
+    [90, 270],
+    [180, 180],
+    [270, 90],
+  ])(
+    "keeps a stamp upright on a /Rotate %i page (annotation rotation %i)",
+    async (pageRotate, annotationRotation) => {
+      const source = await PDFDocument.create();
+      source
+        .addPage([300, 400])
+        .node.set(PDFName.of("Rotate"), PDFNumber.of(pageRotate));
+      const quarterTurn = pageRotate % 180 !== 0;
+      const size = quarterTurn
+        ? { width: 50, height: 120 }
+        : { width: 120, height: 50 };
+      const output = await embedSignatureImages(
+        Uint8Array.from(await source.save()).buffer,
+        [
+          {
+            pageIndex: 0,
+            annotations: [
+              {
+                id: "upright",
+                rotation: annotationRotation,
+                rect: { origin: { x: 25, y: 30 }, size },
+                imageSrc: `data:image/png;base64,${ONE_PIXEL_PNG}`,
+              },
+            ],
+          },
+        ],
+        () => `data:image/png;base64,${ONE_PIXEL_PNG}`,
+        // Red on the left, blue on the right.
+        async () => ({
+          width: 2,
+          height: 1,
+          rgba: new Uint8Array([255, 0, 0, 255, 0, 0, 255, 255]),
+        }),
+      );
+
+      // Render the page as a reader shows it, with /Rotate applied.
+      const m = await getPdfiumModule();
+      const docPtr = await openRawDocumentSafe(output);
+      try {
+        const pagePtr = m.FPDF_LoadPage(docPtr, 0);
+        const w = Math.round(m.FPDF_GetPageWidthF(pagePtr));
+        const h = Math.round(m.FPDF_GetPageHeightF(pagePtr));
+        const bitmap = m.FPDFBitmap_Create(w, h, 1);
+        m.FPDFBitmap_FillRect(bitmap, 0, 0, w, h, 0xffffffff);
+        m.FPDF_RenderPageBitmap(bitmap, pagePtr, 0, 0, w, h, 0, 0x01 | 0x10);
+        const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+        const buffer = m.FPDFBitmap_GetBuffer(bitmap);
+        const stride = m.FPDFBitmap_GetStride(bitmap);
+        const box = { red: [] as number[][], blue: [] as number[][] };
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const i = buffer + y * stride + x * 4;
+            const [r, g, b] = [heap[i], heap[i + 1], heap[i + 2]];
+            if (r > 200 && g < 60 && b < 60) box.red.push([x, y]);
+            if (b > 200 && r < 60 && g < 60) box.blue.push([x, y]);
+          }
+        }
+        m.FPDFBitmap_Destroy(bitmap);
+        m.FPDF_ClosePage(pagePtr);
+        const centre = (points: number[][]) =>
+          points
+            .reduce((sum, [x, y]) => [sum[0] + x, sum[1] + y], [0, 0])
+            .map((value) => value / points.length);
+        const xs = [...box.red, ...box.blue].map(([x]) => x);
+        const ys = [...box.red, ...box.blue].map(([, y]) => y);
+        // Shown landscape, with red to the left of blue at the same height.
+        expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(
+          2 * (Math.max(...ys) - Math.min(...ys)),
+        );
+        const [red, blue] = [centre(box.red), centre(box.blue)];
+        expect(red[0]).toBeLessThan(blue[0]);
+        expect(Math.abs(red[1] - blue[1])).toBeLessThan(2);
+      } finally {
+        closeDocAndFreeBuffer(m, docPtr);
+      }
+    },
+    20_000,
+  );
 });

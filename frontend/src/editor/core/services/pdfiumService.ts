@@ -1692,8 +1692,6 @@ function renderWidgetAppearance(
   bytes: number,
   pagePtr: number,
   annotPtr: number,
-  annotLeft: number,
-  annotTop: number,
   pdfW: number,
   pdfH: number,
   cssX: number,
@@ -1712,7 +1710,8 @@ function renderWidgetAppearance(
   );
   const sx = wDev / pdfW;
   const sy = hDev / pdfH;
-  matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
+  // Same mapping as the signature path: PDFium has already flipped to crop-relative y-down space.
+  matrixView.set([sx, 0, 0, sy, -sx * cssX, -sy * cssY]);
 
   let ok = false;
   try {
@@ -2222,8 +2221,6 @@ export async function renderButtonFieldAppearances(
               bytes,
               pagePtr,
               annotPtr,
-              annotLeft,
-              annotTopVal,
               pdfW,
               pdfH,
               cssX,

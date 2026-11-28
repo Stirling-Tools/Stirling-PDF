@@ -120,16 +120,13 @@ it.each(["move", "resize"])(
   },
 );
 
-// Unrotated page is 600x800; on screen the layer's box is 800x600 at 90/270.
-const screenBox = (rotation: number) => {
-  const quarter = rotation % 2 === 1;
-  const width = quarter ? 800 : 600;
-  const height = quarter ? 600 : 800;
-  return { left: 0, top: 0, right: width, bottom: height, width, height };
-};
+// The unrotated page is 600x800, so a quarter-turned page is shown 800x600.
+const shown = (turns: number) =>
+  turns % 2 === 1 ? { width: 800, height: 600 } : { width: 600, height: 800 };
 
 function renderRotated(
-  rotation: number,
+  pageRotation: number,
+  viewRotation: number,
   props: Partial<ComponentProps<typeof SignaturePreviewLayer>>,
 ) {
   const onChange = vi.fn();
@@ -139,7 +136,8 @@ function renderRotated(
         pageIndex={0}
         pageWidth={600}
         pageHeight={800}
-        rotation={rotation}
+        pageRotation={pageRotation}
+        viewRotation={viewRotation}
         previews={[]}
         onChange={onChange}
         placementMode={false}
@@ -148,21 +146,65 @@ function renderRotated(
       />
     </MantineProvider>,
   );
-  const layer = container.querySelector("div")!;
-  layer.getBoundingClientRect = () => screenBox(rotation) as DOMRect;
+  const layer = container.querySelector<HTMLElement>(
+    "[data-signature-preview-page]",
+  )!;
+  const { width, height } = shown(pageRotation + viewRotation);
+  layer.getBoundingClientRect = () =>
+    ({
+      left: 0,
+      top: 0,
+      right: width,
+      bottom: height,
+      width,
+      height,
+    }) as DOMRect;
   return { layer, onChange };
 }
 
-// Screen point of unrotated (150, 200) under each clockwise quarter turn.
+it.each([0, 1, 2, 3])(
+  "frames the layer as the page shown with /Rotate %i",
+  (pageRotation) => {
+    const { layer } = renderRotated(pageRotation, 0, {});
+    const { width, height } = shown(pageRotation);
+    expect(layer).toHaveStyle({
+      width: `${width}px`,
+      height: `${height}px`,
+      left: `${(600 - width) / 2}px`,
+      top: `${(800 - height) / 2}px`,
+    });
+    expect(layer.style.transform).toBe(
+      pageRotation ? `rotate(${-90 * pageRotation}deg)` : "",
+    );
+  },
+);
+
+it.each([0, 1, 2, 3])(
+  "places a click as fractions of the page shown with /Rotate %i",
+  (pageRotation) => {
+    const { layer, onChange } = renderRotated(pageRotation, 0, {
+      placementMode: true,
+      placementData: signature.signatureData,
+    });
+    fireEvent.click(layer, { clientX: 150, clientY: 200 });
+    const [placed] = onChange.mock.calls[0][0] as SignaturePreview[];
+    const { width, height } = shown(pageRotation);
+    expect(placed.x * width + 75).toBeCloseTo(150);
+    expect(placed.y * height + 37.5).toBeCloseTo(200);
+    expect(placed.width * width).toBeCloseTo(150);
+  },
+);
+
+// View rotation only: screen point of displayed (150, 200) under each clockwise quarter turn.
 it.each([
   [0, 150, 200],
   [1, 600, 150],
   [2, 450, 600],
   [3, 200, 450],
 ])(
-  "places a click at the unrotated point on rotation %i",
-  (rotation, clientX, clientY) => {
-    const { layer, onChange } = renderRotated(rotation, {
+  "undoes a view rotation of %i quarter turns",
+  (viewRotation, clientX, clientY) => {
+    const { layer, onChange } = renderRotated(0, viewRotation, {
       placementMode: true,
       placementData: signature.signatureData,
     });
@@ -173,16 +215,18 @@ it.each([
   },
 );
 
-// A screen drag of (+30, 0) is unrotated (+30,0), (0,-30), (-30,0), (0,+30).
+// A screen drag of (+30, 0) under each view rotation, in displayed page space.
 it.each([
   [0, 30, 0],
   [1, 0, -30],
   [2, -30, 0],
   [3, 0, 30],
 ])(
-  "moves a preview along the unrotated axes on rotation %i",
-  (rotation, dx, dy) => {
-    const { onChange } = renderRotated(rotation, { previews: [signature] });
+  "moves a preview along the page axes under view rotation %i",
+  (viewRotation, dx, dy) => {
+    const { onChange } = renderRotated(0, viewRotation, {
+      previews: [signature],
+    });
     const target = screen.getByRole("img", {
       name: "Signature preview",
     }).parentElement!;
