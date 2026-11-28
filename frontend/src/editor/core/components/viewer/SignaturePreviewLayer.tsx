@@ -11,6 +11,7 @@ import {
 } from "@editor/styles/zIndex";
 import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { getLocalPoint } from "@editor/tools/formFill/usePageScale";
 
 const DEFAULT_COLOR = "rgb(0, 122, 204)";
 const RESIZE_HANDLES = [
@@ -24,6 +25,8 @@ export interface SignaturePreviewLayerProps {
   pageIndex: number;
   pageWidth: number;
   pageHeight: number;
+  /** Clockwise quarter turns applied by the enclosing <Rotate>. */
+  rotation?: number;
   /** All previews across all pages; this layer renders only those matching pageIndex. */
   previews: SignaturePreview[];
   /** If true, previews cannot be moved, resized, or deleted. */
@@ -47,6 +50,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
   pageIndex,
   pageWidth,
   pageHeight,
+  rotation = 0,
   previews,
   readOnly,
   placementMode,
@@ -61,6 +65,10 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
   // Track if a drag operation just occurred to prevent click from firing.
   const isDraggingRef = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Pointer in this layer's unrotated pixel space; screen deltas are wrong under <Rotate>.
+  const localPoint = (e: { clientX: number; clientY: number }) =>
+    getLocalPoint(e, rootRef.current, rotation);
 
   // Track cursor position over this page for the ghost hover preview.
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(
@@ -79,13 +87,13 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
     if (isDraggingRef.current) return;
     if (readOnly || !placementMode || !placementData) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
+    const point = localPoint(e);
     // Store as fractions (0–1) of the rendered page so overlays remain correct
     // at any zoom level.
     const sigWidth = 150 / pageWidth;
     const sigHeight = 75 / pageHeight;
-    const rawX = (e.clientX - rect.left) / pageWidth;
-    const rawY = (e.clientY - rect.top) / pageHeight;
+    const rawX = point.x / pageWidth;
+    const rawY = point.y / pageHeight;
     const x = Math.max(0, Math.min(rawX - sigWidth / 2, 1 - sigWidth));
     const y = Math.max(0, Math.min(rawY - sigHeight / 2, 1 - sigHeight));
 
@@ -105,6 +113,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
   return (
     <div
+      ref={rootRef}
       style={{
         position: "absolute",
         inset: 0,
@@ -113,17 +122,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
         // need to capture click-to-place. Individual previews opt back in below.
         pointerEvents: canPlace ? "auto" : "none",
       }}
-      onMouseMove={
-        canPlace
-          ? (e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setCursorPos({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top,
-              });
-            }
-          : undefined
-      }
+      onMouseMove={canPlace ? (e) => setCursorPos(localPoint(e)) : undefined}
       onMouseLeave={() => setCursorPos(null)}
       onClick={canPlace ? handlePlaceClick : undefined}
     >
@@ -207,18 +206,16 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                         el.setPointerCapture(e.pointerId);
                         pauseInteraction();
 
-                        const startX = e.clientX;
-                        const startY = e.clientY;
+                        const start = localPoint(e);
                         const startLeft = preview.x;
                         const startTop = preview.y;
                         let latest = previews;
 
                         const handlePointerMove = (moveEvent: PointerEvent) => {
                           isDraggingRef.current = true;
-                          const deltaX =
-                            (moveEvent.clientX - startX) / pageWidth;
-                          const deltaY =
-                            (moveEvent.clientY - startY) / pageHeight;
+                          const point = localPoint(moveEvent);
+                          const deltaX = (point.x - start.x) / pageWidth;
+                          const deltaY = (point.y - start.y) / pageHeight;
                           latest = previews.map((p) =>
                             p.id === preview.id
                               ? {
@@ -306,8 +303,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                         el.setPointerCapture(e.pointerId);
                         pauseInteraction();
 
-                        const startX = e.clientX;
-                        const startY = e.clientY;
+                        const start = localPoint(e);
                         const startWidth = preview.width;
                         const startHeight = preview.height;
                         const startLeft = preview.x;
@@ -316,10 +312,9 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
                         const handlePointerMove = (moveEvent: PointerEvent) => {
                           isDraggingRef.current = true;
-                          const deltaX =
-                            (moveEvent.clientX - startX) / pageWidth;
-                          const deltaY =
-                            (moveEvent.clientY - startY) / pageHeight;
+                          const point = localPoint(moveEvent);
+                          const deltaX = (point.x - start.x) / pageWidth;
+                          const deltaY = (point.y - start.y) / pageHeight;
 
                           let newWidth = startWidth;
                           let newHeight = startHeight;

@@ -1662,8 +1662,27 @@ const RENDER_FLAG_REVERSE_BYTE_ORDER = 0x10;
 /** AppearanceMode.Normal = 0 in @embedpdf/models. */
 const AP_MODE_NORMAL = 0;
 
+/**
+ * Runs `render` with the page's /Rotate cleared, so PDFium draws in unrotated
+ * page space like the overlays. Restored before returning: the handle may be shared.
+ */
+export function withUnrotatedPage<T>(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  render: () => T,
+): T {
+  const rotation = m.FPDFPage_GetRotation(pagePtr) & 3;
+  if (!rotation) return render();
+  m.FPDFPage_SetRotation(pagePtr, 0);
+  try {
+    return render();
+  } finally {
+    m.FPDFPage_SetRotation(pagePtr, rotation);
+  }
+}
+
 /** Shared appearance-rendering helper. Renders a widget annotation to ImageData. */
-async function renderWidgetAppearance(
+function renderWidgetAppearance(
   m: WrappedPdfiumModule,
   bitmapPtr: number,
   heapPtr: number,
@@ -1683,7 +1702,7 @@ async function renderWidgetAppearance(
   cropHeight: number,
   formEnvPtr: number,
   dpr: number,
-): Promise<ImageData | null> {
+): ImageData | null {
   const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
   const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
   const matrixView = new Float32Array(
@@ -1913,125 +1932,126 @@ export async function renderSignatureFieldAppearances(
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
           const bytes = stride * hDev;
-          const heapPtr = m.pdfium.wasmExports.malloc(bytes);
-          const bitmapPtr = m.FPDFBitmap_CreateEx(
-            wDev,
-            hDev,
-            4 /* BGRA */,
-            heapPtr,
-            stride,
-          );
-          m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
+          imageData = withUnrotatedPage(m, pagePtr, () => {
+            let rendered: ImageData | null = null;
+            const heapPtr = m.pdfium.wasmExports.malloc(bytes);
+            const bitmapPtr = m.FPDFBitmap_CreateEx(
+              wDev,
+              hDev,
+              4 /* BGRA */,
+              heapPtr,
+              stride,
+            );
+            m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
 
-          // EPDF_RenderAnnotBitmap applies this matrix after its own flip into
-          // crop-relative, y-down page space, so it only scales and shifts the
-          // annotation's CSS rect onto the bitmap; flipping y here too draws the
-          // appearance upside down.
-          const sx = wDev / pdfW;
-          const sy = hDev / pdfH;
-          const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-          const pdfiumRuntime = m.pdfium as typeof m.pdfium &
-            ExtendedPdfiumRuntime;
-          const matrixView = new Float32Array(
-            pdfiumRuntime.HEAPF32.buffer,
-            matrixPtr,
-            6,
-          );
-          matrixView.set([sx, 0, 0, sy, -sx * cssX, -sy * cssY]);
-
-          let ok = false;
-          try {
-            ok = !!m.EPDF_RenderAnnotBitmap(
-              bitmapPtr,
-              pagePtr,
-              annotPtr,
-              AP_MODE_NORMAL,
+            // Applied after PDFium's own flip to crop-relative y-down space,
+            // so it only scales and shifts; a y flip here draws it upside down.
+            const sx = wDev / pdfW;
+            const sy = hDev / pdfH;
+            const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+            const pdfiumRuntime = m.pdfium as typeof m.pdfium &
+              ExtendedPdfiumRuntime;
+            const matrixView = new Float32Array(
+              pdfiumRuntime.HEAPF32.buffer,
               matrixPtr,
-              RENDER_FLAG_REVERSE_BYTE_ORDER,
+              6,
             );
-          } catch {
-            // Extension not available — fall through to FPDF_FFLDraw.
-          }
+            matrixView.set([sx, 0, 0, sy, -sx * cssX, -sy * cssY]);
 
-          m.pdfium.wasmExports.free(matrixPtr);
-          m.FPDFBitmap_Destroy(bitmapPtr);
-
-          if (ok) {
-            const rgba = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
-            );
-            let hasVisible = false;
-            for (let i = 3; i < rgba.length; i += 4) {
-              if (rgba[i] > 0) {
-                hasVisible = true;
-                break;
-              }
-            }
-            if (hasVisible) {
-              imageData = new ImageData(rgba, wDev, hDev);
-            }
-          }
-          m.pdfium.wasmExports.free(heapPtr);
-
-          // Renders the form fill layer (which includes signature appearances)
-          // into a small bitmap covering just the annotation rect.
-          if (!imageData && formEnvPtr) {
-            const heap2 = m.pdfium.wasmExports.malloc(bytes);
-            const bmp2 = m.FPDFBitmap_CreateEx(wDev, hDev, 4, heap2, stride);
-            m.FPDFBitmap_FillRect(bmp2, 0, 0, wDev, hDev, 0x00000000);
-
-            // Map the full page into device coords, then offset so the
-            // annotation rect starts at bitmap (0, 0).
-            const fullW = Math.round(cropWidth * dpr);
-            const fullH = Math.round(cropHeight * dpr);
-            const startX = Math.round(-cssX * dpr);
-            const startY = Math.round(-cssY * dpr);
-
+            let ok = false;
             try {
-              // Draw page content first (provides background under signature)
-              m.FPDF_RenderPageBitmap(
-                bmp2,
+              ok = !!m.EPDF_RenderAnnotBitmap(
+                bitmapPtr,
                 pagePtr,
-                startX,
-                startY,
-                fullW,
-                fullH,
-                0,
-                0x01 | 0x10, // FPDF_ANNOT | FPDF_REVERSE_BYTE_ORDER
-              );
-              // Draw form fill layer on top (includes signature appearances)
-              m.FPDF_FFLDraw(
-                formEnvPtr,
-                bmp2,
-                pagePtr,
-                startX,
-                startY,
-                fullW,
-                fullH,
-                0,
-                0x01 | 0x10,
+                annotPtr,
+                AP_MODE_NORMAL,
+                matrixPtr,
+                RENDER_FLAG_REVERSE_BYTE_ORDER,
               );
             } catch {
-              // FPDF_FFLDraw not available or failed.
+              // Extension not available - fall through to FPDF_FFLDraw.
             }
 
-            m.FPDFBitmap_Destroy(bmp2);
+            m.pdfium.wasmExports.free(matrixPtr);
+            m.FPDFBitmap_Destroy(bitmapPtr);
 
-            const rgba2 = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
-            );
-            let hasVisible2 = false;
-            for (let i = 3; i < rgba2.length; i += 4) {
-              if (rgba2[i] > 0) {
-                hasVisible2 = true;
-                break;
+            if (ok) {
+              const rgba = new Uint8ClampedArray(
+                pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
+              );
+              let hasVisible = false;
+              for (let i = 3; i < rgba.length; i += 4) {
+                if (rgba[i] > 0) {
+                  hasVisible = true;
+                  break;
+                }
+              }
+              if (hasVisible) {
+                rendered = new ImageData(rgba, wDev, hDev);
               }
             }
-            if (hasVisible2) {
-              imageData = new ImageData(rgba2, wDev, hDev);
+            m.pdfium.wasmExports.free(heapPtr);
+
+            // Form fill layer (includes signature appearances) cropped to the rect.
+            if (!rendered && formEnvPtr) {
+              const heap2 = m.pdfium.wasmExports.malloc(bytes);
+              const bmp2 = m.FPDFBitmap_CreateEx(wDev, hDev, 4, heap2, stride);
+              m.FPDFBitmap_FillRect(bmp2, 0, 0, wDev, hDev, 0x00000000);
+
+              // Map the full page into device coords, then offset so the
+              // annotation rect starts at bitmap (0, 0).
+              const fullW = Math.round(cropWidth * dpr);
+              const fullH = Math.round(cropHeight * dpr);
+              const startX = Math.round(-cssX * dpr);
+              const startY = Math.round(-cssY * dpr);
+
+              try {
+                // Draw page content first (provides background under signature)
+                m.FPDF_RenderPageBitmap(
+                  bmp2,
+                  pagePtr,
+                  startX,
+                  startY,
+                  fullW,
+                  fullH,
+                  0,
+                  0x01 | 0x10, // FPDF_ANNOT | FPDF_REVERSE_BYTE_ORDER
+                );
+                // Draw form fill layer on top (includes signature appearances)
+                m.FPDF_FFLDraw(
+                  formEnvPtr,
+                  bmp2,
+                  pagePtr,
+                  startX,
+                  startY,
+                  fullW,
+                  fullH,
+                  0,
+                  0x01 | 0x10,
+                );
+              } catch {
+                // FPDF_FFLDraw not available or failed.
+              }
+
+              m.FPDFBitmap_Destroy(bmp2);
+
+              const rgba2 = new Uint8ClampedArray(
+                pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
+              );
+              let hasVisible2 = false;
+              for (let i = 3; i < rgba2.length; i += 4) {
+                if (rgba2[i] > 0) {
+                  hasVisible2 = true;
+                  break;
+                }
+              }
+              if (hasVisible2) {
+                rendered = new ImageData(rgba2, wDev, hDev);
+              }
+              m.pdfium.wasmExports.free(heap2);
             }
-            m.pdfium.wasmExports.free(heap2);
-          }
+            return rendered;
+          });
         }
 
         let signed = m.FPDFAnnot_HasKey(annotPtr, "V");
@@ -2191,26 +2211,28 @@ export async function renderButtonFieldAppearances(
           );
           m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
 
-          imageData = await renderWidgetAppearance(
-            m,
-            bitmapPtr,
-            heapPtr,
-            wDev,
-            hDev,
-            stride,
-            bytes,
-            pagePtr,
-            annotPtr,
-            annotLeft,
-            annotTopVal,
-            pdfW,
-            pdfH,
-            cssX,
-            cssY,
-            cropWidth,
-            cropHeight,
-            formEnvPtr,
-            dpr,
+          imageData = withUnrotatedPage(m, pagePtr, () =>
+            renderWidgetAppearance(
+              m,
+              bitmapPtr,
+              heapPtr,
+              wDev,
+              hDev,
+              stride,
+              bytes,
+              pagePtr,
+              annotPtr,
+              annotLeft,
+              annotTopVal,
+              pdfW,
+              pdfH,
+              cssX,
+              cssY,
+              cropWidth,
+              cropHeight,
+              formEnvPtr,
+              dpr,
+            ),
           );
         }
 
