@@ -250,7 +250,6 @@ function TrackPageTileImpl({
                 className={[
                   styles.thumb,
                   quarterTurn ? styles.thumbQuarterTurn : "",
-                  "ph-no-capture",
                 ]
                   .filter(Boolean)
                   .join(" ")}

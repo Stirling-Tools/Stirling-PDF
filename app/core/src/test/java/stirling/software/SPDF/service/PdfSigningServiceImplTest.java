@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.controller.api.security.CertSignController;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SignatureLogoStore;
 
 class PdfSigningServiceImplTest {
 
@@ -42,7 +43,8 @@ class PdfSigningServiceImplTest {
         @DisplayName("wires arguments through to CertSignController and returns the output bytes")
         void wiresArgsAndReturnsBytes() throws Exception {
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
-            PdfSigningServiceImpl service = new PdfSigningServiceImpl(factory);
+            PdfSigningServiceImpl service =
+                    new PdfSigningServiceImpl(factory, mock(SignatureLogoStore.class));
             KeyStore keystore = realKeystore();
             byte[] pdf = "%PDF-1.4 fake".getBytes();
 
@@ -122,7 +124,8 @@ class PdfSigningServiceImplTest {
         @DisplayName("empty pdf bytes mark the wrapper as empty")
         void emptyWrapper() throws Exception {
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
-            PdfSigningServiceImpl service = new PdfSigningServiceImpl(factory);
+            PdfSigningServiceImpl service =
+                    new PdfSigningServiceImpl(factory, mock(SignatureLogoStore.class));
             ArgumentCaptor<MultipartFile> fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
 
             try (MockedStatic<CertSignController> signer = mockStatic(CertSignController.class)) {

@@ -11,12 +11,13 @@ import { useIsomorphicEffect } from "@mantine/hooks";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   mantineTheme,
-  editorCssVariablesResolver,
+  appCssVariablesResolver,
 } from "@editor/theme/mantineTheme";
 import { ToastProvider } from "@editor/components/toast";
 import ToastRenderer from "@editor/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@editor/components/toast";
 import {
+  type ColorScheme,
   type ThemeMode,
   getSystemTheme,
   resolveColorScheme,
@@ -28,6 +29,7 @@ import "@editor/theme/index.css";
 interface ThemeContextType {
   themeMode: ThemeMode;
   setTheme: (mode: ThemeMode) => void;
+  forcedTheme?: ColorScheme;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -42,15 +44,30 @@ export function useTheme() {
 
 interface ThemeProviderProps {
   children: ReactNode;
+  /**
+   * Pins the scheme without reading or saving the preference, for hosts that
+   * own the theme such as Storybook's toolbar. setTheme is a no-op while set,
+   * and a ThemeProvider nested inside inherits the pin.
+   */
+  forcedTheme?: ColorScheme;
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
+export function ThemeProvider({
+  children,
+  forcedTheme: ownForcedTheme,
+}: ThemeProviderProps) {
+  // A nested provider (the editor's own, inside a story) keeps the outer pin, or it
+  // would rewrite <html> from the preference and undo the host's theme.
+  const outer = useContext(ThemeContext);
+  const forcedTheme = ownForcedTheme ?? outer?.forcedTheme;
   // preferences.theme is the single source of truth.
   const { preferences, updatePreference } = usePreferences();
-  const themeMode = preferences.theme;
+  const themeMode = forcedTheme ?? preferences.theme;
   const setTheme = useCallback(
-    (mode: ThemeMode) => updatePreference("theme", mode),
-    [updatePreference],
+    (mode: ThemeMode) => {
+      if (!forcedTheme) updatePreference("theme", mode);
+    },
+    [forcedTheme, updatePreference],
   );
 
   // Track the OS scheme so "system" updates live; only subscribe while on system.
@@ -72,7 +89,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => media.removeEventListener("change", update);
   }, [themeMode]);
 
-  // The mode resolved to a concrete light/dark base.
   const colorScheme = resolveColorScheme(themeMode, systemScheme);
 
   // Mirror the scheme to <html>. The accent is fixed to the default (neutral
@@ -86,25 +102,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [colorScheme]);
 
   const value = useMemo<ThemeContextType>(
-    () => ({ themeMode, setTheme }),
-    [themeMode, setTheme],
+    () => ({ themeMode, setTheme, forcedTheme }),
+    [themeMode, setTheme, forcedTheme],
   );
 
   return (
     <ThemeContext.Provider value={value}>
       <MantineProvider
         theme={mantineTheme}
-        cssVariablesResolver={editorCssVariablesResolver}
+        cssVariablesResolver={appCssVariablesResolver}
         defaultColorScheme={colorScheme}
         forceColorScheme={colorScheme}
       >
-        <div style={{ minHeight: "100vh" }}>
-          <ToastProvider>
-            <ToastPortalBinder />
-            {children}
-            <ToastRenderer />
-          </ToastProvider>
-        </div>
+        <ToastProvider>
+          <ToastPortalBinder />
+          {children}
+          <ToastRenderer />
+        </ToastProvider>
       </MantineProvider>
     </ThemeContext.Provider>
   );

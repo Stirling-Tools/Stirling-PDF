@@ -79,11 +79,11 @@ class CropPdfFormTest {
     class PageSelection {
 
         @Test
-        @DisplayName("null pageNumbers falls back to every page")
+        @DisplayName("omitted pageNumbers defaults to every page")
         void nullPageNumbersMeansAllPages() throws IOException {
             try (PDDocument doc = threePageDoc()) {
                 CropPdfForm form = new CropPdfForm();
-                assertThat(form.getPageNumbers()).isNull();
+                assertThat(form.getPageNumbers()).isEqualTo("all");
                 assertThat(form.getPageNumbersList(doc, false)).containsExactly(0, 1, 2);
             }
         }

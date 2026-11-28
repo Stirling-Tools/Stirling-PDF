@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,6 +28,8 @@ import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,6 +46,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SignatureLogoStore;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -63,6 +67,7 @@ class CertSignControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private HardwareKeyStoreService hardwareKeyStoreService;
+    @Mock private SignatureLogoStore signatureLogoStore;
     @Mock private HttpServletRequest httpRequest;
 
     @InjectMocks private CertSignController certSignController;
@@ -190,6 +195,58 @@ class CertSignControllerTest {
     }
 
     @Test
+    void testSignPdfWithVisibleSignatureAndNoReason() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile pfxFile =
+                new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PFX");
+        request.setP12File(pfxFile);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        try (PDDocument signed = Loader.loadPDF(drainBody(response))) {
+            assertEquals(1, signed.getSignatureDictionaries().size());
+        }
+    }
+
+    @Test
+    void testSignPdfFailureIsNotAnsweredWithEmptyPdf() {
+        MockMultipartFile notAPdf =
+                new MockMultipartFile(
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "not a pdf".getBytes());
+        MockMultipartFile pfxFile =
+                new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(notAPdf);
+        request.setCertType("PFX");
+        request.setP12File(pfxFile);
+        request.setPassword("password");
+        request.setShowSignature(false);
+        request.setReason("test");
+        request.setPageNumber(1);
+
+        assertThrows(
+                java.io.IOException.class,
+                () -> certSignController.signPDFWithCert(request, httpRequest));
+    }
+
+    @Test
     void testSignPdfWithPkcs12() throws Exception {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
@@ -239,6 +296,31 @@ class CertSignControllerTest {
                         () -> certSignController.signPDFWithCert(request, httpRequest));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PKCS12", "JKS"})
+    void wrongKeystorePasswordIsAnInputError(String certType) {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType(certType);
+        if ("JKS".equals(certType)) {
+            request.setJksFile(
+                    new MockMultipartFile("jksFile", "c.jks", "application/x", jksBytes));
+        } else {
+            request.setP12File(
+                    new MockMultipartFile("p12File", "c.p12", "application/x", p12Bytes));
+        }
+        request.setPassword("not-the-password");
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+
+        assertTrue(exception.getMessage().contains("password is incorrect"));
     }
 
     @Test
@@ -395,6 +477,118 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    /** An openssl-style unencrypted PKCS#8 key and a self-signed certificate, as PEM text. */
+    private static byte[][] unencryptedPemPair() throws Exception {
+        return unencryptedPemPair("CN=Chat Tester");
+    }
+
+    private static byte[][] unencryptedPemPair(String subjectDn) throws Exception {
+        java.security.KeyPairGenerator generator =
+                java.security.KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        java.security.KeyPair pair = generator.generateKeyPair();
+        org.bouncycastle.asn1.x500.X500Name subject =
+                new org.bouncycastle.asn1.x500.X500Name(subjectDn);
+        java.util.Date now = new java.util.Date();
+        java.security.cert.X509Certificate cert =
+                new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
+                        .getCertificate(
+                                new org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder(
+                                                subject,
+                                                java.math.BigInteger.ONE,
+                                                now,
+                                                new java.util.Date(now.getTime() + 86_400_000L),
+                                                subject,
+                                                pair.getPublic())
+                                        .build(
+                                                new org.bouncycastle.operator.jcajce
+                                                                .JcaContentSignerBuilder(
+                                                                "SHA256withRSA")
+                                                        .build(pair.getPrivate())));
+        return new byte[][] {
+            pem("PRIVATE KEY", pair.getPrivate().getEncoded()),
+            pem("CERTIFICATE", cert.getEncoded())
+        };
+    }
+
+    private static byte[] pem(String type, byte[] der) throws Exception {
+        java.io.StringWriter text = new java.io.StringWriter();
+        try (org.bouncycastle.util.io.pem.PemWriter writer =
+                new org.bouncycastle.util.io.pem.PemWriter(text)) {
+            writer.writeObject(new org.bouncycastle.util.io.pem.PemObject(type, der));
+        }
+        return text.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    }
+
+    private SignPDFWithCertRequest unencryptedPemRequest() throws Exception {
+        return unencryptedPemRequest(unencryptedPemPair());
+    }
+
+    private SignPDFWithCertRequest unencryptedPemRequest(byte[][] pemPair) throws Exception {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType("PEM");
+        request.setPrivateKeyFile(
+                new MockMultipartFile("privateKeyFile", "key.pem", "text/plain", pemPair[0]));
+        request.setCertFile(
+                new MockMultipartFile("certFile", "cert.pem", "text/plain", pemPair[1]));
+        request.setShowLogo(false);
+        return request;
+    }
+
+    @Test
+    void unencryptedPkcs8KeyWithNoPasswordSignsWithAVisibleBoxAndNoReason() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest();
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void visibleSignatureForACertificateWithNoCommonNameSigns() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest(unencryptedPemPair("O=Example Org"));
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CN=山田 太郎", "CN=Иван Петров", "O=東京"})
+    void visibleSignatureShowsNamesOutsideWesternEuropeanScripts(String subject) throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest(unencryptedPemPair(subject));
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+        request.setReason("承認 · Утверждено");
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void visibleSignatureOnAPageThatDoesNotExistIsAClearError() throws Exception {
+        SignPDFWithCertRequest request = unencryptedPemRequest();
+        request.setShowSignature(true);
+        request.setPageNumber(5);
+
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+        assertTrue(error.getMessage().contains("pageNumber 5"), error.getMessage());
     }
 
     @Test

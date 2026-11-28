@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useRedactModeTips = (): TooltipContent => {
+export const useRedactModeTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -20,48 +20,33 @@ export const useRedactModeTips = (): TooltipContent => {
         title: t("redact.tooltip.mode.manual.title", "Manual Redaction"),
         description: t(
           "redact.tooltip.mode.manual.text",
-          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)",
+          "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted.",
         ),
       },
     ],
   };
 };
 
-export const useRedactWordsTips = (): TooltipContent => {
+export const useRedactWordsTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
     header: {
-      title: t("redact.tooltip.words.header.title", "Words to Redact"),
+      title: t("redact.tooltip.words.header.title", "Redaction Settings"),
     },
     tips: [
       {
-        title: t("redact.tooltip.words.description.title", "Text Matching"),
+        title: t("redact.auto.wordsToRedact.title", "Words to Redact"),
         description: t(
-          "redact.tooltip.words.description.text",
-          "Enter words or phrases to find and redact in your document. Each word will be searched for separately.",
-        ),
-        bullets: [
-          t("redact.tooltip.words.bullet1", "Add one word at a time"),
-          t(
-            "redact.tooltip.words.bullet2",
-            "Press Enter or click 'Add Another' to add",
-          ),
-          t("redact.tooltip.words.bullet3", "Click × to remove words"),
-        ],
-      },
-      {
-        title: t("redact.tooltip.words.examples.title", "Common Examples"),
-        description: t(
-          "redact.tooltip.words.examples.text",
-          "Typical words to redact include: bank details, email addresses, or specific names.",
+          "redact.auto.wordsToRedact.info",
+          "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret.",
         ),
       },
     ],
   };
 };
 
-export const useRedactAdvancedTips = (): TooltipContent => {
+export const useRedactAdvancedTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -130,7 +115,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
   };
 };
 
-export const useRedactManualTips = (): TooltipContent => {
+export const useRedactManualTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

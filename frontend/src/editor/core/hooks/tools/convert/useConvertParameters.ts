@@ -42,10 +42,6 @@ export interface ConvertParameters extends BaseParameters {
     downloadHtml: boolean;
     includeAllRecipients: boolean;
   };
-  pdfaOptions: {
-    outputFormat: string;
-    strict?: boolean;
-  };
   pdfUaOptions: {
     profile: string;
     language: string;
@@ -71,7 +67,6 @@ export interface ConvertParameters extends BaseParameters {
     dpi: number;
   };
   ebookOptions?: {
-    embedAllFonts: boolean;
     includeTableOfContents: boolean;
     includePageNumbers: boolean;
     optimizeForEbook: boolean;
@@ -81,8 +76,6 @@ export interface ConvertParameters extends BaseParameters {
     targetDevice: string;
     outputFormat: string;
   };
-  /** Per-request engine pick; undefined follows the server setting. */
-  useStirlingOfficeConvert?: boolean;
   isSmartDetection: boolean;
   smartDetectionType: "mixed" | "images" | "web" | "none";
 }
@@ -115,13 +108,9 @@ export const defaultParameters: ConvertParameters = {
     downloadHtml: false,
     includeAllRecipients: false,
   },
-  pdfaOptions: {
-    outputFormat: "pdfa-2b",
-    strict: false,
-  },
   pdfUaOptions: {
     profile: "ua1",
-    language: "en-GB",
+    language: "en-US",
     overrideLanguage: false,
     title: "",
     embedFonts: true,
@@ -143,7 +132,6 @@ export const defaultParameters: ConvertParameters = {
     dpi: 150,
   },
   ebookOptions: {
-    embedAllFonts: false,
     includeTableOfContents: false,
     includePageNumbers: false,
     optimizeForEbook: false,

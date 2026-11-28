@@ -50,6 +50,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   compare: CREDIT_COSTS.SMALL,
   addAttachments: CREDIT_COSTS.SMALL,
   getPdfInfo: CREDIT_COSTS.MEDIUM,
+  checkAccessibility: CREDIT_COSTS.LARGE,
   validateSignature: CREDIT_COSTS.SMALL,
   read: CREDIT_COSTS.SMALL,
 
@@ -78,6 +79,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   // Large operations (5 credits)
   compress: CREDIT_COSTS.LARGE,
   convert: CREDIT_COSTS.LARGE,
+  archivePdf: CREDIT_COSTS.LARGE,
   ocr: CREDIT_COSTS.LARGE,
   certSign: CREDIT_COSTS.LARGE,
   timestampPdf: CREDIT_COSTS.LARGE,

@@ -1,12 +1,15 @@
 import React from "react";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
+  /** False renders the children unwrapped, for content that is only sometimes
+   * the user's. Undefined counts as true, so coerce an optional flag. */
+  enabled?: boolean;
 }
 
 /**
  * Wrapper component for content that should not be captured by analytics tools.
- * Currently applies the 'ph-no-capture' className to prevent PostHog capture.
  *
  * Uses `display: contents` to be layout-invisible - the wrapper exists in the DOM
  * for analytics filtering, but doesn't affect layout, flexbox, grid, or styling.
@@ -25,11 +28,16 @@ interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
  */
 export const PrivateContent: React.FC<PrivateContentProps> = ({
   children,
+  enabled = true,
   className = "",
   style,
   ...props
 }) => {
-  const combinedClassName = `ph-no-capture${className ? ` ${className}` : ""}`;
+  if (!enabled) return <>{children}</>;
+
+  const combinedClassName = className
+    ? `${privateContentClassName} ${className}`
+    : privateContentClassName;
   const combinedStyle = { display: "contents" as const, ...style };
 
   return (

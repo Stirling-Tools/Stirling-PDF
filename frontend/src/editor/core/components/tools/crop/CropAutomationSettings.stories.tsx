@@ -7,7 +7,7 @@ import {
 } from "@editor/hooks/tools/crop/useCropParameters";
 
 const meta = {
-  title: "Tools/Crop/CropAutomationSettings",
+  title: "Tools/Crop PDF/Parts/CropAutomationSettings",
   component: CropAutomationSettings,
   parameters: { layout: "padded" },
   args: {

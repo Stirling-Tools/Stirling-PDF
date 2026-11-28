@@ -1,6 +1,8 @@
-import { Stack, Text, Group, NumberInput, Alert } from "@mantine/core";
+import { Stack, Text, Group, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Rectangle, PDFBounds } from "@editor/utils/cropCoordinates";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 
 interface CropCoordinateInputsProps {
   cropArea: Rectangle;
@@ -21,29 +23,40 @@ const CropCoordinateInputs = ({
 
   return (
     <Stack gap="xs">
-      {showAutomationInfo && (
-        <Alert color="blue" variant="light">
-          <Text size="xs">
-            {t(
-              "crop.automation.info",
-              "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
-            )}
-          </Text>
-        </Alert>
-      )}
-
-      <Text size="sm" fw={500}>
-        {t("crop.coordinates.title", "Position and Size")}
-      </Text>
+      <Group gap={4} wrap="nowrap">
+        <Text size="sm" fw={500}>
+          {t("crop.coordinates.title", "Position and Size")}
+        </Text>
+        {showAutomationInfo && (
+          <ToolInfoTooltip
+            label={
+              <Stack gap={4}>
+                <span>
+                  {t(
+                    "crop.automation.info",
+                    "Enter crop coordinates in PDF points. Origin (0,0) is at bottom-left. These values will be applied to all PDFs processed in this automation.",
+                  )}
+                </span>
+                <span>
+                  {t(
+                    "crop.automation.reference",
+                    "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points.",
+                  )}
+                </span>
+              </Stack>
+            }
+          />
+        )}
+      </Group>
 
       <Group grow>
         <NumberInput
-          label={t("crop.coordinates.x.label", "X Position")}
-          description={
+          {...infoLabelProps(
+            t("crop.coordinates.x.label", "X Position"),
             showAutomationInfo
               ? t("crop.coordinates.x.desc", "Left edge (points)")
-              : undefined
-          }
+              : undefined,
+          )}
           value={Math.round(cropArea.x * 10) / 10}
           onChange={(value) => onCoordinateChange("x", value)}
           disabled={disabled}
@@ -54,12 +67,12 @@ const CropCoordinateInputs = ({
           size={showAutomationInfo ? "sm" : "xs"}
         />
         <NumberInput
-          label={t("crop.coordinates.y.label", "Y Position")}
-          description={
+          {...infoLabelProps(
+            t("crop.coordinates.y.label", "Y Position"),
             showAutomationInfo
               ? t("crop.coordinates.y.desc", "Bottom edge (points)")
-              : undefined
-          }
+              : undefined,
+          )}
           value={Math.round(cropArea.y * 10) / 10}
           onChange={(value) => onCoordinateChange("y", value)}
           disabled={disabled}
@@ -73,12 +86,12 @@ const CropCoordinateInputs = ({
 
       <Group grow>
         <NumberInput
-          label={t("crop.coordinates.width.label", "Width")}
-          description={
+          {...infoLabelProps(
+            t("crop.coordinates.width.label", "Width"),
             showAutomationInfo
               ? t("crop.coordinates.width.desc", "Crop width (points)")
-              : undefined
-          }
+              : undefined,
+          )}
           value={Math.round(cropArea.width * 10) / 10}
           onChange={(value) => onCoordinateChange("width", value)}
           disabled={disabled}
@@ -89,12 +102,12 @@ const CropCoordinateInputs = ({
           size={showAutomationInfo ? "sm" : "xs"}
         />
         <NumberInput
-          label={t("crop.coordinates.height.label", "Height")}
-          description={
+          {...infoLabelProps(
+            t("crop.coordinates.height.label", "Height"),
             showAutomationInfo
               ? t("crop.coordinates.height.desc", "Crop height (points)")
-              : undefined
-          }
+              : undefined,
+          )}
           value={Math.round(cropArea.height * 10) / 10}
           onChange={(value) => onCoordinateChange("height", value)}
           disabled={disabled}
@@ -105,17 +118,6 @@ const CropCoordinateInputs = ({
           size={showAutomationInfo ? "sm" : "xs"}
         />
       </Group>
-
-      {showAutomationInfo && (
-        <Alert color="gray" variant="light">
-          <Text size="xs">
-            {t(
-              "crop.automation.reference",
-              "Reference: A4 page is 595.28 × 841.89 points (210mm × 297mm). 1 inch = 72 points.",
-            )}
-          </Text>
-        </Alert>
-      )}
     </Stack>
   );
 };

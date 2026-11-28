@@ -1,16 +1,18 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
+import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { AppLayout } from "@editor/components/AppLayout";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
-import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 
 const Landing = lazy(() => import("@editor/routes/Landing"));
 const Login = lazy(() => import("@editor/routes/Login"));
 const AuthCallback = lazy(() => import("@editor/routes/AuthCallback"));
 const InviteAccept = lazy(() => import("@editor/routes/InviteAccept"));
 const ShareLinkPage = lazy(() => import("@editor/routes/ShareLinkPage"));
+const OAuthAuthorize = lazy(() => import("@editor/routes/OAuthAuthorize"));
+const OAuthConsent = lazy(() => import("@editor/routes/OAuthConsent"));
 const ParticipantView = lazy(
   () => import("@editor/components/workflow/ParticipantView"),
 );
@@ -24,6 +26,8 @@ import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
 import { AppFrame } from "@editor/components/layout/AppFrame";
 import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 import { RootGate } from "@editor/routes/RootGate";
+import { useAuth } from "@editor/auth/UseSession";
+import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
 
 // Import global styles
 import "@editor/styles/tailwind.css";
@@ -34,21 +38,23 @@ import "@editor/auth/ui/auth-theme.css";
 // Import file ID debugging helpers (development only)
 import "@editor/utils/fileIdSafety";
 
-// Minimal providers for public, no-auth pages (mobile scanner, participant
-// signing) - no API calls, no authentication
-function PublicRouteProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <PreferencesProvider>
-      <ThemeProvider>{children}</ThemeProvider>
-    </PreferencesProvider>
-  );
-}
-
 // Participant signing page — token-gated, no login required
 function ParticipantViewPage() {
   const { token } = useParams<{ token: string }>();
   if (!token) return null;
   return <ParticipantView token={token} />;
+}
+
+function OAuthRoutes() {
+  const { session, loading } = useAuth();
+  if (loading) return <LoadingFallback />;
+  return session ? (
+    <StartupPrompts>
+      <NoAppChrome />
+    </StartupPrompts>
+  ) : (
+    <NoAppChrome />
+  );
 }
 
 function MainRoutes() {
@@ -63,14 +69,18 @@ function MainRoutes() {
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/share/:token" element={<ShareLinkPage />} />
       </Route>
+      <Route element={<OAuthRoutes />}>
+        <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
+      </Route>
       {/* The editor and its tool routes - Landing handles auth logic */}
       <Route path="/*" element={<Landing />} />
     </Routes>
   );
 }
 
-// All other routes need AppProviders for backend integration. RootGate routes
-// "/" by role before any of it mounts.
+// All other routes need the editor's providers. RootGate routes "/" by role
+// before any of them mount.
 function MainApp() {
   return (
     <RootGate>
@@ -119,7 +129,13 @@ export default function App() {
         />
 
         {/* Both apps, under a shared frame so the rail renders once outside them. */}
-        <Route element={<AppFrame />}>
+        <Route
+          element={
+            <PlatformProviders>
+              <AppFrame />
+            </PlatformProviders>
+          }
+        >
           {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
           <Route path="*" element={<MainApp />} />

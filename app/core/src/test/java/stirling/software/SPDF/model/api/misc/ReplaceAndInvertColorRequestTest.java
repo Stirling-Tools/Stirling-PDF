@@ -17,11 +17,13 @@ class ReplaceAndInvertColorRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("all fields default to null on a fresh instance")
-        void defaultsNull() {
+        @DisplayName("options default to the documented values, colors to null")
+        void defaultsMatchSchema() {
             ReplaceAndInvertColorRequest req = new ReplaceAndInvertColorRequest();
-            assertThat(req.getReplaceAndInvertOption()).isNull();
-            assertThat(req.getHighContrastColorCombination()).isNull();
+            assertThat(req.getReplaceAndInvertOption())
+                    .isEqualTo(ReplaceAndInvert.HIGH_CONTRAST_COLOR);
+            assertThat(req.getHighContrastColorCombination())
+                    .isEqualTo(HighContrastColorCombination.WHITE_TEXT_ON_BLACK);
             assertThat(req.getBackGroundColor()).isNull();
             assertThat(req.getTextColor()).isNull();
         }

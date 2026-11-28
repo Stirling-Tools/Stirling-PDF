@@ -11,6 +11,7 @@ import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -107,7 +108,7 @@ const ChangePermissions = (props: BaseToolProps) => {
             )}
             {showOwnerPassword && (
               <PasswordInput
-                size="xs"
+                className={privateContentClassName}
                 label={t(
                   "encryptedPdfUnlock.newOwnerPassword",
                   "New permissions password",

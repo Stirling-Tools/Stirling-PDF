@@ -7,17 +7,22 @@ import java.security.KeyStore;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.controller.api.security.CertSignController;
+import stirling.software.SPDF.pdf.signature.StampStyle;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfSigningService;
+import stirling.software.common.service.SignatureLogoStore;
 
 /** Core implementation of {@link PdfSigningService} backed by {@link CertSignController}. */
 @Service
 public class PdfSigningServiceImpl implements PdfSigningService {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final SignatureLogoStore signatureLogoStore;
 
-    public PdfSigningServiceImpl(CustomPDFDocumentFactory pdfDocumentFactory) {
+    public PdfSigningServiceImpl(
+            CustomPDFDocumentFactory pdfDocumentFactory, SignatureLogoStore signatureLogoStore) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.signatureLogoStore = signatureLogoStore;
     }
 
     @Override
@@ -35,6 +40,9 @@ public class PdfSigningServiceImpl implements PdfSigningService {
 
         CertSignController.CreateSignature createSignature =
                 new CertSignController.CreateSignature(keystore, password);
+        createSignature.setStampStyle(
+                StampStyle.defaults(
+                        showSignature && showLogo ? signatureLogoStore.effective() : null));
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ByteArrayMultipartFile inputFile =

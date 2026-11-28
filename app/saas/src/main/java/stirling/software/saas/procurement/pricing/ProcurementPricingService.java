@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 public class ProcurementPricingService {
 
     private static final double LOG2 = Math.log(2.0);
-    private static final long RUN_CURVE_KNEE = 1_000_000L; // discount starts past 1M committed runs
 
     /**
      * Estimated annual PDF volume from seat count (~2,012.5 PDFs/user/yr = 5 docs/day x 230 working
@@ -40,8 +39,16 @@ public class ProcurementPricingService {
         return Math.round(Math.max(0, users) * 5.0 * 230.0 * 1.75);
     }
 
+    /**
+     * The rate card quotes are priced from. Also sent to the quote builder, which runs the same
+     * formula over it for its live estimate, so its figures can't drift from these rates.
+     */
+    public PricingRates rates() {
+        return PricingRates.defaults();
+    }
+
     public QuoteBreakdown price(QuoteConfig cfg) {
-        return price(cfg, PricingRates.defaults());
+        return price(cfg, rates());
     }
 
     public QuoteBreakdown price(QuoteConfig cfg, PricingRates rates) {
@@ -52,14 +59,6 @@ public class ProcurementPricingService {
         int intensity = Math.max(1, cfg.intensity());
         long runVol = volume * (long) intensity;
 
-        // Committed-volume curve: continuous, no cliffs. Floors at the per-run cost + margin.
-        double volDisc =
-                runVol > RUN_CURVE_KNEE
-                        ? Math.min(
-                                0.5,
-                                rates.discountPerDoubling()
-                                        * (Math.log(runVol / (double) RUN_CURVE_KNEE) / LOG2))
-                        : 0.0;
         double rate = perRunRate(cfg, rates);
         double termDisc = rates.termDiscount(cfg.termYears());
 
@@ -165,12 +164,14 @@ public class ProcurementPricingService {
      */
     private static double perRunRate(QuoteConfig cfg, PricingRates rates) {
         long runVol = Math.max(0, cfg.volume()) * (long) Math.max(1, cfg.intensity());
+        // Committed-volume curve: continuous, no cliffs. Floors at the per-run cost + margin.
+        long knee = rates.runCurveKnee();
         double volDisc =
-                runVol > RUN_CURVE_KNEE
+                runVol > knee
                         ? Math.min(
-                                0.5,
+                                rates.maxVolumeDiscount(),
                                 rates.discountPerDoubling()
-                                        * (Math.log(runVol / (double) RUN_CURVE_KNEE) / LOG2))
+                                        * (Math.log(runVol / (double) knee) / LOG2))
                         : 0.0;
         return Math.max(rates.floorRatePerRun(), rates.listRatePerRun() * (1.0 - volDisc))
                 * cfg.sizeMult();

@@ -16,6 +16,7 @@ import {
   Tabs,
 } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { type Member, type RoleId } from "@processor/api/users";
 import type { Team } from "@processor/api/teams";
 import type { UsersCapabilities } from "@processor/api/usersCapabilities";
@@ -286,6 +287,7 @@ export function UsersDirectory({
       column.entity({
         key: "person",
         header: t("users.columns.person", "Person"),
+        privateContent: true,
         icon: (m) => (
           <Avatar
             name={m.name}
@@ -307,6 +309,7 @@ export function UsersDirectory({
         column.muted({
           key: "email",
           header: t("users.columns.email", "Email"),
+          privateContent: true,
           get: (m) => (m.email !== m.name ? m.email : undefined),
         }),
       );
@@ -595,6 +598,7 @@ export function UsersDirectory({
             {searchOpen ? (
               <Input
                 ref={searchRef}
+                className={privateContentClassName}
                 inputSize="sm"
                 value={query}
                 placeholder={t("users.filters.search", "Search people")}

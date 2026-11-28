@@ -34,6 +34,7 @@ import { useFieldShortcuts } from "@editor/tools/formFill/useFieldShortcuts";
 import { serverMessage } from "@editor/tools/formFill/useFormCommit";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { useAllFiles, useFileState } from "@editor/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@editor/types/fileContext";
@@ -55,6 +56,7 @@ import { FormFieldModifyPanel } from "@editor/tools/formFill/FormFieldModifyPane
 import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 import { dispatchFormApply } from "@editor/tools/formFill/formFillEvents";
 import { useFormAutoMode } from "@editor/tools/formFill/useFormAutoMode";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import styles from "@editor/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -176,11 +178,10 @@ const FormFill = (_props: BaseToolProps) => {
   const hasUncommittedRef = useRef(false);
   hasUncommittedRef.current = hasUncommittedChanges;
   useEffect(() => {
-    registerUnsavedChangesChecker(
-      () =>
-        hasUncommittedRef.current || isDirtyRef.current || savingRef.current,
-    );
-    return () => unregisterUnsavedChangesChecker();
+    const checker = () =>
+      hasUncommittedRef.current || isDirtyRef.current || savingRef.current;
+    registerUnsavedChangesChecker(checker);
+    return () => unregisterUnsavedChangesChecker(checker);
   }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   // requestNavigation gates on this flag rather than on the checker above.
@@ -215,7 +216,8 @@ const FormFill = (_props: BaseToolProps) => {
     return activeFiles[0];
   }, [activeFiles, selectedFileIds, activeFileId]);
   const pdfAccess = usePdfAccess(viewedFile);
-  const currentFile = pdfAccess?.encrypted === false ? viewedFile : null;
+  const editingLocked = pdfEditingLocked(pdfAccess);
+  const currentFile = editingLocked ? null : viewedFile;
 
   const handleExtractCsv = useCallback(async () => {
     if (!currentFile) return;
@@ -500,7 +502,7 @@ const FormFill = (_props: BaseToolProps) => {
   }, [requiredFields, allValues]);
 
   if (!isActive) return null;
-  if (viewedFile && pdfAccess?.encrypted) {
+  if (viewedFile && pdfAccess && editingLocked) {
     return (
       <Stack gap="sm" p="sm">
         {createToolSteps().createFilesStep({ selectedFiles: [] })}
@@ -790,7 +792,7 @@ const FormFill = (_props: BaseToolProps) => {
                           ref={isFieldActive ? activeFieldRef : undefined}
                           className={`${styles.fieldCard} ${
                             isFieldActive ? styles.fieldCardActive : ""
-                          } ${hasError ? styles.fieldCardError : ""}`}
+                          } ${hasError ? styles.fieldCardError : ""} ${privateContentClassName}`}
                           onClick={() =>
                             handleFieldClick(field.name, pageIndex)
                           }

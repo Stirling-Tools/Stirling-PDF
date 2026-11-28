@@ -23,7 +23,6 @@ export interface AutomationTool {
   id: string;
   operation: string;
   name: string;
-  configured: boolean;
   parameters?: Record<string, unknown>;
 }
 

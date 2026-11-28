@@ -4,6 +4,7 @@ import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import FitText from "@editor/components/shared/FitText";
 import { useTranslation } from "react-i18next";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ApiKeySectionProps {
   publicKey: string;
@@ -47,12 +48,13 @@ export default function ApiKeySection({
                 display: "flex",
                 alignItems: "center",
               }}
+              role="group"
               aria-label={t(
                 "config.apiKeys.publicKeyAriaLabel",
                 "Public API key",
               )}
             >
-              <FitText text={publicKey} />
+              <FitText text={publicKey} className={privateContentClassName} />
             </Box>
           </Box>
           <Button

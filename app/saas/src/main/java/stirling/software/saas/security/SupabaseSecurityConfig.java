@@ -127,6 +127,18 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/account-link/connect/request",
                                                 "/api/v1/account-link/connect/claim")
                                         .permitAll()
+                                        // These tracking endpoints verify a license proof or a
+                                        // scoped registration secret without creating a user
+                                        // session.
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/v1/server-license/registrations",
+                                                "/api/v1/server-license/registrations/sync")
+                                        .permitAll()
+                                        // Static legal documents, read before agreeing to them,
+                                        // which can be before the reader has an account.
+                                        .requestMatchers(HttpMethod.GET, "/api/v1/legal/*")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
@@ -288,6 +300,17 @@ public class SupabaseSecurityConfig {
                 }
             }
 
+            // Tokens Supabase issues to connected apps (Claude, ChatGPT) are for /mcp only, which
+            // has its own decoder; API callers use API keys and the web app user sessions.
+            String clientId = token.getClaimAsString("client_id");
+            if (clientId != null && !clientId.isBlank()) {
+                errors.add(
+                        new OAuth2Error(
+                                "invalid_token",
+                                "App tokens are only valid for MCP; use an API key or sign in",
+                                null));
+            }
+
             return errors.isEmpty()
                     ? OAuth2TokenValidatorResult.success()
                     : OAuth2TokenValidatorResult.failure(errors);
@@ -401,10 +424,16 @@ public class SupabaseSecurityConfig {
                         "Accept",
                         "Origin",
                         "X-API-KEY",
-                        "X-Browser-Id"));
+                        "X-Browser-Id",
+                        // MCP Streamable HTTP headers, for browser-based MCP clients
+                        "MCP-Protocol-Version",
+                        "Mcp-Method",
+                        "Mcp-Name",
+                        "Mcp-Session-Id"));
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",
+                        "Mcp-Session-Id",
                         "X-Stirling-Skipped-Field-Edits",
                         "X-Stirling-Skipped-Field-Edits-Total",
                         "X-Stirling-Detected-Fields"));

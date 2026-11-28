@@ -16,6 +16,7 @@ import { useFileContext } from "@editor/contexts/FileContext";
 import { isStirlingFile } from "@editor/types/fileContext";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import apiClient from "@editor/services/apiClient";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 import { openExternalTab } from "@editor/platform/openExternalTab";
 import { getExternalHref } from "@editor/utils/externalUrl";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
@@ -23,10 +24,10 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { SidebarBase } from "@editor/components/viewer/SidebarBase";
 import "@editor/components/viewer/BookmarkSidebar.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface BookmarkSidebarProps {
   visible: boolean;
-  thumbnailVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
@@ -94,7 +95,6 @@ const openBookmarkTarget = (rawUrl: string): void => {
 
 export const BookmarkSidebar = ({
   visible,
-  thumbnailVisible,
   documentCacheKey,
   preloadCacheKeys = [],
 }: BookmarkSidebarProps) => {
@@ -393,6 +393,11 @@ export const BookmarkSidebar = ({
     setIsSavingBookmark(true);
     setAddBookmarkError(null);
     try {
+      await assertSignedPdfsEditable(
+        [file],
+        "/api/v1/general/edit-table-of-contents",
+        false,
+      );
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
       const toPayload = (b: PdfBookmarkObject): BookmarkPayload => ({
@@ -649,7 +654,11 @@ export const BookmarkSidebar = ({
               <span className="bookmark-item__dash">-</span>
             )}
             <div className="bookmark-item__content">
-              <Text size="sm" fw={500} className="bookmark-item__title">
+              <Text
+                size="sm"
+                fw={500}
+                className={`bookmark-item__title ${privateContentClassName}`}
+              >
                 {node.title || t("viewer.bookmarks.untitled", "Untitled")}
               </Text>
               {pageNumber && (
@@ -728,7 +737,6 @@ export const BookmarkSidebar = ({
       className="bookmark-sidebar"
       title={t("viewer.bookmarks.title", "Bookmarks")}
       icon={<Icon name="bookmark" />}
-      rightOffset={`${thumbnailVisible ? 15 : 0}rem`}
       visible={visible}
       onClose={toggleBookmarkSidebar}
       closeLabel={t("viewer.bookmarks.closeSidebar", "Close bookmarks sidebar")}
@@ -814,6 +822,7 @@ export const BookmarkSidebar = ({
             </Text>
             <TextInput
               size="xs"
+              className={privateContentClassName}
               placeholder={t(
                 "viewer.bookmarks.bookmarkTitle",
                 "Bookmark title",
@@ -920,9 +929,11 @@ export const BookmarkSidebar = ({
               />
               <Text
                 size="xs"
-                c="blue.5"
                 ta="center"
-                style={{ textDecoration: "underline" }}
+                style={{
+                  color: "var(--c-accent-text)",
+                  textDecoration: "underline",
+                }}
               >
                 {t(
                   "viewer.bookmarks.openEditor",

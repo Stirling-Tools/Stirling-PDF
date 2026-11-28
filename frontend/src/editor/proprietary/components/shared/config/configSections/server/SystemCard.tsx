@@ -19,6 +19,7 @@ import {
 } from "@editor/i18n";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Branding, languages and the system-wide toggles. Writes ui.* and system.*. */
 export function SystemCard({
@@ -221,6 +222,7 @@ export function SystemCard({
 
         <div id="frontendUrl">
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -343,6 +345,29 @@ export function SystemCard({
               system: {
                 ...settings.system,
                 showUpdateOnlyAdmin: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
+
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.enableFeedback.label",
+            "Enable Feedback",
+          )}
+          info={t(
+            "admin.settings.general.enableFeedback.description",
+            "Let users send feedback to the Stirling team",
+          )}
+          pending={isFieldPending("system.enableFeedback")}
+          checked={settings.system?.enableFeedback || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: {
+                ...settings.system,
+                enableFeedback: checked,
               },
             })
           }

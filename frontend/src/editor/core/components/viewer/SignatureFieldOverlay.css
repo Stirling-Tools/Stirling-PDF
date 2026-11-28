@@ -1,0 +1,19 @@
+.signature-field-flash {
+  animation: signature-field-flash 1.2s ease-out;
+}
+
+@keyframes signature-field-flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--c-primary) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-primary) 25%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-field-flash {
+    animation: none;
+  }
+}

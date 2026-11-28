@@ -43,6 +43,7 @@ async function mockHardwareEndpoints(page: Page) {
             alias: "Anthony Stirling",
             source: "WINDOWS_STORE",
             subject: "CN=Anthony Stirling",
+            displaySubject: "CN=Anthony Stirling",
             issuer: "CN=Anthony Stirling",
             subjectCommonName: "Anthony Stirling",
             issuerCommonName: "Anthony Stirling",
@@ -78,19 +79,17 @@ test.describe("CertSign tool - certificate source model", () => {
     await expect(page).toHaveURL(/\/cert-sign/);
     // With no server cert or hardware token there is nothing to choose, so the
     // whole "Certificate source" step is hidden and the format picker shows directly.
-    await expect(
-      page.getByRole("button", { name: /pkcs12/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/^pkcs12$/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText(/certificate source/i)).toHaveCount(0);
     await expect(
       page.getByText(/no other certificate sources are available/i),
     ).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /^server$/i })).toHaveCount(
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
       0,
     );
+    await expect(page.getByRole("radio", { name: /^server$/i })).toHaveCount(0);
   });
 
   test("does NOT offer 'This device' when not running as desktop", async ({
@@ -101,12 +100,12 @@ test.describe("CertSign tool - certificate source model", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     // No alternative sources: the source step is hidden, and hardware is never offered.
-    await expect(
-      page.getByRole("button", { name: /pkcs12/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
+    await expect(page.getByText(/^pkcs12$/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -142,16 +141,18 @@ test.describe("CertSign tool - hardware on mac/Linux (no Windows store)", () => 
     await page.waitForLoadState("domcontentloaded");
     await uploadFiles(page, SAMPLE_PDF);
 
-    const deviceBtn = page.getByRole("button", { name: /this device/i });
-    await expect(deviceBtn).toBeVisible({ timeout: 10_000 });
-    await deviceBtn.click();
+    const deviceBtn = page.getByRole("radio", { name: /this device/i });
+    await expect(deviceBtn).toBeEnabled({ timeout: 10_000 });
+    await page
+      .locator(".mantine-SegmentedControl-label", { hasText: /this device/i })
+      .click();
 
-    // Only one hardware kind applies -> no Windows-store toggle.
+    // No OS store -> no digital ID picker and no way back to one.
     await expect(
-      page.getByRole("button", { name: /windows certificate store/i }),
+      page.getByRole("button", { name: /back to digital ids/i }),
     ).toHaveCount(0);
-    // The USB-token (PKCS#11) driver picker is shown instead.
-    await expect(page.getByText(/PKCS#11 driver/i).first()).toBeVisible({
+    // The card software (PKCS#11) picker is shown instead.
+    await expect(page.getByText(/PKCS#11/i).first()).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -182,14 +183,14 @@ test.describe("CertSign tool - server deployment (no hardware)", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
+      page.getByRole("radio", { name: /^upload$/i }).first(),
     ).toBeAttached({ timeout: 10_000 });
     await expect(
-      page.getByRole("button", { name: /^server$/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
+      page.getByRole("radio", { name: /^server$/i }).first(),
+    ).toBeEnabled({ timeout: 10_000 });
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -210,18 +211,23 @@ test.describe("CertSign tool - hardware signing (desktop)", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     // The desktop-only source appears.
-    const deviceBtn = page.getByRole("button", { name: /this device/i });
-    await expect(deviceBtn).toBeVisible({ timeout: 10_000 });
-    await deviceBtn.click();
+    const deviceBtn = page.getByRole("radio", { name: /this device/i });
+    await expect(deviceBtn).toBeEnabled({ timeout: 10_000 });
+    await page
+      .locator(".mantine-SegmentedControl-label", { hasText: /this device/i })
+      .click();
 
-    // The Windows store / USB token kind toggle renders.
+    // The single enumerated cert is listed and auto-selected.
     await expect(
-      page.getByRole("button", { name: /windows certificate store/i }),
-    ).toBeVisible({ timeout: 10_000 });
+      page.getByRole("radio", { name: /Anthony Stirling/ }),
+    ).toBeChecked({ timeout: 10_000 });
 
-    // The single enumerated cert is auto-selected into the picker input.
+    // The PKCS#11 route sits behind a link and can be backed out of.
+    await page.getByRole("button", { name: /read the card directly/i }).click();
+    await expect(page.getByText(/PKCS#11/i).first()).toBeVisible();
+    await page.getByRole("button", { name: /back to digital ids/i }).click();
     await expect(
-      page.getByRole("textbox", { name: /^certificate$/i }),
-    ).toHaveValue(/Anthony Stirling/, { timeout: 10_000 });
+      page.getByRole("radio", { name: /Anthony Stirling/ }),
+    ).toBeVisible();
   });
 });

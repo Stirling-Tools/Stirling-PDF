@@ -21,5 +21,5 @@ public class CreatePortfolioRequest {
             description = "Title shown on the portfolio cover page.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "PDF Portfolio")
-    private String coverTitle;
+    private String coverTitle = "PDF Portfolio";
 }

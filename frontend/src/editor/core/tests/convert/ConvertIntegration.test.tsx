@@ -114,6 +114,7 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
       .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
+    forgetFile: vi.fn(),
   },
 }));
 
@@ -424,10 +425,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -537,10 +534,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -607,10 +600,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -684,10 +673,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -768,10 +753,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -851,10 +832,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -938,10 +915,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1009,10 +982,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -1088,10 +1057,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1159,10 +1124,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",
@@ -1237,10 +1198,6 @@ describe("Convert Tool Integration Tests", () => {
           downloadHtml: false,
           includeAllRecipients: false,
         },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
-        },
         pdfxOptions: {
           outputFormat: "pdfx",
         },
@@ -1313,10 +1270,6 @@ describe("Convert Tool Integration Tests", () => {
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
           includeAllRecipients: false,
-        },
-        pdfaOptions: {
-          outputFormat: "",
-          strict: false,
         },
         pdfxOptions: {
           outputFormat: "pdfx",

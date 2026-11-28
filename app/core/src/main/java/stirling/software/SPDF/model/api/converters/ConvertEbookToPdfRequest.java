@@ -23,25 +23,18 @@ public class ConvertEbookToPdfRequest {
     private MultipartFile fileInput;
 
     @Schema(
-            description = "Embed all fonts from the eBook into the generated PDF",
-            allowableValues = {"true", "false"},
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "false")
-    private Boolean embedAllFonts;
-
-    @Schema(
             description = "Add a generated table of contents to the resulting PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean includeTableOfContents;
+    private Boolean includeTableOfContents = false;
 
     @Schema(
             description = "Add page numbers to the generated PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean includePageNumbers;
+    private Boolean includePageNumbers = false;
 
     @Schema(
             description =
@@ -49,5 +42,5 @@ public class ConvertEbookToPdfRequest {
                             + " eInk devices)",
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean optimizeForEbook;
+    private Boolean optimizeForEbook = false;
 }

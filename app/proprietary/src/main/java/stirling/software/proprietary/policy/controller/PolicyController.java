@@ -597,6 +597,14 @@ public class PolicyController {
         return new PolicyPermissions(policyEditingAllowed());
     }
 
+    /**
+     * The caller's policy with its stored step secrets, for running it in-process. Applies the same
+     * access check as {@link #getPolicy}; the result must never be returned over HTTP.
+     */
+    public Optional<Policy> accessiblePolicyForRun(String policyId) {
+        return policyStore.get(policyId).filter(this::accessiblePolicySurface);
+    }
+
     @GetMapping("/{policyId}")
     @Operation(
             summary = "Get a policy by id",
@@ -764,6 +772,7 @@ public class PolicyController {
             // Steps get the same treatment as the output, and for the same reason: an integration
             // step dereferences its connection by id on a principal-less worker thread, so this
             // request thread is the only place that reference can be checked against the caller.
+            policyValidator.validateRunnableSteps(definition.steps());
             policyValidator.validateSteps(definition.steps());
             // Every destination is checked; an ad-hoc run with no destinations validates nothing.
             for (OutputSpec output : definition.outputs()) {

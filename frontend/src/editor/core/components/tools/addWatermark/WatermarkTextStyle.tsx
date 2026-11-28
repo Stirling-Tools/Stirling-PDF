@@ -1,5 +1,4 @@
-import { useId } from "react";
-import { Stack, Text, Select, ColorInput } from "@mantine/core";
+import { Stack, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
@@ -20,47 +19,35 @@ const WatermarkTextStyle = ({
   disabled = false,
 }: WatermarkTextStyleProps) => {
   const { t } = useTranslation();
-  const colorLabelId = useId();
-  const alphabetLabelId = useId();
 
   return (
     <Stack gap="sm">
-      <Stack gap="xs">
-        <Text id={colorLabelId} size="xs" fw={500}>
-          {t("watermark.settings.color", "Colour")}
-        </Text>
-        <ColorInput
-          aria-labelledby={colorLabelId}
-          value={parameters.customColor}
-          onChange={(value) => onParameterChange("customColor", value)}
-          disabled={disabled}
-          format="hex"
-          popoverProps={{
-            withinPortal: true,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-          }}
-        />
-      </Stack>
+      <ColorInput
+        label={t("watermark.settings.color", "Colour")}
+        value={parameters.customColor}
+        onChange={(value) => onParameterChange("customColor", value)}
+        disabled={disabled}
+        format="hex"
+        popoverProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
+      />
 
-      <Stack gap="xs">
-        <Text id={alphabetLabelId} size="xs" fw={500}>
-          {t("watermark.settings.alphabet", "Alphabet")}
-        </Text>
-        <Select
-          aria-labelledby={alphabetLabelId}
-          value={parameters.alphabet}
-          onChange={(value) => value && onParameterChange("alphabet", value)}
-          data={alphabetOptions.map((option) => ({
-            value: option.value,
-            label: t(option.labelKey, option.label),
-          }))}
-          disabled={disabled}
-          comboboxProps={{
-            withinPortal: true,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-          }}
-        />
-      </Stack>
+      <Select
+        label={t("watermark.settings.alphabet", "Alphabet")}
+        value={parameters.alphabet}
+        onChange={(value) => value && onParameterChange("alphabet", value)}
+        data={alphabetOptions.map((option) => ({
+          value: option.value,
+          label: t(option.labelKey, option.label),
+        }))}
+        disabled={disabled}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
+      />
     </Stack>
   );
 };

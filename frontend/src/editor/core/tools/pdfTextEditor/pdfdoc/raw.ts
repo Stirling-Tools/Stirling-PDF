@@ -36,6 +36,15 @@ export interface ValueSpan {
   text: string;
 }
 
+export interface ObjectExtent {
+  start: number;
+  /** Offset of the `stream` keyword, or the object's end when it has no stream. */
+  dictEnd: number;
+  stream: { start: number; end: number } | null;
+  /** Offset of `endobj`, -1 when none follows the stream. */
+  end: number;
+}
+
 export interface NumberTreeEntry {
   /** The object whose body holds the value. */
   objNum: number;
@@ -51,6 +60,19 @@ export interface ParentTreeArray {
   /** Where the page's value sits: the array itself, or a reference to it. */
   entry: NumberTreeEntry;
   items: ValueSpan[] | null;
+}
+
+interface NumberTreeNode {
+  /** Each key's first value, by the key as written, spanning the node's object body. */
+  values: Map<string, ValueSpan>;
+  kids: NumberTreeKid[];
+}
+
+interface NumberTreeKid {
+  num: number;
+  /** The kid's /Limits, NaN when it has no readable pair. */
+  lo: number;
+  hi: number;
 }
 
 interface ObjectSource {
@@ -76,6 +98,11 @@ export class RawPdf {
   private readonly objects: Map<number, ObjectSource>;
   private readonly bodyCache = new Map<number, string | null>();
   private pageNums: number[] | null = null;
+  /**
+   * Number-tree nodes by `objNum:nodeStart`, each read once: one flat /Nums can
+   * hold an entry per annotation, and re-reading it per lookup is quadratic.
+   */
+  private readonly numberTreeNodes = new Map<string, NumberTreeNode | null>();
   /** Highest object number the file has ever used, across all revisions. */
   private highestObj: number;
 
@@ -317,6 +344,11 @@ export class RawPdf {
     return this.objects.get(num)?.offset ?? -1;
   }
 
+  /** The numbers of every object the file's index holds, ascending. */
+  objectNumbers(): number[] {
+    return [...this.objects.keys()].filter((n) => n > 0).sort((x, y) => x - y);
+  }
+
   /** `/Key 12 0 R` -> 12. */
   dictRef(body: string, key: string): number | null {
     const span = this.valueSpan(body, key);
@@ -411,36 +443,12 @@ export class RawPdf {
       if (seen.has(objNum)) return null;
       seen.add(objNum);
     }
-    const body = this.objectBody(objNum);
-    if (!body) return null;
-    const node = body.slice(nodeStart);
+    const node = this.numberTreeNode(objNum, nodeStart);
+    if (!node) return null;
+    const span = node.values.get(String(key));
+    if (span) return { objNum, span: { ...span } };
 
-    const nums = this.valueSpan(node, "Nums");
-    const pairs = nums ? arrayItems(nums.text) : null;
-    if (nums && pairs) {
-      for (let i = 0; i + 1 < pairs.length; i += 2) {
-        if (pairs[i].text !== String(key)) continue;
-        const value = pairs[i + 1];
-        const at = nodeStart + nums.start;
-        return {
-          objNum,
-          span: {
-            start: at + value.start,
-            end: at + value.end,
-            text: value.text,
-          },
-        };
-      }
-    }
-
-    const kids = this.resolve(node, "Kids");
-    for (const m of kids?.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
-      const kidNum = parseInt(m[1], 10);
-      const kid = this.objectBody(kidNum);
-      const limits = kid ? this.resolve(kid, "Limits") : null;
-      const [lo, hi] = (limits ? arrayItems(limits.trim()) : null)?.map((b) =>
-        Number(b.text),
-      ) ?? [NaN, NaN];
+    for (const { num, lo, hi } of node.kids) {
       // /Limits is only an index; without both bounds, search the kid anyway.
       if (
         Number.isInteger(lo) &&
@@ -448,21 +456,71 @@ export class RawPdf {
         (key < lo || key > hi)
       )
         continue;
-      const found = this.searchNumberTree(kidNum, 0, key, seen, depth + 1);
+      const found = this.searchNumberTree(num, 0, key, seen, depth + 1);
       if (found) return found;
     }
     return null;
   }
 
-  /** Decoded stream payload for an object, or null when unsupported. */
-  async streamData(num: number): Promise<Uint8Array | null> {
-    const entry = this.objects.get(num);
-    if (!entry || entry.offset === undefined) return null;
-    const body = this.objectBody(num);
+  private numberTreeNode(
+    objNum: number,
+    nodeStart: number,
+  ): NumberTreeNode | null {
+    const id = `${objNum}:${nodeStart}`;
+    const cached = this.numberTreeNodes.get(id);
+    if (cached !== undefined) return cached;
+    const body = this.objectBody(objNum);
+    const node = body ? this.readNumberTreeNode(body, nodeStart) : null;
+    this.numberTreeNodes.set(id, node);
+    return node;
+  }
+
+  private readNumberTreeNode(body: string, nodeStart: number): NumberTreeNode {
+    const node = body.slice(nodeStart);
+    const values = new Map<string, ValueSpan>();
+    const nums = this.valueSpan(node, "Nums");
+    const pairs = nums ? arrayItems(nums.text) : null;
+    if (nums && pairs) {
+      const at = nodeStart + nums.start;
+      for (let i = 0; i + 1 < pairs.length; i += 2) {
+        const value = pairs[i + 1];
+        if (values.has(pairs[i].text)) continue;
+        values.set(pairs[i].text, {
+          start: at + value.start,
+          end: at + value.end,
+          text: value.text,
+        });
+      }
+    }
+
+    const kids: NumberTreeKid[] = [];
+    const refs = this.resolve(node, "Kids");
+    for (const m of refs?.matchAll(/(\d+)\s+\d+\s+R/g) ?? []) {
+      const num = parseInt(m[1], 10);
+      const kid = this.objectBody(num);
+      const limits = kid ? this.resolve(kid, "Limits") : null;
+      const [lo = NaN, hi = NaN] =
+        (limits ? arrayItems(limits.trim()) : null)?.map((b) =>
+          Number(b.text),
+        ) ?? [];
+      kids.push({ num, lo, hi });
+    }
+    return { values, kids };
+  }
+
+  /** Where a top-level object's dictionary, stream payload and `endobj` sit in `src`; null when it has no offset. */
+  objectExtent(num: number): ObjectExtent | null {
+    const start = this.bodyOffset(num);
+    const body = start < 0 ? null : this.objectBody(num);
     if (body === null) return null;
-    const kw = body.indexOf("stream");
-    if (kw < 0) return null;
-    let dataStart = entry.offset + kw + "stream".length;
+    const valueEnd = scanValueEnd(body, skipWhitespace(body, 0));
+    const keyword = /^\s*stream\b/.exec(body.slice(valueEnd));
+    const kw = keyword ? valueEnd + keyword[0].length - "stream".length : -1;
+    if (kw < 0) {
+      const end = start + body.length;
+      return { start, dictEnd: end, stream: null, end };
+    }
+    let dataStart = start + kw + "stream".length;
     if (this.src[dataStart] === "\r") dataStart += 1;
     if (this.src[dataStart] === "\n") dataStart += 1;
 
@@ -479,7 +537,10 @@ export class RawPdf {
     // A wrong /Length is common enough in the wild that trusting it blindly
     // truncates real content; verify against the endstream keyword.
     const marker = this.src.indexOf("endstream", dataStart);
-    if (dataEnd < 0 || marker < 0 || dataEnd > marker) {
+    const confirmed =
+      dataEnd >= 0 &&
+      /^\s*endstream/.test(this.src.slice(dataEnd, dataEnd + 16));
+    if (!confirmed && (dataEnd < 0 || marker < 0 || dataEnd > marker)) {
       dataEnd = marker < 0 ? this.bytes.length : marker;
       while (
         dataEnd > dataStart &&
@@ -488,7 +549,20 @@ export class RawPdf {
         dataEnd -= 1;
       }
     }
-    let data = this.bytes.subarray(dataStart, dataEnd);
+    return {
+      start,
+      dictEnd: start + kw,
+      stream: { start: dataStart, end: dataEnd },
+      end: this.src.indexOf("endobj", dataEnd),
+    };
+  }
+
+  /** Decoded stream payload for an object, or null when unsupported. */
+  async streamData(num: number): Promise<Uint8Array | null> {
+    const extent = this.objectExtent(num);
+    const body = this.objectBody(num);
+    if (!extent?.stream || body === null) return null;
+    let data = this.bytes.subarray(extent.stream.start, extent.stream.end);
 
     const filters = this.filterNames(body);
     if (filters === null) return null;
@@ -560,12 +634,12 @@ export class RawPdf {
         out.push(num);
         return;
       }
-      const kids = this.valueSpan(body, "Kids");
-      if (!kids) {
+      if (!this.valueSpan(body, "Kids")) {
         if (type === null) out.push(num);
         return;
       }
-      for (const m of kids.text.matchAll(/(\d+)\s+\d+\s+R/g)) {
+      const kids = this.resolve(body, "Kids") ?? "";
+      for (const m of kids.matchAll(/(\d+)\s+\d+\s+R/g)) {
         visit(parseInt(m[1], 10), depth + 1);
       }
     };
@@ -740,8 +814,34 @@ interface Entry {
 }
 
 function findEntry(body: string, key: string): Entry | null {
+  let found: Entry | null = null;
+  visitEntries(body, (name, entry) => {
+    if (name === key) found = entry;
+    return found !== null;
+  });
+  return found;
+}
+
+/** The keys of the outermost dictionary in `body`, without their slashes; null when there is none. */
+export function dictKeys(body: string): string[] | null {
+  const keys: string[] = [];
+  const read = visitEntries(body, (name) => {
+    keys.push(name);
+    return false;
+  });
+  return read ? keys : null;
+}
+
+/**
+ * Visit the entries of the outermost dictionary in `body` until `visit`
+ * returns true. False when `body` has no dictionary.
+ */
+function visitEntries(
+  body: string,
+  visit: (key: string, entry: Entry) => boolean,
+): boolean {
   const open = body.indexOf("<<");
-  if (open < 0) return null;
+  if (open < 0) return false;
   let i = open + 2;
   let depth = 1;
   while (i < body.length) {
@@ -759,10 +859,14 @@ function findEntry(body: string, key: string): Entry | null {
       i += 2;
       continue;
     }
+    if (ch === "<") {
+      i = skipHexString(body, i);
+      continue;
+    }
     if (ch === ">" && body[i + 1] === ">") {
       depth -= 1;
       i += 2;
-      if (depth === 0) return null;
+      if (depth === 0) return true;
       continue;
     }
     if (ch === "[" || ch === "]") {
@@ -773,15 +877,16 @@ function findEntry(body: string, key: string): Entry | null {
       const nameEnd = scanNameEnd(body, i + 1);
       const start = skipWhitespace(body, nameEnd);
       const end = scanValueEnd(body, start);
-      if (body.slice(i + 1, nameEnd) === key)
-        return { keyStart: i, start, end };
+      if (visit(body.slice(i + 1, nameEnd), { keyStart: i, start, end })) {
+        return true;
+      }
       // Past the value too: in `/S /P /P 9 0 R` the value /P is not the key.
       i = end;
       continue;
     }
     i += 1;
   }
-  return null;
+  return true;
 }
 
 function skipWhitespace(text: string, at: number): number {
@@ -800,6 +905,12 @@ function scanNameEnd(text: string, at: number): number {
     i += 1;
   }
   return i;
+}
+
+/** Past the `>` closing the hex string at `at`, which would otherwise read as half of a dictionary's `>>`. */
+function skipHexString(text: string, at: number): number {
+  const close = text.indexOf(">", at);
+  return close < 0 ? text.length : close + 1;
 }
 
 function skipLiteralString(text: string, at: number): number {
@@ -837,6 +948,10 @@ function scanValueEnd(text: string, at: number): number {
         i += 2;
         continue;
       }
+      if (text[i] === "<") {
+        i = skipHexString(text, i);
+        continue;
+      }
       if (text[i] === ">" && text[i + 1] === ">") {
         depth -= 1;
         i += 2;
@@ -847,10 +962,7 @@ function scanValueEnd(text: string, at: number): number {
     }
     return i;
   }
-  if (text[i] === "<") {
-    const close = text.indexOf(">", i);
-    return close < 0 ? text.length : close + 1;
-  }
+  if (text[i] === "<") return skipHexString(text, i);
   if (text[i] === "[") {
     let depth = 0;
     while (i < text.length) {

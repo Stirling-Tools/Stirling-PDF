@@ -8,6 +8,8 @@ import {
 } from "@editor/services/connectionModeService";
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 interface ServerSelectionProps {
   onSelect: (config: ServerConfig) => void;
   loading: boolean;
@@ -251,6 +253,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
     >
       <Stack gap="md">
         <TextInput
+          className={privateContentClassName}
           label={t("setup.server.url.label", "Server URL")}
           placeholder="https://your-server.com"
           value={customUrl}
@@ -324,9 +327,11 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
                 }, 0);
               }}
             >
-              {t("setup.server.useLast", "Last used server: {{serverUrl}}", {
-                serverUrl: serverUrl,
-              })}
+              <PrivateContent>
+                {t("setup.server.useLast", "Last used server: {{serverUrl}}", {
+                  serverUrl: serverUrl,
+                })}
+              </PrivateContent>
             </Button>
           </div>
         )}

@@ -128,7 +128,7 @@ export default function ApiKeys() {
       </Paper>
 
       {apiKeyError && (
-        <Text size="sm" c="red.5">
+        <Text size="sm" c="var(--c-danger-text)">
           {t(
             "config.apiKeys.generateError",
             "We couldn't generate your API key.",
@@ -137,7 +137,7 @@ export default function ApiKeys() {
             component="button"
             underline="always"
             onClick={refetch}
-            c="red.4"
+            c="var(--c-danger-text)"
           >
             {t("common.retry", "Retry")}
           </Anchor>

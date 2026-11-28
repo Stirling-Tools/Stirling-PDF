@@ -19,13 +19,13 @@ class AddPageNumbersRequestTest {
             AddPageNumbersRequest req = new AddPageNumbersRequest();
             assertThat(req.getZeroPad()).isZero();
             assertThat(req.getPosition()).isEqualTo(8);
-            assertThat(req.getStartingNumber()).isZero();
-            assertThat(req.getFontSize()).isEqualTo(0f);
-            assertThat(req.getCustomMargin()).isNull();
+            assertThat(req.getStartingNumber()).isEqualTo(1);
+            assertThat(req.getFontSize()).isEqualTo(12f);
+            assertThat(req.getCustomMargin()).isEqualTo("medium");
             assertThat(req.getFontType()).isNull();
-            assertThat(req.getFontColor()).isNull();
-            assertThat(req.getPagesToNumber()).isNull();
-            assertThat(req.getCustomText()).isNull();
+            assertThat(req.getFontColor()).isEqualTo("#000000");
+            assertThat(req.getPagesToNumber()).isEqualTo("all");
+            assertThat(req.getCustomText()).isEqualTo("{n}");
         }
     }
 
@@ -94,7 +94,7 @@ class AddPageNumbersRequestTest {
         void differByInheritedField() {
             AddPageNumbersRequest a = new AddPageNumbersRequest();
             AddPageNumbersRequest b = new AddPageNumbersRequest();
-            b.setPageNumbers("all");
+            b.setPageNumbers("1-3");
             assertThat(a).isNotEqualTo(b);
         }
 

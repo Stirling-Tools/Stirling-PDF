@@ -5,7 +5,6 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { AutomationTool } from "@editor/types/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
-import { ToolId } from "@editor/types/toolId";
 import ToolSelector from "@editor/components/tools/automate/ToolSelector";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 
@@ -18,6 +17,7 @@ interface ToolListProps {
   onToolAdd: () => void;
   getToolName: (operation: string) => string;
   getToolDefaultParameters: (operation: string) => Record<string, unknown>;
+  isToolConfigured: (tool: AutomationTool) => boolean;
 }
 
 export default function ToolList({
@@ -29,20 +29,15 @@ export default function ToolList({
   onToolAdd,
   getToolName,
   getToolDefaultParameters,
+  isToolConfigured,
 }: ToolListProps) {
   const { t } = useTranslation();
 
   const handleToolSelect = (index: number, newOperation: string) => {
-    const defaultParams = getToolDefaultParameters(newOperation);
-    const toolEntry = toolRegistry[newOperation as ToolId];
-    // If tool has no settingsComponent, it's automatically configured
-    const isConfigured = !toolEntry?.automationSettings;
-
     onToolUpdate(index, {
       operation: newOperation,
       name: getToolName(newOperation),
-      configured: isConfigured,
-      parameters: defaultParams,
+      parameters: getToolDefaultParameters(newOperation),
     });
   };
 
@@ -62,16 +57,15 @@ export default function ToolList({
           <React.Fragment key={tool.id}>
             <div
               style={{
-                border: "1px solid var(--mantine-color-gray-2)",
+                border: "1px solid var(--c-border)",
                 borderRadius:
-                  tool.operation && !tool.configured
+                  tool.operation && !isToolConfigured(tool)
                     ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
                     : "var(--mantine-radius-lg)",
-                backgroundColor: "var(--mantine-color-gray-2)",
                 position: "relative",
                 padding: "var(--mantine-spacing-xs)",
                 borderBottomWidth:
-                  tool.operation && !tool.configured ? "0" : "1px",
+                  tool.operation && !isToolConfigured(tool) ? "0" : "1px",
               }}
             >
               {/* Delete X - centered vertically, anchored right */}
@@ -138,11 +132,11 @@ export default function ToolList({
               </div>
             </div>
             {/* Configuration status underneath */}
-            {tool.operation && !tool.configured && (
+            {tool.operation && !isToolConfigured(tool) && (
               <div
                 style={{
                   width: "100%",
-                  border: "1px solid var(--mantine-color-gray-2)",
+                  border: "1px solid var(--c-border)",
                   borderTop: "none",
                   borderRadius:
                     "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",

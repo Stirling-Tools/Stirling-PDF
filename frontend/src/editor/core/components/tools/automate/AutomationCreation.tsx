@@ -55,6 +55,7 @@ export default function AutomationCreation({
     removeTool,
     updateTool,
     canSaveAutomation,
+    isToolConfigured,
     getToolName,
     getToolDefaultParameters,
   } = useAutomationForm({ mode, existingAutomation, toolRegistry });
@@ -70,10 +71,7 @@ export default function AutomationCreation({
 
   const handleToolConfigSave = (parameters: Record<string, unknown>) => {
     if (configuraingToolIndex >= 0) {
-      updateTool(configuraingToolIndex, {
-        configured: true,
-        parameters,
-      });
+      updateTool(configuraingToolIndex, { parameters });
     }
     setConfigModalOpen(false);
     setConfiguringToolIndex(-1);
@@ -89,7 +87,6 @@ export default function AutomationCreation({
       id: `tool-${Date.now()}`,
       operation: "",
       name: t("automate.creation.tools.selectTool", "Select a tool..."),
-      configured: false,
       parameters: {},
     };
     updateTool(selectedTools.length, newTool);
@@ -176,23 +173,6 @@ export default function AutomationCreation({
 
   return (
     <div>
-      <Text
-        size="sm"
-        mb="md"
-        p="md"
-        style={{
-          borderRadius: "var(--mantine-radius-md)",
-          background: "var(--color-gray-200)",
-          color: "var(--mantine-color-text)",
-        }}
-      >
-        {t(
-          "automate.creation.intro",
-          "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
-        )}
-      </Text>
-      <Divider mb="md" />
-
       <Stack gap="md">
         <Group gap="xs" align="flex-end">
           <Stack gap="xs" style={{ flex: 1 }}>
@@ -239,6 +219,7 @@ export default function AutomationCreation({
             onToolAdd={handleToolAdd}
             getToolName={getToolName}
             getToolDefaultParameters={getToolDefaultParameters}
+            isToolConfigured={isToolConfigured}
           />
         )}
 

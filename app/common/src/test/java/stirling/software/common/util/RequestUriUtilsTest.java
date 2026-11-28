@@ -212,7 +212,28 @@ class RequestUriUtilsTest {
     void testIsPublicAuthEndpoint_webhookReceiver() {
         // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/connected-accounts/callback/microsoft", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/connected-accounts/12/access-token", ""));
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_mcpAuthorizationServer() {
+        // Clients reach discovery, registration and token with no credentials at all.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/.well-known/oauth-authorization-server", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/.well-known/jwks.json", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/register", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/mcp/oauth/token", "/app"));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/authorizations", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/grants", ""));
     }
 
     @Test
@@ -258,13 +279,26 @@ class RequestUriUtilsTest {
     }
 
     @Test
-    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
-        assertFalse(
+    void testIsPublicAuthEndpoint_shareLinkMetadataApi() {
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f/metadata",
                         ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
+        String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/accessed", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/metadata/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/accesses", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/files/1/shares/links/"
+                                + "00dcac3a-fc7a-4989-9c4f-97745484d62f/accesses",
+                        ""));
     }
 
     // --- share-link SPA bootstrap ---
@@ -310,6 +344,19 @@ class RequestUriUtilsTest {
         // Guard against future additions like /share/<token>/download becoming accidentally public
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/download", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc/admin", ""));
+    }
+
+    @Test
+    void testIsShareLinkRead_onlyTheTokenDownloadAndMetadataPaths() {
+        String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
+        assertTrue(RequestUriUtils.isShareLinkRead(link, ""));
+        assertTrue(RequestUriUtils.isShareLinkRead("/app" + link, "/app"));
+        assertTrue(RequestUriUtils.isShareLinkRead(link + "/metadata", ""));
+        assertTrue(RequestUriUtils.isShareLinkRead("/app" + link + "/metadata", "/app"));
+        assertFalse(RequestUriUtils.isShareLinkRead(link + "/accesses", ""));
+        assertFalse(RequestUriUtils.isShareLinkRead("/api/v1/storage/share-links/accessed", ""));
+        assertFalse(
+                RequestUriUtils.isShareLinkRead("/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
     }
 
     @Test

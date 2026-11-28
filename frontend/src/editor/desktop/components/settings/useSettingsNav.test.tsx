@@ -85,6 +85,7 @@ vi.mock("@editor/services/connectionModeService", () => ({
         throw new Error("Connection config unavailable");
       return state.mode;
     },
+    getCachedMode: () => (state.connectionFails ? null : state.mode),
     subscribeToModeChanges: () => () => {},
   },
 }));

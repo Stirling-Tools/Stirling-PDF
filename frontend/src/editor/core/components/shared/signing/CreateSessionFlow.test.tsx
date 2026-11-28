@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
 import UserSelector from "@editor/components/shared/UserSelector";
 import { qk } from "@editor/query/keys";
@@ -15,6 +15,13 @@ vi.mock("@editor/hooks/useIsMobile", () => ({
 }));
 beforeEach(() => {
   viewport.mobile = false;
+  // The date picker opens on the current month. Pin it so the fixed
+  // October 2026 dates below stay on screen as the real clock advances.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 15, 12, 0, 0));
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 vi.mock("react-i18next", () => ({
@@ -177,7 +184,7 @@ it("guides mobile creation through three pages and retains the draft when going 
     }),
   );
   await user.click(
-    await screen.findByRole("switch", {
+    await screen.findByRole("checkbox", {
       name: "Include Signature Summary Page",
     }),
   );
@@ -194,7 +201,7 @@ it("guides mobile creation through three pages and retains the draft when going 
     "2026-10-25",
   );
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   expect(onSubmit).not.toHaveBeenCalled();
   await user.click(
@@ -214,7 +221,7 @@ it("preserves the mobile page and signature settings across desktop resizing", a
     }),
   );
   await user.click(
-    await screen.findByRole("switch", {
+    await screen.findByRole("checkbox", {
       name: "Include Signature Summary Page",
     }),
   );
@@ -222,14 +229,14 @@ it("preserves the mobile page and signature settings across desktop resizing", a
   expect(screen.getByRole("button", { name: "Change PDF" })).toBeVisible();
   expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   resize(true);
   expect(
     screen.getByRole("button", { name: "Dates & options" }),
   ).toHaveAttribute("aria-current", "step");
   expect(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   ).toBeChecked();
   expect(
     screen.queryByRole("button", { name: "Change PDF" }),
@@ -346,7 +353,7 @@ it("moves signing guidance into focusable tooltips while preserving submitted si
     screen.getByRole("button", { name: "Include Signature Summary Page" }),
   );
   await user.click(
-    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+    screen.getByRole("checkbox", { name: "Include Signature Summary Page" }),
   );
   await user.click(
     screen.getByRole("button", { name: "Send signing request" }),

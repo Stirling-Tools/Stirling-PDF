@@ -26,6 +26,7 @@ import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useA
 import { removePasswordOperationConfig } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
 import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
 import { repairOperationConfig } from "@editor/hooks/tools/repair/useRepairOperation";
+import { archivePdfOperationConfig } from "@editor/hooks/tools/archivePdf/useArchivePdfOperation";
 import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "@editor/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
@@ -66,6 +67,9 @@ import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@editor/constants/splitConsta
 import { ToolId } from "@editor/types/toolId";
 import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
 
+const loadPdfTextEditor = () =>
+  import("@editor/tools/pdfTextEditor/PdfTextEditor");
+
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
   regularTools: RegularToolRegistry;
@@ -86,9 +90,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfTextEditor: {
         icon: <Icon name="square-pen" size="1.5rem" />,
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: lazy(
-          () => import("@editor/tools/pdfTextEditor/PdfTextEditor"),
-        ),
+        component: lazy(loadPdfTextEditor),
+        preload: loadPdfTextEditor,
         description: t(
           "home.pdfTextEditor.desc",
           "Review and edit text and images in PDFs with grouped text editing and PDF regeneration",
@@ -349,7 +352,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: <Icon name="form-input" size="1.5rem" />,
+        icon: <Icon name="clipboard-pen-line" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@editor/tools/formFill/FormFill")),
         description: t(
@@ -431,7 +434,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
-        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
+        name: t("home.getPdfInfo.title", "Get all info on PDF"),
         component: lazy(() => import("@editor/tools/GetPdfInfo")),
         description: t(
           "home.getPdfInfo.desc",
@@ -444,6 +447,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
         automationSettings: null,
         maxFiles: 1,
+      },
+      checkAccessibility: {
+        icon: <Icon name="universal-access" size="1.5rem" />,
+        name: t("home.checkAccessibility.title", "PDF accessibility"),
+        component: lazy(() => import("@editor/tools/PdfAccessibility")),
+        description: t(
+          "home.checkAccessibility.desc",
+          "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+        maxFiles: -1,
+        endpoints: ["accessibility-report"],
+        synonyms: getSynonyms(t, "checkAccessibility"),
+        // Reports rather than transforming the PDF, so it has no automation step.
+        supportsAutomate: false,
+        automationSettings: null,
       },
       validateSignature: {
         icon: <Icon name="badge-check" size="1.5rem" />,
@@ -908,7 +928,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       autoRename: {
         icon: <Icon name="whole-word" size="1.5rem" />,
-        name: t("home.autoRename.title", "Auto Rename PDF File"),
+        name: t("home.autoRename.title", "Auto Rename File"),
         component: lazy(() => import("@editor/tools/AutoRename")),
         maxFiles: -1,
         endpoints: ["auto-rename"],
@@ -958,6 +978,25 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(repairOperationConfig),
         synonyms: getSynonyms(t, "repair"),
         automationSettings: null,
+      },
+      archivePdf: {
+        icon: <Icon name="archive" size="1.5rem" />,
+        name: t("home.archivePdf.title", "Prepare for Archive (PDF/A)"),
+        component: lazy(() => import("@editor/tools/ArchivePdf")),
+        description: t(
+          "home.archivePdf.desc",
+          "Convert PDFs to the PDF/A archival standard for long-term preservation",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["pdf-to-pdfa"],
+        operationConfig: asRegistryConfig(archivePdfOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@editor/components/tools/archivePdf/ArchivePdfSettings"),
+        ),
+        synonyms: getSynonyms(t, "archivePdf"),
       },
       scannerImageSplit: {
         icon: <Icon name="table-columns-split" size="1.5rem" />,

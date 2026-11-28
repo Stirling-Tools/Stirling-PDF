@@ -2,7 +2,11 @@
 import { describe, it, expect } from "vitest";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import {
+  LineGrouper,
+  type SpaceAdvance,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 
 let ptr = 5000;
 function mkRun(opts: {
@@ -40,11 +44,11 @@ function lineOf(
   return runs;
 }
 
-function joinLine(runs: TextRun[]): string {
+function joinLine(runs: TextRun[], spaceAdvance?: SpaceAdvance): string {
   const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
   page.setRuns(runs);
   page.loaded = true;
-  const groups = LineGrouper.apply(page);
+  const groups = LineGrouper.apply(page, undefined, spaceAdvance);
   expect(groups.length, "runs formed a single line group").toBe(1);
   return groups[0].representative.text;
 }
@@ -55,6 +59,94 @@ function runsBetween(text: string, before: string, after: string): number {
 }
 
 describe("LineGrouper inter-run space synthesis", () => {
+  it("keeps an 18pt monospace heading saved one word per object on one line", () => {
+    const menloSpace = () => 0.602;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Heading ", width: 73, gapAfter: 12.9 },
+          { text: "in ", width: 18, gapAfter: 12 },
+          { text: "a ", width: 8.1, gapAfter: 13 },
+          { text: "bigger ", width: 62, gapAfter: 12.9 },
+          { text: "size", width: 41 },
+        ],
+        18,
+      ),
+      menloSpace,
+    );
+    expect(text).toBe("Heading in a bigger size");
+  });
+
+  it("keeps the heading on one line when its subset font reports the 1em missing space width", () => {
+    const missingSpace = () => 1;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns(
+      lineOf(
+        [
+          { text: "Heading", width: 73, gapAfter: 12.2 },
+          { text: "in", width: 19, gapAfter: 11.7 },
+          { text: "a", width: 9, gapAfter: 12 },
+          { text: "bigger", width: 62, gapAfter: 12.3 },
+          { text: "size", width: 41 },
+        ],
+        18,
+      ),
+    );
+    page.loaded = true;
+    const groups = LineGrouper.apply(page, undefined, missingSpace);
+    expect(groups.map((g) => g.representative.text)).toEqual([
+      "Heading in a bigger size",
+    ]);
+  });
+
+  it("reads a condensed font's narrow word gaps as spaces", () => {
+    const impactSpace = () => 0.176;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "that", width: 18, gapAfter: 1.91 },
+          { text: "we", width: 12.7, gapAfter: 1.92 },
+          { text: "want", width: 22 },
+        ],
+        11,
+      ),
+      impactSpace,
+    );
+    expect(text).toBe("that we want");
+  });
+
+  it("keeps a condensed font's letter spacing out of the words", () => {
+    const impactSpace = () => 0.176;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "w", width: 6, gapAfter: 0.6 },
+          { text: "a", width: 5, gapAfter: 0.6 },
+          { text: "n", width: 5, gapAfter: 0.6 },
+          { text: "t", width: 3 },
+        ],
+        11,
+      ),
+      impactSpace,
+    );
+    expect(text).toBe("want");
+  });
+
+  it("still splits two 18pt columns a wide gutter apart", () => {
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns(
+      lineOf(
+        [
+          { text: "Left", width: 40, gapAfter: 40 },
+          { text: "Right", width: 50 },
+        ],
+        18,
+      ),
+    );
+    page.loaded = true;
+    expect(LineGrouper.apply(page, undefined, () => 1)).toHaveLength(2);
+  });
+
   it("emits one space for normal 10pt word gaps", () => {
     const text = joinLine(
       lineOf(
@@ -167,5 +259,208 @@ describe("LineGrouper inter-run space synthesis", () => {
       ),
     );
     expect(text).toBe("Water");
+  });
+
+  it("counts spaces by the font's space width when two gaps are all the line has", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "documents ", width: 50, gapAfter: 5.9 },
+          { text: "A ", width: 6.6, gapAfter: 9.4 },
+          { text: "B", width: 5.7 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("documents  A   B");
+  });
+
+  it("keeps two equal justified gaps as ONE space each when the font space is narrower", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "The", width: 16, gapAfter: 7.4 },
+          { text: "quick", width: 25, gapAfter: 7.4 },
+          { text: "brown", width: 29 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("The quick brown");
+  });
+
+  it("counts two and three spaces at exact multiples of a narrow font space", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "One", width: 18, gapAfter: 5.56 },
+          { text: "two", width: 17, gapAfter: 8.34 },
+          { text: "three", width: 24 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("One  two   three");
+  });
+
+  it("keeps the gap-based count when the runs' fonts disagree on the space width", () => {
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Alpha", width: 26, gapAfter: 6 },
+          { text: "beta", width: 20, gapAfter: 12 },
+          { text: "Gamma", width: 30 },
+        ],
+        10,
+      ),
+      (run) => (run.text === "Gamma" ? 0.278 : 0.6),
+    );
+    expect(text).toBe("Alpha beta  Gamma");
+  });
+
+  it("keeps a justified line in two fonts at one space a gap", () => {
+    const fs = 10;
+    const runs = lineOf(
+      [
+        { text: "Alpha", width: 28, gapAfter: 6 },
+        { text: "beta", width: 22, gapAfter: 6.2 },
+        { text: "gamma", width: 30, gapAfter: 5.9 },
+        { text: "delta", width: 26, gapAfter: 6.1 },
+        { text: "omega", width: 30 },
+      ],
+      fs,
+    );
+    runs[0].fontId = "pdf:2:Times";
+    const advance: SpaceAdvance = (run) =>
+      run.fontId === "pdf:2:Times" ? 0.25 : 0.35;
+
+    expect(joinLine(runs, advance)).toBe("Alpha beta gamma delta omega");
+  });
+
+  it("counts spaces typed in a second font by that font's space", () => {
+    const fs = 10;
+    const runs = lineOf(
+      [
+        { text: "Document", width: 44, gapAfter: 5.6 },
+        { text: "A", width: 6, gapAfter: 9.2 },
+        { text: "B", width: 6 },
+      ],
+      fs,
+    );
+    runs[0].fontId = "pdf:2:Aptos";
+    const advance: SpaceAdvance = (run) =>
+      run.fontId === "pdf:2:Aptos" ? 0.2 : 0.278;
+
+    expect(joinLine(runs, advance)).toBe("Document A   B");
+  });
+
+  it("keeps the gap-based count when the font reports no usable space width", () => {
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Item", width: 20, gapAfter: 3.4 },
+          { text: "one", width: 17, gapAfter: 6.6 },
+          { text: "two", width: 18 },
+        ],
+        10,
+      ),
+      () => 0,
+    );
+    expect(text).toBe("Item one  two");
+  });
+});
+
+describe("LineGrouper text layers", () => {
+  it("keeps visible text out of a line of invisible OCR words", () => {
+    const [typed, ...ocr] = lineOf(
+      [
+        { text: "Receipt", width: 35, gapAfter: 3.2 },
+        { text: "4471", width: 20, gapAfter: 3.2 },
+        { text: "for", width: 14 },
+      ],
+      10,
+    );
+    for (const run of ocr) run.renderMode = 3;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([typed, ...ocr]);
+    page.loaded = true;
+    const groups = LineGrouper.apply(page);
+    expect(
+      groups.map((g) => [g.representative.text, g.representative.renderMode]),
+    ).toEqual([
+      ["Receipt", 0],
+      ["4471 for", 3],
+    ]);
+  });
+});
+
+describe("LineGrouper text layers", () => {
+  it("keeps a whole line in each layer when OCR words sit over the printed ones", () => {
+    const printed = lineOf(
+      [
+        { text: "Hello", width: 25, gapAfter: 3.2 },
+        { text: "world", width: 27 },
+      ],
+      10,
+    );
+    const ocr = printed.map((r) => {
+      const copy = mkRun({
+        x: r.bounds.x + 1,
+        width: r.bounds.width,
+        f: 500,
+        fs: 10,
+        text: r.text,
+      });
+      copy.renderMode = RENDER_MODE_INVISIBLE;
+      return copy;
+    });
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([...printed, ...ocr]);
+    page.loaded = true;
+    const groups = LineGrouper.apply(page);
+    expect(groups.map((g) => g.representative.text).sort()).toEqual([
+      "Hello world",
+      "Hello world",
+    ]);
+  });
+});
+
+describe("OCR words boxed with their trailing space", () => {
+  it("keeps a word on its line when its stretched space overhangs the next word", () => {
+    const words = lineOf(
+      [
+        { text: "Pack ", width: 31.2, gapAfter: -2.64 },
+        { text: "my ", width: 24.48, gapAfter: -5.04 },
+        { text: "box", width: 18 },
+      ],
+      12,
+    );
+    for (const word of words) word.renderMode = RENDER_MODE_INVISIBLE;
+    expect(joinLine(words).replace(/\s+/g, " ")).toBe("Pack my box");
+  });
+});
+
+describe("text that draws no ink", () => {
+  it("never joins a clip-only line to drawn text beside it", () => {
+    const [drawn, clip] = lineOf(
+      [
+        { text: "Drawn ", width: 40, gapAfter: 4 },
+        { text: "clip", width: 30 },
+      ],
+      12,
+    );
+    clip.renderMode = 7;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([drawn, clip]);
+    page.loaded = true;
+    expect(
+      LineGrouper.apply(page).map((g) => g.representative.text.trim()),
+    ).toEqual(["Drawn", "clip"]);
   });
 });

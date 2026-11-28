@@ -3,16 +3,20 @@ import { useTranslation } from "react-i18next";
 import { Stack, Text, TextInput, Group } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
-  onWordsChange: (words: string[]) => void;
+  onAddWord: (word: string) => void;
+  onRemoveWord: (index: number) => void;
   disabled?: boolean;
 }
 
 export default function WordsToRedactInput({
   wordsToRedact,
-  onWordsChange,
+  onAddWord,
+  onRemoveWord,
   disabled,
 }: WordsToRedactInputProps) {
   const { t } = useTranslation();
@@ -20,13 +24,9 @@ export default function WordsToRedactInput({
 
   const addWord = () => {
     if (currentWord.trim() && !wordsToRedact.includes(currentWord.trim())) {
-      onWordsChange([...wordsToRedact, currentWord.trim()]);
+      onAddWord(currentWord.trim());
       setCurrentWord("");
     }
-  };
-
-  const removeWord = (index: number) => {
-    onWordsChange(wordsToRedact.filter((_, i) => i !== index));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -38,9 +38,17 @@ export default function WordsToRedactInput({
 
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>
-        {t("redact.auto.wordsToRedact.title", "Words to Redact")}
-      </Text>
+      <Group gap={4} wrap="nowrap">
+        <Text size="sm" fw={500}>
+          {t("redact.auto.wordsToRedact.title", "Words to Redact")}
+        </Text>
+        <ToolInfoTooltip
+          label={t(
+            "redact.auto.wordsToRedact.info",
+            "Each word or phrase is found and redacted on its own, for example Confidential or Top-Secret.",
+          )}
+        />
+      </Group>
 
       {/* Current words */}
       {wordsToRedact.map((word, index) => (
@@ -50,8 +58,8 @@ export default function WordsToRedactInput({
           p="sm"
           style={{
             borderRadius: "var(--mantine-radius-sm)",
-            border: `1px solid var(--mantine-color-gray-3)`,
-            backgroundColor: "var(--mantine-color-gray-0)",
+            border: "1px solid var(--c-border)",
+            backgroundColor: "var(--c-input-bg)",
           }}
         >
           <Text
@@ -63,6 +71,7 @@ export default function WordsToRedactInput({
               whiteSpace: "nowrap",
             }}
             title={word}
+            className={privateContentClassName}
           >
             {word}
           </Text>
@@ -70,7 +79,7 @@ export default function WordsToRedactInput({
             size="sm"
             variant="tertiary"
             accent="danger"
-            onClick={() => removeWord(index)}
+            onClick={() => onRemoveWord(index)}
             disabled={disabled}
             aria-label={t("remove", "Remove")}
           >
@@ -87,6 +96,7 @@ export default function WordsToRedactInput({
             "Enter a word",
           )}
           value={currentWord}
+          className={privateContentClassName}
           onChange={(e) => setCurrentWord(e.target.value)}
           onKeyDown={handleKeyPress}
           disabled={disabled}
@@ -94,7 +104,8 @@ export default function WordsToRedactInput({
           style={{ flex: 1 }}
         />
         <Button
-          size="sm"
+          size="md"
+          fontSize="sm"
           variant="secondary"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}
@@ -102,16 +113,6 @@ export default function WordsToRedactInput({
           + {t("redact.auto.wordsToRedact.add", "Add")}
         </Button>
       </Group>
-
-      {/* Examples */}
-      {wordsToRedact.length === 0 && (
-        <Text size="xs" c="dimmed">
-          {t(
-            "redact.auto.wordsToRedact.examples",
-            "Examples: Confidential, Top-Secret",
-          )}
-        </Text>
-      )}
     </Stack>
   );
 }

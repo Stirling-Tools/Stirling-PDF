@@ -213,6 +213,12 @@ public class ConfigController {
                     "mobileScannerStretchToFit",
                     applicationProperties.getSystem().getMobileScannerSettings().isStretchToFit());
 
+            // Lets the user-facing MCP guide show the right endpoint and auth instructions.
+            ApplicationProperties.Mcp mcp = applicationProperties.getMcp();
+            configData.put("mcpEnabled", mcp.isEnabled());
+            configData.put("mcpAuthMode", mcp.getAuth().getMode());
+            configData.put("mcpResourceId", mcp.getAuth().getResourceId());
+
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
@@ -256,9 +262,34 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+
+            configData.put(
+                    "googleDriveAccountConnections",
+                    enableLogin && googleDrive.accountConnectionsReady());
+            ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
+                    applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            if (microsoft.isEnabled()) {
+                configData.put("microsoftEnabled", true);
+                configData.put("microsoftClientId", microsoft.getClientId());
+                configData.put("microsoftTenant", microsoft.getTenant());
+                configData.put(
+                        "microsoftGraphUrl",
+                        applicationContext
+                                .getEnvironment()
+                                .getProperty(
+                                        "stirling.microsoft.graph-url",
+                                        "https://graph.microsoft.com/v1.0"));
+                configData.put("microsoftAllowEditorSaves", microsoft.isAllowEditorSaves());
+            }
+            configData.put(
+                    "microsoftAccountConnections",
+                    enableLogin && microsoft.accountConnectionsReady());
             configData.put(
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());
+            configData.put(
+                    "blockSignedPdfEdits",
+                    applicationProperties.getSecurity().isBlockSignedPdfEdits());
             configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
@@ -312,6 +343,7 @@ public class ConfigController {
 
             // Check if this is a new server (version was 0.0.0 before initialization)
             configData.put("isNewServer", InitialSetup.isNewServer());
+            configData.put("setupCompleted", applicationProperties.getSystem().isSetupCompleted());
 
             // Check if the current user is a first-time user
             boolean isNewUser =
@@ -330,9 +362,6 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
-            configData.put(
-                    "stirlingOfficeConversion",
-                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
@@ -346,6 +375,7 @@ public class ConfigController {
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
             configData.put(
                     "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
+            configData.put("enableFeedback", applicationProperties.getSystem().isEnableFeedback());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));

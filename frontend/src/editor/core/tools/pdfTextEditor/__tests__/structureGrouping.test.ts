@@ -19,7 +19,7 @@ import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes"
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
-import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
@@ -190,24 +190,31 @@ describe("textTag", () => {
   }
 
   test("gives text the block it belongs to", async () => {
-    const tagged = (role: string, cannotRetag: string | null) => ({
+    const tagged = (
+      role: string,
+      cannotRetag: string | null,
+      canBeArtifact: boolean,
+    ) => ({
       kind: "tagged",
       block: { role, type: role },
       cannotRetag,
+      canBeArtifact,
     });
     expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(
-      tagged("H1", null),
+      tagged("H1", null, true),
     );
-    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P", null));
+    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(
+      tagged("P", null, false),
+    );
     expect(await tagOf(paragraphsPdf(), "Item")).toEqual(
-      tagged("LI", "not-text"),
+      tagged("LI", "not-text", false),
     );
   });
 
-  test("reads text in a file without a structure tree as untagged", async () => {
+  test("reads text marked with an MCID the file has no tree for as untagged, to tag", async () => {
     expect(
       await tagOf(paragraphsPdf({ tagged: false }), "Introduction"),
-    ).toEqual({ kind: "untagged", documentTagged: false, taggable: false });
+    ).toEqual({ kind: "untagged", documentTagged: true, taggable: true });
   });
 });
 
@@ -412,14 +419,14 @@ describe("Chrome-style tagging", () => {
   test("retags the heading through the NonStruct holding its text", async () => {
     const { doc, run } = await openChrome();
     new HistoryStack().execute(
-      new RetagTextCommand({
+      new RetagBlockCommand({
         pageIndex: 0,
         mcid: run("Introduction").snapshot().mcid!,
         type: "H2",
       }),
       doc,
     );
-    const { blob } = await exportToBlob(doc, "chrome.pdf");
+    const blob = await exportToBlob(doc);
     const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
     expect(pdf.dictName(pdf.objectBody(8)!, "S")).toBe("H2");
     expect(pdf.dictName(pdf.objectBody(9)!, "S")).toBe("NonStruct");

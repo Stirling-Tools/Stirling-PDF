@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import "@editor/auth/ui/auth.css";
 import "@editor/routes/authShared/saas-auth.css";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface EmailPasswordFormProps {
   email: string;
@@ -50,7 +51,7 @@ export default function EmailPasswordForm({
             placeholder={t("login.enterEmail", "Enter email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`auth-input ${fieldErrors.email ? "auth-input-error" : ""}`}
+            className={`auth-input ${privateContentClassName} ${fieldErrors.email ? "auth-input-error" : ""}`}
           />
           {fieldErrors.email && (
             <div className="auth-field-error">{fieldErrors.email}</div>
@@ -70,7 +71,7 @@ export default function EmailPasswordForm({
               placeholder={t("login.enterPassword")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`auth-input ${fieldErrors.password ? "auth-input-error" : ""}`}
+              className={`auth-input ${privateContentClassName} ${fieldErrors.password ? "auth-input-error" : ""}`}
             />
             {fieldErrors.password && (
               <div className="auth-field-error">{fieldErrors.password}</div>

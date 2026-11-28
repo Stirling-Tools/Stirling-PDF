@@ -2,6 +2,8 @@ import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
+import { selectedPresetIds } from "@editor/components/tools/redact/redactWords";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;
@@ -18,6 +20,7 @@ const RedactAdvancedSettings = ({
   disabled = false,
 }: RedactAdvancedSettingsProps) => {
   const { t } = useTranslation();
+  const regexLocked = selectedPresetIds(parameters).length > 0;
 
   return (
     <Stack gap="md">
@@ -50,12 +53,19 @@ const RedactAdvancedSettings = ({
         placeholder="0.1"
       />
 
-      {/* Use Regex */}
       <Checkbox
-        label={t("redact.auto.useRegexLabel", "Use Regex")}
+        {...infoLabelProps(
+          t("redact.auto.useRegexLabel", "Use Regex"),
+          regexLocked
+            ? t(
+                "redact.auto.useRegexLockedTooltip",
+                "Common types are regular expressions, so Use Regex stays on while any are selected.",
+              )
+            : undefined,
+        )}
         checked={parameters.useRegex}
         onChange={(e) => onParameterChange("useRegex", e.currentTarget.checked)}
-        disabled={disabled}
+        disabled={disabled || regexLocked}
         size="sm"
       />
 
@@ -82,9 +92,12 @@ const RedactAdvancedSettings = ({
 
       {/* Convert PDF to PDF-Image */}
       <Checkbox
-        label={t(
-          "redact.auto.convertPDFToImageLabel",
-          "Convert PDF to PDF-Image (Used to remove text behind the box)",
+        {...infoLabelProps(
+          t("redact.auto.convertPDFToImageLabel", "Convert PDF to PDF-Image"),
+          t(
+            "redact.tooltip.advanced.convert.text",
+            "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable.",
+          ),
         )}
         checked={parameters.convertPDFToImage}
         onChange={(e) =>

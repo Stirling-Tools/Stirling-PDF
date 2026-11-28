@@ -18,6 +18,9 @@ public record ToolDiagnostic(int stepIndex, Severity severity, String code, Stri
     /** The step declares no {@link ToolIO}, so nothing past it can be checked. */
     public static final String UNDECLARED = "undeclared-operation";
 
+    /** The step names no operation, or one the pipeline runner cannot dispatch to. */
+    public static final String UNKNOWN_OPERATION = "unknown-operation";
+
     /** The previous step's output is not a format this step accepts. */
     public static final String FORMAT_MISMATCH = "format-mismatch";
 

@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import { SignatureFieldPickerProvider } from "@editor/contexts/SignatureFieldPickerContext";
 import type {
   SignatureAPI,
   HistoryAPI,
@@ -237,7 +238,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
 
   return (
     <SignatureContext.Provider value={contextValue}>
-      {children}
+      <SignatureFieldPickerProvider>{children}</SignatureFieldPickerProvider>
     </SignatureContext.Provider>
   );
 };

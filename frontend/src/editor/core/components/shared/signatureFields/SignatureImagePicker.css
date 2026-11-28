@@ -1,0 +1,11 @@
+.signature-image-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.signature-image-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 0.5rem;
+}

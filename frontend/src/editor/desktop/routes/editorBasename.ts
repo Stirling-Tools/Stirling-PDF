@@ -1,6 +1,6 @@
 /**
- * Desktop override: the desktop app ships no processor, so it takes core's
- * behaviour back off the proprietary layer - nothing for "/" to route between,
- * and the editor owns the root.
+ * Desktop override: the editor owns the root, as in core. The proprietary layer
+ * moves it so "/" can route signed-in users to the Processor; desktop opens the
+ * Processor only from the rail, so "/" stays the editor.
  */
 export const EDITOR_BASENAME = "/";

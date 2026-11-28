@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  setViewerZoom,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Visual zoom / render-scale suite.
@@ -23,10 +27,6 @@ import path from "path";
 const PARA_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
-);
-const JUSTIFIED_PDF = path.join(
-  import.meta.dirname,
-  "../test-fixtures/justified-sample.pdf",
 );
 
 /** Fixed CSS-pixel gap between a `.pdf-editor-run` border box and its text origin. */
@@ -89,14 +89,12 @@ interface Snap {
 }
 
 interface EditorState {
-  renderScale: number;
   pages: Array<{ width: number; height: number }>;
 }
 
 interface StoreWindow extends Window {
   __editor_store?: {
     getState: () => EditorState;
-    setRenderScale: (scale: number) => void;
   };
 }
 
@@ -104,13 +102,7 @@ async function openEditor(
   page: import("@playwright/test").Page,
   file: string,
 ): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -178,7 +170,8 @@ function snapshotFn(): Snap {
   const pageState = store.getState().pages[0];
 
   return {
-    scale: store.getState().renderScale,
+    // The page is drawn at the viewer's zoom.
+    scale: Math.round((cb.width / pageState.width) * 100) / 100,
     pageW: pageState.width,
     pageH: pageState.height,
     canvasW: canvas.width,
@@ -258,15 +251,13 @@ async function waitForBitmap(
       const store = (window as StoreWindow).__editor_store;
       if (!canvas || !store) return false;
       const st = store.getState();
-      if (Math.abs(st.renderScale - want) > 1e-6) return false;
+      const shown = canvas.getBoundingClientRect().width / st.pages[0].width;
+      if (Math.abs(shown - want) > 0.01) return false;
       // The bitmap renders at zoom x devicePixelRatio (capped at 3) so HiDPI
       // displays get real pixels; headless runs are 1x, so this reduces to
       // the plain zoom scale there.
       const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
-      return (
-        canvas.width ===
-        Math.max(1, Math.round(st.pages[0].width * want * ratio))
-      );
+      return Math.abs(canvas.width - st.pages[0].width * shown * ratio) <= 1;
     },
     scale,
     { timeout: 20_000 },
@@ -279,9 +270,7 @@ async function zoomTo(
   page: import("@playwright/test").Page,
   scale: number,
 ): Promise<Snap> {
-  await page.evaluate((v) => {
-    (window as StoreWindow).__editor_store?.setRenderScale(v);
-  }, scale);
+  await setViewerZoom(page, Math.round(scale * 100));
   await waitForBitmap(page, scale);
   return page.evaluate(snapshotFn);
 }
@@ -554,205 +543,5 @@ test.describe("PDF text editor - zoom keeps bitmap and overlay registered", () =
       b.boxHeight / a.boxHeight,
       `overlay box height ratio ${(b.boxHeight / a.boxHeight).toFixed(3)} should match the glyph ratio ${(b.height / a.height).toFixed(3)}`,
     ).toBeGreaterThan(2.8);
-  });
-
-  // Breakage caught: the Ctrl+wheel path updating renderScale without the
-  // overlays following - the store number would move but the ink and the box
-  // would part company.
-  test("Ctrl+wheel zoom moves the bitmap and the overlay together", async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    await openEditor(page, PARA_PDF);
-
-    const before = await zoomTo(page, 1);
-    const beforeRun = requireRun(before, 0);
-    const beforeInk = await page.evaluate(runInkFn, beforeRun.id);
-    requireInk(beforeInk, "run before wheel zoom");
-
-    // 10 Ctrl+wheel-up events = +0.1 each = 100% -> 200%.
-    for (let i = 0; i < 10; i++) {
-      await page.evaluate(() => {
-        document
-          .querySelector('[data-testid="pdf-editor-stage"]')
-          ?.dispatchEvent(
-            new WheelEvent("wheel", {
-              deltaY: -100,
-              ctrlKey: true,
-              bubbles: true,
-              cancelable: true,
-            }),
-          );
-      });
-    }
-    await waitForBitmap(page, 2);
-
-    const after = await page.evaluate(snapshotFn);
-    expect(
-      after.scale,
-      `10 Ctrl+wheel-up steps of 0.1 from 100% should land on 200%, got ${after.scale}`,
-    ).toBeCloseTo(2, 5);
-    const afterRun = requireRun(after, 0);
-    const afterInk = await page.evaluate(runInkFn, afterRun.id);
-    requireInk(afterInk, "run after wheel zoom");
-
-    // The ink actually moved (this is not a no-op comparison)...
-    expect(
-      afterInk.minX / beforeInk.minX,
-      `wheel zoom should double the ink offset: ${afterInk.minX} vs ${beforeInk.minX}`,
-    ).toBeGreaterThan(1.8);
-    // ...and the overlay moved with it.
-    expectRegistered(
-      afterInk.minX,
-      afterRun.left + RUN_BOX_INSET,
-      after.scale,
-      "after Ctrl+wheel zoom",
-    );
-    expect(
-      Math.abs(afterInk.minY - beforeInk.minY * 2),
-      `the run's top glyph row should double from ${beforeInk.minY} to ~${beforeInk.minY * 2}, got ${afterInk.minY}`,
-    ).toBeLessThanOrEqual(3);
-  });
-
-  // Breakage caught: Fit computing a scale from the wrong width, or applying
-  // it to the layout but not to the bitmap.
-  test("Fit to width sizes the bitmap to the stage and keeps the ink registered", async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    await openEditor(page, PARA_PDF);
-    await zoomTo(page, 1);
-
-    await page.getByTestId("pdf-editor-zoom-fit").click();
-    await page.waitForTimeout(1800);
-    const snap = await page.evaluate(snapshotFn);
-    requireInk(snap.ink, "fit-to-width");
-
-    const stageWidth = await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"]',
-      );
-      if (!el) throw new Error("no stage");
-      return el.clientWidth;
-    });
-
-    // EditorTopBar fits to (stage width - 64px of padding).
-    expect(
-      snap.canvasW,
-      `fit bitmap width ${snap.canvasW} should fill the stage width ${stageWidth} minus 64px of padding`,
-    ).toBe(
-      Math.round(snap.pageW * +((stageWidth - 64) / snap.pageW).toFixed(2)),
-    );
-    expect(
-      stageWidth - snap.canvasW,
-      `fit should leave ~64px of slack, left ${stageWidth - snap.canvasW}px`,
-    ).toBeLessThanOrEqual(70);
-    expect(
-      snap.canvasW,
-      `fit must actually enlarge the page beyond its 100% width ${snap.pageW}`,
-    ).toBeGreaterThan(snap.pageW);
-
-    const run = requireRun(snap, 0);
-    const ink = await page.evaluate(runInkFn, run.id);
-    requireInk(ink, "fit-to-width run");
-    expectRegistered(
-      ink.minX,
-      run.left + RUN_BOX_INSET,
-      snap.scale,
-      "after Fit to width",
-    );
-  });
-
-  // Breakage caught: the 25% floor letting the scale go lower (or the bitmap
-  // collapsing to a blank thumbnail with no ink left).
-  test("zoom-out clamps at 25% and the shrunken bitmap still carries the same layout", async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    await openEditor(page, PARA_PDF);
-    const base = await zoomTo(page, 1);
-    requireInk(base.ink, "scale 1 baseline");
-
-    for (let i = 0; i < 12; i++) {
-      await page.getByTestId("pdf-editor-zoom-out").click();
-    }
-    await waitForBitmap(page, 0.25);
-    await expect(page.getByTestId("pdf-editor-zoom-percent")).toHaveText("25%");
-
-    const floor = await page.evaluate(snapshotFn);
-    expect(
-      floor.canvasW,
-      `at the 25% floor the bitmap should be round(${floor.pageW} * 0.25) px wide`,
-    ).toBe(Math.round(floor.pageW * 0.25));
-    requireInk(floor.ink, "25% floor");
-
-    // The page is 1/16th of the area but the layout is unchanged: the ink box
-    // still covers the same fraction of the canvas.
-    const b = normalisedInk(base);
-    const f = normalisedInk(floor);
-    for (const edge of ["l", "t", "r", "b"] as const) {
-      expect(
-        Math.abs(f[edge] - b[edge]),
-        `at 25% the ink ${edge} edge sits at ${f[edge].toFixed(4)} of the canvas but at ${b[edge].toFixed(4)} at 100%`,
-      ).toBeLessThan(0.03);
-    }
-  });
-
-  // Breakage caught: the 400% ceiling leaking - a further zoom-in that
-  // re-rasterises at a larger scale would change the bitmap checksum.
-  test("zoom-in past the 400% ceiling is a pixel-level no-op", async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    await openEditor(page, JUSTIFIED_PDF);
-
-    const three = await zoomTo(page, 3);
-    requireInk(three.ink, "scale 3");
-
-    for (let i = 0; i < 6; i++) {
-      await page.getByTestId("pdf-editor-zoom-in").click();
-    }
-    await waitForBitmap(page, 4);
-    await expect(page.getByTestId("pdf-editor-zoom-percent")).toHaveText(
-      "400%",
-    );
-    const ceiling = await page.evaluate(snapshotFn);
-    requireInk(ceiling.ink, "400% ceiling");
-    expect(
-      ceiling.ink.sig,
-      "the 400% bitmap must differ from the 300% one, otherwise the no-op check below is vacuous",
-    ).not.toBe(three.ink.sig);
-    expect(
-      ceiling.canvasW,
-      `400% bitmap width should be round(${ceiling.pageW} * 4)`,
-    ).toBe(Math.round(ceiling.pageW * 4));
-
-    // Three more clicks at the ceiling.
-    for (let i = 0; i < 3; i++) {
-      await page.getByTestId("pdf-editor-zoom-in").click();
-    }
-    await page.waitForTimeout(1200);
-    const again = await page.evaluate(snapshotFn);
-
-    await expect(page.getByTestId("pdf-editor-zoom-percent")).toHaveText(
-      "400%",
-    );
-    expect(
-      again.canvasW,
-      `clicking zoom-in at the ceiling changed the bitmap width: ${again.canvasW} vs ${ceiling.canvasW}`,
-    ).toBe(ceiling.canvasW);
-    expect(
-      again.ink.sig >>> 0,
-      `clicking zoom-in at the ceiling changed the rendered pixels: ${again.ink.sig} vs ${ceiling.ink.sig}`,
-    ).toBe(ceiling.ink.sig >>> 0);
-    const run = requireRun(again, 0);
-    const ink = await page.evaluate(runInkFn, run.id);
-    requireInk(ink, "400% ceiling run");
-    expectRegistered(
-      ink.minX,
-      run.left + RUN_BOX_INSET,
-      4,
-      "at the 400% ceiling",
-    );
   });
 });

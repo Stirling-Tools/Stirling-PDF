@@ -5,20 +5,34 @@ import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
 import { alert } from "@editor/components/toast";
 
-// One drag state shared by every surface given these handlers (the workbench
-// and the file sidebar), so the overlay the workbench draws stays up while the
-// pointer moves from one to the other. Every child the pointer crosses fires its
+// One drag state shared by every surface given these handlers (the workbench,
+// the file sidebar and the tool panel), so the overlay the workbench draws stays
+// up while the pointer moves between them. Every child the pointer crosses fires its
 // own enter/leave pair, so a depth count, not the last event, says whether the
 // drag is still over any of them.
 let dragDepth = 0;
 let dragOver = false;
 const listeners = new Set<() => void>();
 
+// A drag can end without the leave or drop we count on, e.g. when the source
+// app holds the drop back while it produces the files. Browsers repeat dragover
+// at least every 350 +/- 200 ms while a drag is over us, so silence ends it.
+const STALE_DRAG_MS = 1500;
+let lastDragOverAt = 0;
+let staleDragCheck: ReturnType<typeof setInterval> | undefined;
+
 function setDragDepth(depth: number) {
   dragDepth = Math.max(0, depth);
   const next = dragDepth > 0;
   if (next === dragOver) return;
   dragOver = next;
+  clearInterval(staleDragCheck);
+  if (next) {
+    lastDragOverAt = Date.now();
+    staleDragCheck = setInterval(() => {
+      if (Date.now() - lastDragOverAt > STALE_DRAG_MS) setDragDepth(0);
+    }, 500);
+  }
   listeners.forEach((listener) => listener());
 }
 
@@ -83,6 +97,7 @@ export function useWorkbenchFileDrop(enabled: boolean) {
   };
   const onDragOver = (e: DragEvent<HTMLElement>) => {
     if (!isExternalFileDrag(e)) return;
+    lastDragOverAt = Date.now();
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
   };

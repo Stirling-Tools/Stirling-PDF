@@ -7,10 +7,7 @@ import { ConnectCallbackHost } from "@editor/portal/components/account-link/Conn
 import { PortalChrome } from "@editor/portal/components/PortalChrome";
 import { AccountLinkSessionBoundary } from "@editor/portal/components/account-link/AccountLinkSessionBoundary";
 import { useFreeTierExhaustedPrompt } from "@editor/portal/hooks/useFreeTierExhaustedPrompt";
-import { LicenseProvider } from "@editor/contexts/LicenseContext";
-import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
-import { ServerExperienceProvider } from "@editor/contexts/ServerExperienceContext";
 import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
 
 function LinkModalHost() {
@@ -19,10 +16,8 @@ function LinkModalHost() {
 }
 
 /**
- * Self-hosted provider stack. Checkout is mounted here rather than inherited: the portal is its
- * own route-set, outside the {@code AppProviders} where the editor keeps its copy.
- * License and checkout both need the local app config; without its provider, license loading
- * waits indefinitely for the admin and login settings.
+ * Self-hosted provider stack. Checkout is mounted here rather than inherited: its modal renders
+ * inside whichever app opened it, so each app mounts its own under its own theme.
  */
 export function PortalProviders() {
   return (
@@ -31,18 +26,12 @@ export function PortalProviders() {
         <AccountLinkSessionBoundary>
           <UIProvider>
             <AccountLinkProvider>
-              <AppConfigProvider>
-                <LicenseProvider>
-                  <CheckoutProvider>
-                    <ServerExperienceProvider>
-                      <StartupPrompts />
-                      <PortalChrome />
-                    </ServerExperienceProvider>
-                    <LinkModalHost />
-                    <ConnectCallbackHost />
-                  </CheckoutProvider>
-                </LicenseProvider>
-              </AppConfigProvider>
+              <CheckoutProvider>
+                <StartupPrompts />
+                <PortalChrome />
+                <LinkModalHost />
+                <ConnectCallbackHost />
+              </CheckoutProvider>
             </AccountLinkProvider>
           </UIProvider>
         </AccountLinkSessionBoundary>

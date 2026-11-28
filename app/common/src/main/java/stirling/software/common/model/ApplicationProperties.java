@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -134,7 +136,12 @@ public class ApplicationProperties {
             environment.getPropertySources().addFirst(propertySource);
         }
 
-        log.debug("Loaded properties: {}", propertySource.getSource());
+        // Names only: values include secrets such as security.scimToken.
+        log.debug(
+                "Loaded property keys: {}",
+                propertySource instanceof EnumerablePropertySource<?> keys
+                        ? Arrays.toString(keys.getPropertyNames())
+                        : propertySource.getName());
 
         return propertySource;
     }
@@ -526,9 +533,6 @@ public class ApplicationProperties {
          */
         private boolean scopesEnabled = true;
 
-        /** How often to refresh the AI capabilities manifest from the engine. */
-        private int engineCapabilityRefreshMinutes = 5;
-
         /**
          * Tool allow-list (operation ids, e.g. {@code compress-pdf}). When non-empty, ONLY these
          * operations are exposed over MCP; everything else is hidden, undescribable, and
@@ -538,26 +542,84 @@ public class ApplicationProperties {
 
         /**
          * Tool deny-list (operation ids). Any operation listed here is removed from MCP even if it
-         * would otherwise be allowed. Applied after {@link #allowedOperations}.
+         * would otherwise be allowed. Applied after {@link #allowedOperations}. url-to-pdf is never
+         * offered over MCP, whatever either list says.
          */
         private List<String> blockedOperations = new ArrayList<>();
 
         /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
         private long maxRequestBytes = 10L * 1024 * 1024;
 
-        /** Results up to this size return inline as base64; larger ones return a fileId only. */
+        /** Largest file {@code stirling_download} returns inline as base64. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
+
+        /**
+         * Most bytes of stored files one tool call reads into memory as inputs, summed across every
+         * file it names; 0 or less means no limit.
+         */
+        private long maxInputFileBytes = 500L * 1024 * 1024;
+
+        /** Most stored files one tool call may name as inputs; 0 or less means no limit. */
+        private int maxInputFiles = 50;
+
+        /** How long tool results stay downloadable before storage deletes them. */
+        private int resultTtlMinutes = 60;
+
+        /** Keep results as the user's temporary stored files; false = the shared temp store. */
+        private boolean storeResults = true;
+
+        /** Result download links: private (sign-in), public (anyone with the link) or off. */
+        private String downloadLinks = "private";
+
+        /** Also return results as base64: auto (only without stored files), always or never. */
+        private String inlineResults = "auto";
+
+        /** Wait this long for an operation, then hand back a job id to poll (0 = always wait). */
+        private int syncWaitSeconds = 100;
+
+        /** Tool calls each user may make per minute (0 = unlimited). */
+        private int rateLimitPerMinute = 60;
+
+        /**
+         * Operations one user may have running at once on a node, counting jobs still running after
+         * the client got a job id (0 = unlimited).
+         */
+        private int maxConcurrentCallsPerUser = 4;
+
+        /** Let chat apps run multi-step pipelines and use the team's saved automations. */
+        private boolean automationsEnabled = true;
+
+        /** Most steps one pipeline call may chain. */
+        private int maxPipelineSteps = 10;
+
+        /** Most bytes of step results one pipeline call holds between steps; 0 means no limit. */
+        private long maxPipelineCarryBytes = 500L * 1024 * 1024;
+
+        /** Serve the in-chat widget (MCP Apps) and the file picker tool. */
+        private boolean widgetEnabled = true;
+
+        /**
+         * Attachment hosts (HTTPS): suffix, {@code *} in one label, or lone {@code *}. Empty = off.
+         */
+        private List<String> fileUrlAllowedHosts =
+                new ArrayList<>(
+                        List.of(
+                                "oaiusercontent.com",
+                                "openai.com",
+                                "chatgpt.com",
+                                // ChatGPT serves attachments from regional Azure blob accounts.
+                                "oaisdmntpr*.blob.core.windows.net"));
+
+        /** Max size of a file fetched from a chat app's download URL. */
+        private long maxFileUrlBytes = 100L * 1024 * 1024;
 
         private Auth auth = new Auth();
 
         @Data
         public static class Auth {
             /**
-             * Authentication mode for the MCP endpoint. {@code oauth} (default) runs a full OAuth2
-             * resource server (JWT, RFC 8707 audience, RFC 9728 metadata). {@code apikey} accepts a
-             * Stirling per-user API key via the {@code X-API-KEY} header (or {@code Authorization:
-             * Bearer <key>}) and binds the request to that user - the low-friction self-host path,
-             * no external IdP required.
+             * {@code oauth} (default): resource server for an external IdP. {@code builtin}: also
+             * Stirling's own OAuth 2.1 authorization server. {@code apikey}: X-API-KEY, no OAuth.
              */
             private String mode = "oauth";
 
@@ -601,6 +663,45 @@ public class ApplicationProperties {
              * without a local account.
              */
             private boolean requireExistingAccount = true;
+
+            /** Create a disabled account for an unknown IdP subject instead of a 403. */
+            private boolean autoProvisionUsers = false;
+
+            /**
+             * Bind a token to an account that has no IdP link when the username claim matches its
+             * username. Off on SaaS, where web sign-in only ever uses the Supabase link.
+             */
+            private boolean matchUnlinkedByUsername = true;
+
+            private Builtin builtin = new Builtin();
+
+            /** Built-in authorization server settings ({@code mode: builtin}). */
+            @Data
+            public static class Builtin {
+
+                /** Token issuer. Blank derives it from resourceId minus the trailing /mcp. */
+                private String issuer = "";
+
+                /**
+                 * RFC 7591 dynamic client registration; clients that cannot pre-register need it.
+                 */
+                private boolean allowDynamicRegistration = true;
+
+                /** Accept https client_id URLs as Client ID Metadata Documents. */
+                private boolean allowClientMetadataDocuments = true;
+
+                /** Access-token lifetime in minutes. */
+                private int accessTokenMinutes = 60;
+
+                /** Refresh-token lifetime in days. Zero disables refresh tokens. */
+                private int refreshTokenDays = 30;
+
+                /** Authorization-code lifetime in seconds; also bounds the consent screen. */
+                private int authorizationCodeSeconds = 300;
+
+                /** Per-IP hourly cap on dynamic client registrations. */
+                private int registrationsPerHourPerIp = 20;
+            }
         }
     }
 
@@ -966,6 +1067,7 @@ public class ApplicationProperties {
     public static class Security {
         private boolean enableLogin;
         private boolean honorOwnerPasswords = true;
+        private boolean blockSignedPdfEdits = false;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
@@ -974,6 +1076,10 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        // Bearer token (32+ chars) for SCIM 2.0 provisioning at /api/v1/scim/v2; blank disables it.
+        @ToString.Exclude private String scimToken;
+        // SCIM DELETE erases the user and their files; when false it only deactivates them.
+        private boolean scimDeleteRemovesUser = false;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
         private Timestamp timestamp = new Timestamp();
@@ -1288,9 +1394,19 @@ public class ApplicationProperties {
             public static class Trust {
                 private boolean serverAsAnchor = true;
                 private boolean useSystemTrust = true;
+                private Boolean useOSTrust;
                 private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
+
+                /**
+                 * {@code useOSTrust}, where null means on in the desktop app and off on a server.
+                 */
+                public boolean trustsOSRoots() {
+                    return useOSTrust != null
+                            ? useOSTrust
+                            : Boolean.getBoolean("STIRLING_PDF_TAURI_MODE");
+                }
             }
 
             @Data
@@ -1329,13 +1445,15 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        // True when absent: older and read-only settings files belong to servers already set up.
+        private boolean setupCompleted = true;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
-        private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
         private int maxPdfaConversionPages = 20_000;
         private int maxImageMegapixels;
@@ -1480,7 +1598,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
@@ -1520,11 +1638,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Operations {
-            private String weasyprint;
-            private String unoconvert;
-            private String calibre;
             private String ocrmypdf;
-            private String soffice;
         }
     }
 
@@ -1532,9 +1646,6 @@ public class ApplicationProperties {
     public static class TempFileManagement {
         @JsonProperty("baseTmpDir")
         private String baseTmpDir = "";
-
-        @JsonProperty("libreofficeDir")
-        private String libreofficeDir = "";
 
         private String systemTempDir = "";
         private String prefix = "stirling-pdf-";
@@ -1550,14 +1661,6 @@ public class ApplicationProperties {
             }
             String tmp = java.lang.System.getProperty("java.io.tmpdir");
             return new File(tmp, "stirling-pdf").getPath();
-        }
-
-        @JsonIgnore
-        public String getLibreofficeDir() {
-            if (libreofficeDir != null && !libreofficeDir.isEmpty()) {
-                return libreofficeDir;
-            }
-            return new File(getBaseTmpDir(), "libreoffice").getPath();
         }
     }
 
@@ -1882,6 +1985,7 @@ public class ApplicationProperties {
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
+            private Microsoft microsoft = new Microsoft();
 
             @Data
             public static class GoogleDrive {
@@ -1889,6 +1993,43 @@ public class ApplicationProperties {
                 private String clientId = "";
                 private String apiKey = "";
                 private String appId = "";
+                @ToString.Exclude private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private String accountScope = "drive";
+
+                private static final Set<String> ACCOUNT_SCOPES =
+                        Set.of("drive", "drive.file", "drive.readonly");
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank()
+                            && validAccountScope() != null;
+                }
+
+                /** The trimmed {@code accountScope}, or null when it is not a Drive scope. */
+                public String validAccountScope() {
+                    String scope = accountScope == null ? "" : accountScope.trim();
+                    return ACCOUNT_SCOPES.contains(scope) ? scope : null;
+                }
+            }
+
+            @Data
+            public static class Microsoft {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String tenant = "common";
+                @ToString.Exclude private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank();
+                }
             }
 
             @Data
@@ -1959,31 +2100,17 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
-        private boolean autoUnoServer = true;
-        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
-
-        @Data
-        public static class UnoServerEndpoint {
-            private String host = "127.0.0.1";
-            private int port = 2003;
-            private String hostLocation = "auto"; // auto|local|remote
-            private String protocol = "http"; // http|https
-        }
 
         @Data
         public static class SessionLimit {
-            private int libreOfficeSessionLimit;
-            private int pdfToHtmlSessionLimit;
             private int pythonOpenCvSessionLimit;
-            private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
-            private int calibreSessionLimit;
-            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int ffmpegSessionLimit;
+            private int officeConvertSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -1993,32 +2120,12 @@ public class ApplicationProperties {
                 return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
             }
 
-            public int getLibreOfficeSessionLimit() {
-                return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
-            }
-
-            public int getPdfToHtmlSessionLimit() {
-                return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
-            }
-
             public int getPythonOpenCvSessionLimit() {
                 return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
             }
 
-            public int getWeasyPrintSessionLimit() {
-                return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
-            }
-
             public int getInstallAppSessionLimit() {
                 return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
-            }
-
-            public int getCalibreSessionLimit() {
-                return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
-            }
-
-            public int getImageMagickSessionLimit() {
-                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
             }
 
             public int getGhostscriptSessionLimit() {
@@ -2036,25 +2143,13 @@ public class ApplicationProperties {
 
         @Data
         public static class TimeoutMinutes {
-            @JsonProperty("libreOfficetimeoutMinutes")
-            private long libreOfficeTimeoutMinutes;
-
-            @JsonProperty("pdfToHtmltimeoutMinutes")
-            private long pdfToHtmlTimeoutMinutes;
+            private long officeConvertTimeoutMinutes;
 
             @JsonProperty("pythonOpenCvtimeoutMinutes")
             private long pythonOpenCvTimeoutMinutes;
 
-            @JsonProperty("weasyPrinttimeoutMinutes")
-            private long weasyPrintTimeoutMinutes;
-
             @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
-
-            @JsonProperty("calibretimeoutMinutes")
-            private long calibreTimeoutMinutes;
-
-            private long imageMagickTimeoutMinutes;
 
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
@@ -2070,32 +2165,16 @@ public class ApplicationProperties {
                 return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
             }
 
-            public long getLibreOfficeTimeoutMinutes() {
-                return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
-            }
-
-            public long getPdfToHtmlTimeoutMinutes() {
-                return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
+            public long getOfficeConvertTimeoutMinutes() {
+                return officeConvertTimeoutMinutes > 0 ? officeConvertTimeoutMinutes : 30;
             }
 
             public long getPythonOpenCvTimeoutMinutes() {
                 return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
             }
 
-            public long getWeasyPrintTimeoutMinutes() {
-                return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
-            }
-
             public long getInstallAppTimeoutMinutes() {
                 return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
-            }
-
-            public long getCalibreTimeoutMinutes() {
-                return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
-            }
-
-            public long getImageMagickTimeoutMinutes() {
-                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
             }
 
             public long getGhostscriptTimeoutMinutes() {

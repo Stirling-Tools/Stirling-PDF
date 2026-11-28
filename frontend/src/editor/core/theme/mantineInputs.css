@@ -1,0 +1,18 @@
+/* Every Mantine field (TextInput, Select, NumberInput, Textarea, ...) takes the SUI
+ * input tokens. Declared on the wrapper, where Mantine keeps its variant defaults, so
+ * the input's own :focus rule can still swap --input-bd for --input-bd-focus; an
+ * inline style would beat that rule. Typed text stays --c-text in the error state too,
+ * where Mantine would turn it red: the message and border carry the error. The border
+ * rule skips [data-error] so the red error border survives. Specificity: these beat
+ * Mantine's variant (0,3,0) and error (0,4,0) rules. */
+:root[data-mantine-color-scheme]
+  .mantine-Input-wrapper[data-variant="default"] {
+  --input-bg: var(--c-input-bg);
+  --input-color: var(--c-text);
+  --input-bd-focus: var(--c-primary);
+}
+
+:root[data-mantine-color-scheme]
+  .mantine-Input-wrapper[data-variant="default"]:not([data-error]) {
+  --input-bd: var(--c-border);
+}

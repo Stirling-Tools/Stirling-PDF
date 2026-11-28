@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   Suspense,
 } from "react";
@@ -96,10 +97,13 @@ const SettingsPageInner: React.FC = () => {
   // The URL always names what is shown. `/settings` and an unknown key land on
   // the first section; a retired key (an old bookmark, an older search result)
   // follows its alias to whatever replaced it.
+  const redirectedFromKeyRef = useRef<string | null>(null);
   useEffect(() => {
     // `pending` matters as much as an empty list: the permission-gated sections
     // arrive a request later, so a deep link to one of them is not unknown yet.
     if (items.length === 0 || activeItem || pending) return;
+    if (redirectedFromKeyRef.current === location.key) return;
+    redirectedFromKeyRef.current = location.key;
     const alias = urlSection ? aliases?.[urlSection] : undefined;
     const target = alias ?? items.find((i) => !i.disabled)?.key ?? items[0].key;
     // An aliased link keeps its hash; without one it lands on the card that
@@ -114,6 +118,7 @@ const SettingsPageInner: React.FC = () => {
     pending,
     urlSection,
     aliases,
+    location.key,
     location.search,
     location.hash,
     navigate,
@@ -165,6 +170,20 @@ const SettingsPageInner: React.FC = () => {
   const { active: activeHeading, focus: focusHeading } = useActiveHeading(
     contentRef,
     headings,
+  );
+
+  // On phones the headings are listed on the nav pane, so a heading tap has to
+  // reveal the content before the scroll can measure it.
+  const jumpToHeading = useCallback(
+    (id: string) => {
+      if (!isMobile) {
+        focusHeading(id, { moveFocus: true });
+        return;
+      }
+      setMobilePane("content");
+      window.requestAnimationFrame(() => focusHeading(id, { moveFocus: true }));
+    },
+    [focusHeading, isMobile],
   );
 
   const anchor = decodeURIComponent(location.hash.replace(/^#/, ""));
@@ -314,7 +333,7 @@ const SettingsPageInner: React.FC = () => {
                                   }
                                   onClick={(event) => {
                                     event.preventDefault();
-                                    focusHeading(h.id);
+                                    jumpToHeading(h.id);
                                   }}
                                 >
                                   {h.label}

@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { useTranslation } from "react-i18next";
 import auditService, { AuditChartsData } from "@editor/services/auditService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Event type color mapping
 const EVENT_TYPE_COLORS: Record<string, string> = {
@@ -35,6 +36,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   FILE_OPERATION: "var(--mantine-color-cyan-6)",
   PDF_PROCESS: "var(--mantine-color-violet-6)",
   UI_DATA: "var(--mantine-color-teal-6)",
+  MCP_TOOL_CALL: "var(--mantine-color-grape-6)",
   HTTP_REQUEST: "var(--mantine-color-indigo-6)",
 };
 
@@ -298,7 +300,10 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
             <Text size="md" fw={600}>
               {t("audit.charts.byUser", "Top Users")}
             </Text>
-            <Box style={{ width: "100%", height: 280 }}>
+            <Box
+              className={privateContentClassName}
+              style={{ width: "100%", height: 280 }}
+            >
               {eventsByUserData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={eventsByUserData} layout="vertical">

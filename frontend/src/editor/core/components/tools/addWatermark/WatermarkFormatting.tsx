@@ -37,7 +37,7 @@ const WatermarkFormatting = ({
       />
 
       {/* Position & Appearance - 2 per row */}
-      <Group grow align="flex-start">
+      <Group grow align="flex-end">
         <NumberInputWithUnit
           label={t("watermark.settings.rotation", "Rotation")}
           value={parameters.rotation}
@@ -63,7 +63,7 @@ const WatermarkFormatting = ({
       </Group>
 
       {/* Spacing - 2 per row */}
-      <Group grow align="flex-start">
+      <Group grow align="flex-end">
         <NumberInputWithUnit
           label={t(
             "watermark.settings.spacing.horizontal",

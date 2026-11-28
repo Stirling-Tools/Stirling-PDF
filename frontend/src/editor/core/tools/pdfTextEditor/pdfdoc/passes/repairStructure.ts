@@ -159,13 +159,16 @@ async function planPage(
     const here = renumbered
       .filter((r) => r.site.stream === stream)
       .map((r) => ({ at: r.site.number!, mcid: r.mcid }))
-      .sort((a, b) => b.at.start - a.at.start);
+      .sort((a, b) => a.at.start - b.at.start);
     if (here.length === 0) return;
-    let out = text;
+    const parts: string[] = [];
+    let from = 0;
     for (const { at, mcid } of here) {
-      out = out.slice(0, at.start) + String(mcid) + out.slice(at.end);
+      parts.push(text.slice(from, at.start), String(mcid));
+      from = at.end;
     }
-    streams.set(refs[stream], out);
+    parts.push(text.slice(from));
+    streams.set(refs[stream], parts.join(""));
   });
 
   return { streams, elements };

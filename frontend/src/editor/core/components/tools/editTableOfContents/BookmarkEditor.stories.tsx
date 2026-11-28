@@ -3,7 +3,7 @@ import BookmarkEditor from "@editor/components/tools/editTableOfContents/Bookmar
 import { createBookmarkNode } from "@editor/utils/editTableOfContents";
 
 const meta = {
-  title: "Tools/EditTableOfContents/BookmarkEditor",
+  title: "Tools/Edit Table of Contents/Parts/BookmarkEditor",
   component: BookmarkEditor,
   parameters: { layout: "padded" },
 } satisfies Meta<typeof BookmarkEditor>;

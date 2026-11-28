@@ -30,6 +30,7 @@ import { FolderAccessCard } from "@editor/components/shared/config/configSection
 import { CustomPathsCard } from "@editor/components/shared/config/configSections/server/CustomPathsCard";
 import { CustomMetadataCard } from "@editor/components/shared/config/configSections/server/CustomMetadataCard";
 import { ServerCertificateCard } from "@editor/components/shared/config/configSections/server/ServerCertificateCard";
+import { SignatureLogoCard } from "@editor/components/shared/config/configSections/server/SignatureLogoCard";
 import AdminFormDetectionSection from "@editor/components/shared/config/configSections/AdminFormDetectionSection";
 import "@editor/components/shared/config/configSections/server/AdminSystemSection.css";
 
@@ -127,11 +128,6 @@ export default function AdminSystemSection() {
             watchedFoldersDirs: normalizedWatchedFoldersDirs,
             finishedFoldersDir: pipelinePaths.finishedFoldersDir || "",
           },
-          operations: {
-            ...(system.customPaths?.operations || {}),
-            weasyprint: system.customPaths?.operations?.weasyprint || "",
-            unoconvert: system.customPaths?.operations?.unoconvert || "",
-          },
         },
         customMetadata: premium.proFeatures?.customMetadata || {
           autoUpdateMetadata: false,
@@ -177,6 +173,7 @@ export default function AdminSystemSection() {
         "system.defaultLocale": settings.system?.defaultLocale,
         "system.showUpdate": settings.system?.showUpdate,
         "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
+        "system.enableFeedback": settings.system?.enableFeedback,
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,
@@ -210,10 +207,6 @@ export default function AdminSystemSection() {
           settings.customPaths?.pipeline?.watchedFoldersDirs;
         deltaSettings["system.customPaths.pipeline.finishedFoldersDir"] =
           settings.customPaths?.pipeline?.finishedFoldersDir;
-        deltaSettings["system.customPaths.operations.weasyprint"] =
-          settings.customPaths?.operations?.weasyprint;
-        deltaSettings["system.customPaths.operations.unoconvert"] =
-          settings.customPaths?.operations?.unoconvert;
       }
 
       return {
@@ -546,6 +539,7 @@ export default function AdminSystemSection() {
           )}
         >
           <ServerCertificateCard {...generalCard} />
+          <SignatureLogoCard loginEnabled={loginEnabled} />
         </SettingsCard>
 
         <SettingsCard

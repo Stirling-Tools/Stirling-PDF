@@ -8,6 +8,9 @@ import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
+// Before any component import, as in src/index.tsx: component CSS overrides
+// Mantine's at equal specificity, so Mantine's must load first.
+import "@mantine/core/styles.css";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
@@ -16,22 +19,26 @@ void React;
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@processor/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { ThemeProvider } from "@editor-core/components/shared/ThemeProvider";
+import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
-import { SuiProvider } from "@processor/theme/SuiProvider";
-import { MantineProvider } from "@mantine/core";
-import {
-  mantineTheme as editorMantineTheme,
-  editorCssVariablesResolver,
-} from "@editor-core/theme/mantineTheme";
+import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { handlers } from "@processor/mocks/handlers";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { mockDesktopIpc } from "./desktopIpc";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import { flavorHandlers, startFlavor } from "./flavorSetup";
+// oxlint-disable-next-line no-restricted-imports -- Storybook-only: sibling config files have no @-alias
+import {
+  installStorybookFilePicker,
+  withStorybookFilePicker,
+} from "./storybookFilePicker";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
 import { rtlLanguages, supportedLanguages } from "@editor-core/i18n/languages";
 
-import "@mantine/core/styles.css";
 import "@editor-core/tokens/tokens.css";
 import "@editor-core/theme/index.css";
 // The editor's semantic token layer (--bg-surface, --onboarding-title, …).
@@ -99,7 +106,18 @@ if (!i18next.isInitialized) {
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
-initialize({ onUnhandledRequest: "bypass" }, handlers);
+initialize({ onUnhandledRequest: "bypass" }, [...handlers, ...flavorHandlers]);
+
+installStorybookFilePicker();
+
+if (import.meta.env.STORYBOOK_FLAVOR === "desktop") {
+  mockDesktopIpc();
+  // The app's own onboarding bypass (?bypassOnboarding=true). Desktop shows its
+  // welcome flow over everything on a fresh profile, which every story run is.
+  sessionStorage.setItem("onboarding::bypass-all", "true");
+}
+
+startFlavor();
 
 // PortalApp wraps the app in a QueryClientProvider, so any component reaching a
 // shared query hook throws "No QueryClient set" without one here. `retry: false`
@@ -160,37 +178,6 @@ function TierKey({
   );
 }
 
-/**
- * Makes the Storybook toolbar the SINGLE source of truth for the theme.
- */
-function ThemeBridge({
-  theme,
-  children,
-}: {
-  theme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-  return <>{children}</>;
-}
-
-/**
- * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
- * with the fixed default accent (data-accent="default"), matching the editor.
- */
-function SchemeSetup({ scheme }: { scheme: "light" | "dark" }) {
-  useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-app-theme", "custom");
-    root.setAttribute("data-accent", "default");
-    root.setAttribute("data-mantine-color-scheme", scheme);
-  }, [scheme]);
-  return null;
-}
-
 /** Switches i18next to the toolbar locale and keeps document dir/lang in sync. */
 const withLocale: Decorator = (Story, context) => {
   const locale = (context.globals.locale as string) ?? "en-US";
@@ -203,37 +190,6 @@ const withLocale: Decorator = (Story, context) => {
   }, [locale]);
   return <Story />;
 };
-
-/**
- * Applies the Mantine theme the story's component actually runs under in the
- * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
- * everything else in its own ThemeProvider. Getting this wrong is not just
- * cosmetic — the two themes carry different neutral ramps, so rendering an
- * editor component under the Processor's theme drops it onto Mantine's stock
- * greys and reports contrast failures the app doesn't have.
- */
-function StoryTheme({
-  isPortalStory,
-  colorScheme,
-  children,
-}: {
-  isPortalStory: boolean;
-  colorScheme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  if (isPortalStory) {
-    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
-  }
-  return (
-    <MantineProvider
-      theme={editorMantineTheme}
-      cssVariablesResolver={editorCssVariablesResolver}
-      forceColorScheme={colorScheme}
-    >
-      {children}
-    </MantineProvider>
-  );
-}
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
@@ -252,19 +208,23 @@ const withProviders: Decorator = (Story, context) => {
   // styles never apply to editor components).
   // `fileName` is only injected by the dev/build pipeline — under the Vitest
   // runner it is absent, so path alone would silently drop every portal story
-  // onto the editor theme (where portal-only palette entries like `amber`
-  // resolve to nothing and render unstyled). The title prefix is the fallback
-  // that survives both environments.
+  // out of the wrapper. The title prefix is the fallback that survives both
+  // environments.
   const isPortalStory =
     (context.parameters.fileName ?? "").includes("/portal/") ||
     context.title.startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <SchemeSetup scheme={colorScheme} />
-          <ThemeBridge theme={colorScheme}>
-            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+        <PreferencesProvider>
+          <ThemeProvider forcedTheme={colorScheme}>
+            {/* The app mounts this with the platform providers; without it the config never
+                loads and anything waiting on it (the portal's connect gate) never settles.
+                Seeded rather than fetched; a story can mount its own to vary it. */}
+            <AppConfigProvider
+              initialConfig={STORY_APP_CONFIG}
+              autoFetch={false}
+            >
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
@@ -282,13 +242,16 @@ const withProviders: Decorator = (Story, context) => {
                   </UIProvider>
                 </TierKey>
               </LinkProvider>
-            </StoryTheme>
-          </ThemeBridge>
-        </ThemeProvider>
+            </AppConfigProvider>
+          </ThemeProvider>
+        </PreferencesProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
 };
+
+/** Matches the mocked /api/v1/config/app-config, which the portal's views were written against. */
+const STORY_APP_CONFIG = { aiEngineEnabled: true };
 
 const preview: Preview = {
   loaders: [mswLoader],
@@ -297,9 +260,33 @@ const preview: Preview = {
   // the run. Unset — the Storybook UI — falls back to the toolbar default.
   initialGlobals: {
     theme: import.meta.env.VITE_SCAN_THEME === "dark" ? "dark" : "light",
+    // Stories open at the size the story tests render at. The editor switches
+    // to its narrow layout at 1024px and below, and a preview squeezed beside
+    // the sidebar and addons panel is often that narrow, so stories written
+    // against the desktop layout would wait out their timeouts there.
+    viewport: { value: "testRunner", isRotated: false },
   },
   parameters: {
     layout: "padded",
+    viewport: {
+      options: {
+        // The size the story test runner renders every story at (the vitest
+        // plugin's default), so a story looks here as it does there.
+        testRunner: {
+          name: "Story tests (1200 × 900)",
+          styles: { width: "1200px", height: "900px" },
+          type: "desktop",
+        },
+      },
+    },
+    options: {
+      // Alphabetical, so each tool's Panel sits above its Parts; parts no one
+      // tool owns go last within Tools. Stories keep their order in the file.
+      storySort: {
+        method: "alphabetical",
+        order: ["*", "Tools", ["*", "Shared"]],
+      },
+    },
     controls: {
       matchers: { color: /(background|color)$/i, date: /Date$/i },
     },
@@ -320,8 +307,10 @@ const preview: Preview = {
         // document — their stamp text, their watermark, in the colour and
         // opacity they chose. WCAG contrast governs the interface, not the
         // content authored through it, and the controls that set those values
-        // are checked normally.
-        exclude: ["[data-user-content-preview]"],
+        // are checked normally. A placed annotation's appearance is that same
+        // content drawn on the page: embedpdf renders it as an <img> it gives
+        // no alt, inside its annotation wrapper.
+        exclude: ["[data-user-content-preview]", "[data-no-interaction] img"],
       },
     },
   },
@@ -369,6 +358,7 @@ const preview: Preview = {
     },
   },
   decorators: [
+    withStorybookFilePicker,
     withLocale,
     withProviders,
     withThemeByDataAttribute({

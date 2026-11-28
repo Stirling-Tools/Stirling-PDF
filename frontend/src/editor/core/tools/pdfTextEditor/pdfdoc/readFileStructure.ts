@@ -1,3 +1,5 @@
+import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
@@ -12,7 +14,11 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { staleKeyCheck } from "@editor/tools/pdfTextEditor/pdfdoc/parentTreeEntries";
+import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
+import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 
@@ -31,34 +37,74 @@ export interface FileBlock extends StructureRole {
   pageIndex: number | null;
   /** Its MCIDs on that page, its inline elements' included. */
   mcids: number[];
+  alt: string | null;
+}
+
+/** An element's /Lang, and its nearest ancestor's. */
+export interface ElementLanguage {
+  lang: string | null;
+  inheritedLang: string | null;
+  /** Parent element key; null at the top of the structure tree. */
+  parent: string | null;
 }
 
 export interface FileStructure {
   /**
    * Every page with /StructParents, keyed by page index, its elements each
    * listing only the MCIDs the page's ParentTree slots give it: the lookup
-   * the save addresses edits by. PDFium lists an element's MCIDs from every
+   * the save addresses edits by. A page without one has no elements yet, and
+   * the save gives it a ParentTree array. PDFium lists an element's MCIDs from every
    * page with no page attached, so an element spanning a page break would
    * claim another element's MCID there.
    */
   pages: Map<number, FilePageStructure>;
   /** Every block element, in the tree's reading order. */
   blocks: FileBlock[];
+  /** By element key, for every element a page or block names. */
+  languages: Map<string, ElementLanguage>;
+  /** The link annotations the save can give an element, by page index (see readLinks). */
+  links: Map<number, LinkAnnotation[]>;
+  /** The widget annotations the save can give a Form element, by page index (see readWidgets). */
+  widgets: Map<number, WidgetAnnotation[]>;
+  /** Whether the file has a /StructTreeRoot at all. */
+  hasTree: boolean;
+  /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
+  marked: boolean;
 }
 
 /**
- * The file's structure tree. Null when the file is untagged, cannot be
- * parsed, or is encrypted, whose strings would read as ciphertext.
+ * The file's structure tree, empty when it has none: the save creates one
+ * for the first element added. Null when the file cannot be parsed, or is
+ * encrypted, whose strings would read as ciphertext.
  */
 export async function readFileStructure(
   bytes: Uint8Array,
 ): Promise<FileStructure | null> {
   const pdf = await RawPdf.parse(bytes);
-  if (!pdf || pdf.encrypted) return null;
+  return pdf ? fileStructureOf(pdf) : null;
+}
+
+/** As readFileStructure, from a file already parsed. */
+export function fileStructureOf(pdf: RawPdf): FileStructure | null {
+  if (pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
-  const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
-  const rootBody = treeRoot === null ? null : pdf.objectBody(treeRoot);
-  if (treeRoot === null || !rootBody) return null;
+  if (!catalog) return null;
+  const treeRoot = pdf.dictRef(catalog, "StructTreeRoot");
+  if (treeRoot === null) {
+    return pdf.valueSpan(catalog, "StructTreeRoot")
+      ? null
+      : {
+          pages: new Map(),
+          blocks: [],
+          languages: new Map(),
+          links: readLinks(pdf, null),
+          widgets: readWidgets(pdf, null),
+          hasTree: false,
+          marked: isMarked(pdf, catalog),
+        };
+  }
+  const rootBody = pdf.objectBody(treeRoot);
+  if (!rootBody) return null;
   const nodes = new StructureNodes(pdf, rootBody);
   const nodeFor = (num: number) => nodes.node(num);
 
@@ -71,12 +117,21 @@ export async function readFileStructure(
     return infos.get(num)!;
   };
 
+  const isStale = staleKeyCheck(pdf, rootBody);
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
-    const key = page ? pdf.dictInt(page, "StructParents") : null;
-    if (key === null) return;
-    const items = pdf.parentTreeArray(treeRoot, key)?.items;
+    if (!page || !pdf.valueSpan(page, "StructParents")) return;
+    const key = pdf.dictInt(page, "StructParents");
+    if (key === null) {
+      byPage.set(pageIndex, { elements: [], slotCount: null });
+      return;
+    }
+    const array = pdf.parentTreeArray(treeRoot, key);
+    // A stale key, as on a page merged in after its tree was written: the page has
+    // no elements yet, and the save gives it a key of its own.
+    if (!array && isStale(pageNum, key)) return;
+    const items = array?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });
       return;
@@ -95,9 +150,23 @@ export async function readFileStructure(
       slotCount: items.length,
     });
   });
+  const blocks = readBlocks(pdf, rootBody, nodeFor, byPage);
+  const languages = new Map<string, ElementLanguage>();
+  for (const [num, { lang, inheritedLang, parent }] of nodes.readNodes()) {
+    languages.set(String(num), {
+      lang,
+      inheritedLang,
+      parent: parent === null ? null : String(parent),
+    });
+  }
   return {
     pages: byPage,
-    blocks: readBlocks(pdf, rootBody, nodeFor, byPage),
+    blocks,
+    languages,
+    links: readLinks(pdf, treeRoot),
+    widgets: readWidgets(pdf, treeRoot),
+    hasTree: true,
+    marked: isMarked(pdf, catalog),
   };
 }
 
@@ -136,6 +205,7 @@ function readBlocks(
           type: node.type,
           pageIndex: at?.pageIndex ?? null,
           mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
+          alt: textEntry(pdf, kidBody, "Alt"),
         });
       }
       visit(kidBody);
@@ -152,10 +222,7 @@ function readElement(
 ): ElementInfo | null {
   const body = pdf.objectBody(num);
   if (!body) return null;
-  const text = (key: string): string | null => {
-    const value = pdf.resolve(body, key);
-    return value === null ? null : decodeTextString(value.trim());
-  };
+  const text = (key: string) => textEntry(pdf, body, key);
   return {
     role: node.role,
     type: node.type,
@@ -163,6 +230,12 @@ function readElement(
     key: String(num),
     alt: text("Alt"),
     actualText: text("ActualText"),
+    lang: node.lang,
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
+}
+
+function textEntry(pdf: RawPdf, body: string, key: string): string | null {
+  const value = pdf.resolve(body, key);
+  return value === null ? null : decodeTextString(value.trim());
 }

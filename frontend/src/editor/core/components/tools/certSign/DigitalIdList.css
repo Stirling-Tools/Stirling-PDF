@@ -1,0 +1,10 @@
+.digital-id-location {
+  display: inline-flex;
+  vertical-align: -2px;
+  margin-inline-end: 4px;
+}
+
+.digital-id-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

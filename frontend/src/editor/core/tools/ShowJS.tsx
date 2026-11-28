@@ -140,7 +140,7 @@ const ShowJS = (props: BaseToolProps) => {
     executeButton: {
       text: hasResults
         ? t("back", "Back")
-        : t("showJS.submit", "Extract JavaScript"),
+        : t("showJS.submit", "Show JavaScript"),
       loadingText: t("loading", "Loading..."),
       onClick: hasResults
         ? async () => {

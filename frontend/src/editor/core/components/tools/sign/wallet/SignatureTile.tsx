@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Dropdown } from "@editor/ui/Dropdown";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import styles from "@editor/components/tools/sign/wallet/SignatureTile.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface SignatureTileAction {
   id: string;
@@ -37,7 +38,10 @@ export function SignatureTile({
   const defaultLabel = t("sign.wallet.default", "Default");
 
   return (
-    <div className={styles.tile} data-testid="signature-tile">
+    <div
+      className={`${styles.tile} ${privateContentClassName}`}
+      data-testid="signature-tile"
+    >
       <button
         type="button"
         className={styles.paper}
@@ -52,7 +56,13 @@ export function SignatureTile({
           <Icon name="check" size={11} strokeWidth={3.2} />
         </span>
       </button>
-      <SignatureTileMenu label={label} actions={actions} disabled={disabled} />
+      {actions.length > 0 && (
+        <SignatureTileMenu
+          label={label}
+          actions={actions}
+          disabled={disabled}
+        />
+      )}
       <span className={styles.label}>
         <span className={styles.labelText}>{label}</span>
         {isDefault && (

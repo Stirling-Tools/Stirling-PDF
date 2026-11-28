@@ -20,7 +20,6 @@ from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (  # 
     GEN_AI_TOOL_DEFINITIONS,
     GEN_AI_USAGE_INPUT_TOKENS,
     GEN_AI_USAGE_OUTPUT_TOKENS,
-    GenAiOperationNameValues,
 )
 from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS, SERVER_PORT
 from opentelemetry.trace import Span
@@ -84,7 +83,7 @@ def _transform_output_choices(choices: list[Any]) -> list[Any]:
     for choice in choices:
         if not isinstance(choice, dict) or "parts" not in choice:
             continue
-        tool_calls = []
+        tool_calls: list[dict[str, Any]] = []
         for part in choice.get("parts", []):
             if isinstance(part, dict) and part.get("type") == "tool_call":
                 tool_calls.append(
@@ -127,8 +126,9 @@ class PostHogSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
+        """Capture chat spans with request-local attribution and one trace event per trace."""
         attrs = dict(span.attributes or {})
-        if attrs.get(GEN_AI_OPERATION_NAME) != GenAiOperationNameValues.CHAT.value:
+        if attrs.get(GEN_AI_OPERATION_NAME) != "chat":
             return
 
         properties = self._build_generation_properties(span, attrs)

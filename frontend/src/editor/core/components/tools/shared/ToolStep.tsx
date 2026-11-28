@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
+import "@editor/ui/InfoTooltip.css";
 import { Tooltip } from "@editor/components/shared/Tooltip";
-import { TooltipTip } from "@editor/types/tips";
+import type { SidebarTooltipContent } from "@editor/types/tips";
 import {
   createFilesToolStep,
   FilesToolStepProps,
@@ -24,6 +25,8 @@ export interface ToolStepProps {
   isVisible?: boolean;
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
+  /** A control shown beside the chevron while the step is open. */
+  headerAction?: React.ReactNode;
   children?: React.ReactNode;
   helpText?: string;
   showNumber?: boolean;
@@ -31,14 +34,7 @@ export interface ToolStepProps {
   _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
   _noPadding?: boolean; // Internal prop to exclude from default left padding
   alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
-  tooltip?: {
-    content?: React.ReactNode;
-    tips?: TooltipTip[];
-    header?: {
-      title: string;
-      logo?: React.ReactNode;
-    };
-  };
+  tooltip?: SidebarTooltipContent;
 }
 
 const renderTooltipTitle = (
@@ -56,15 +52,14 @@ const renderTooltipTitle = (
         sidebarTooltip={true}
         pinOnClick={true}
       >
-        <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={400} size="sm">
+        <Flex align="center" gap={6} onClick={(e) => e.stopPropagation()}>
+          <Text fw={500} size="sm">
             {title}
           </Text>
-          <Icon
-            name="info"
-            size="1.25rem"
-            style={{ color: "var(--icon-files-color)" }}
-          />
+          {/* Same glyph and tone as the field-level ToolInfoTooltip, so a step's (i) and a field's (i) read as one affordance. */}
+          <span className="sui-info">
+            <Icon name="info" size={14} strokeWidth={2} />
+          </span>
         </Flex>
       </Tooltip>
     );
@@ -82,6 +77,7 @@ const ToolStep = ({
   isVisible = true,
   isCollapsed = false,
   onCollapsedClick,
+  headerAction,
   children,
   helpText,
   showNumber,
@@ -92,11 +88,10 @@ const ToolStep = ({
 }: ToolStepProps) => {
   const parent = useContext(ToolStepContext);
 
-  // Auto-detect if we should show numbers based on sibling count or force option
   const shouldShowNumber = useMemo(() => {
-    if (showNumber !== undefined) return showNumber; // Individual step override
-    if (parent?.forceStepNumbers) return true; // Flow-level force
-    return parent ? parent.visibleStepCount >= 3 : false; // Auto-detect
+    if (showNumber !== undefined) return showNumber;
+    if (parent?.forceStepNumbers) return true;
+    return parent ? parent.visibleStepCount >= 2 : false;
   }, [showNumber, parent]);
 
   if (!isVisible) return null;
@@ -131,25 +126,17 @@ const ToolStep = ({
             {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
           </Flex>
 
-          {isCollapsed ? (
+          <Flex align="center" gap="xs">
+            {!isCollapsed && headerAction}
             <Icon
-              name="chevron-right"
+              name={isCollapsed ? "chevron-right" : "chevron-down"}
               size="1.2rem"
               style={{
                 color: "var(--mantine-color-dimmed)",
                 opacity: onCollapsedClick ? 1 : 0.5,
               }}
             />
-          ) : (
-            <Icon
-              name="chevron-down"
-              size="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-                opacity: onCollapsedClick ? 1 : 0.5,
-              }}
-            />
-          )}
+          </Flex>
         </Flex>
 
         {!isCollapsed && (

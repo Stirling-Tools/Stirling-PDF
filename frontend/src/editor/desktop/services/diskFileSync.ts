@@ -102,7 +102,8 @@ export function endSelfWrite(path: string): void {
   selfWrites.delete(path);
 }
 
-function isSelfWrite(path: string): boolean {
+/** Whether we are writing this path ourselves, so its disk state is ours. */
+export function isSelfWrite(path: string): boolean {
   const until = selfWrites.get(path);
   if (until == null) return false;
   // A save that never re-baselined must not blind us forever.
@@ -333,10 +334,13 @@ interface ToastSpec {
 }
 
 /** Lazy: this sits on the hydration path and the toast barrel pulls in the
- *  whole icon set, costing ~3s of module load per file open. */
+ *  whole icon set, costing ~3s of module load per file open. Every notice
+ *  here names a file in its body. */
 function toast({ alertType = "warning", ...options }: ToastSpec): void {
   void import("@editor/components/toast")
-    .then(({ alert }) => alert({ alertType, expandable: false, ...options }))
+    .then(({ alert }) =>
+      alert({ alertType, expandable: false, privateBody: true, ...options }),
+    )
     .catch((error) => console.error("[diskFileSync] toast failed:", error));
 }
 

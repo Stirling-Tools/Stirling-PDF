@@ -452,7 +452,7 @@ test.describe("Form field editor", () => {
     await page.getByTestId("form-modify-row-firstName").click();
 
     // The property editor reveals the label input; change it.
-    const labelInput = page.getByLabel("Label").first();
+    const labelInput = page.getByLabel("Label", { exact: true });
     await expect(labelInput).toBeVisible();
     await labelInput.fill("Given name");
 
@@ -520,7 +520,9 @@ test.describe("Form field editor", () => {
     await selectMode(page, "Fill");
     await page.getByTestId("unsaved-save").click();
     await expect(
-      page.getByText("Field could not be saved", { exact: true }),
+      page
+        .getByText("Field could not be saved", { exact: true })
+        .and(page.locator(":not(.toast-body)")),
     ).toBeVisible();
     await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
       "Keep this draft",

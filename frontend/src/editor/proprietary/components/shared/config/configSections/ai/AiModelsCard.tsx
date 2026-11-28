@@ -21,6 +21,7 @@ import {
   MASKED_SECRET,
 } from "@editor/components/shared/config/configSections/aiEngineSettings";
 import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AiModelsCardProps extends AiCardProps {
   apiKeyDirty: boolean;
@@ -211,6 +212,7 @@ export function AiModelsCard({
 
           {showApiKey && (
             <PasswordInput
+              className={privateContentClassName}
               label={
                 <Group gap="xs">
                   <span>{apiKeyLabel}</span>
@@ -243,6 +245,7 @@ export function AiModelsCard({
 
           {showBaseUrl && (
             <TextInput
+              className={privateContentClassName}
               label={
                 <Group gap="xs">
                   <span>

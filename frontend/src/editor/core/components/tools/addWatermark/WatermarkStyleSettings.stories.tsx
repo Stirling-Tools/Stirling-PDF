@@ -7,7 +7,7 @@ import {
 } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta: Meta<typeof WatermarkStyleSettings> = {
-  title: "Tools/AddWatermark/WatermarkStyleSettings",
+  title: "Tools/Add Watermark/Parts/WatermarkStyleSettings",
   component: WatermarkStyleSettings,
 };
 export default meta;

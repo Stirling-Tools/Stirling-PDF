@@ -1,8 +1,11 @@
 import { BaseParameters } from "@editor/types/parameters";
+import type { PdfBox } from "@editor/services/signatureFieldLayout";
 import {
   useBaseParameters,
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
+
+export type StampGraphic = "NAME" | "IMAGE" | "NONE";
 
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
@@ -10,8 +13,16 @@ export interface CertSignParameters extends BaseParameters {
   //  DEVICE = a certificate held on this machine (Windows store or USB PKCS#11 token, desktop only).
   signMode: "MANUAL" | "AUTO" | "DEVICE";
   // For MANUAL this is the uploaded file format; for DEVICE it is the hardware kind
-  // (WINDOWS_STORE or PKCS11). Hardware kinds are only offered in the desktop app.
-  certType: "" | "PEM" | "PKCS12" | "PFX" | "JKS" | "WINDOWS_STORE" | "PKCS11";
+  // (WINDOWS_STORE, MACOS_KEYCHAIN or PKCS11). Hardware kinds are only offered in the desktop app.
+  certType:
+    | ""
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "WINDOWS_STORE"
+    | "MACOS_KEYCHAIN"
+    | "PKCS11";
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
@@ -23,13 +34,28 @@ export interface CertSignParameters extends BaseParameters {
   pkcs11LibraryPath?: string;
   pkcs11Slot?: number;
 
+  /** Fingerprint of the certificate the user reviewed (server or digital ID); sent at signing only. */
+  expectedCertificateSha256?: string;
+  /** The chosen keychain ID was on a security key, so a copy elsewhere must not sign. */
+  requireToken?: boolean;
+
   // Signature appearance options
   showSignature: boolean;
   reason: string;
   location: string;
   name: string;
   pageNumber: number;
-  showLogo: boolean;
+  /** Beside the details: the name, the signer's own image, or nothing. */
+  stampGraphic: StampGraphic;
+  /** The signer's image (a handwritten signature, a seal) for the IMAGE graphic. */
+  signatureImage?: File;
+  /** The server's signature logo faded behind the whole stamp. */
+  showWatermark: boolean;
+  showCertificateDetails: boolean;
+  /** An empty signature field to sign into; it brings its own page and box. */
+  fieldName?: string;
+  /** Box on pageNumber in PDF user space; unset leaves the server's default corner. */
+  stampBox?: PdfBox;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -41,7 +67,9 @@ export const defaultParameters: CertSignParameters = {
   location: "",
   name: "",
   pageNumber: 1,
-  showLogo: true,
+  stampGraphic: "NAME",
+  showWatermark: true,
+  showCertificateDetails: false,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
@@ -51,6 +79,14 @@ export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
 export function validateCertSignParameters(
   params: CertSignParameters,
 ): boolean {
+  if (
+    params.showSignature &&
+    params.stampGraphic === "IMAGE" &&
+    !params.signatureImage
+  ) {
+    return false;
+  }
+
   // Auto mode (server certificate) - no additional validation needed
   if (params.signMode === "AUTO") {
     return true;
@@ -71,7 +107,8 @@ export function validateCertSignParameters(
     case "JKS":
       return !!params.jksFile;
     case "WINDOWS_STORE":
-      // Need a chosen certificate from the Windows store.
+    case "MACOS_KEYCHAIN":
+      // Need a chosen certificate from the OS store.
       return !!params.alias;
     case "PKCS11":
       // Need a driver library and a chosen certificate on the token.

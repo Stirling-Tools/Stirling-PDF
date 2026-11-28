@@ -1,0 +1,25 @@
+/* The file button and its remove button drawn as one control. Not Button.Group:
+   FileButton puts its hidden input first, so the group would square the file
+   button's outer corners too. */
+.certRow {
+  display: flex;
+  width: 100%;
+}
+
+.certRow > button:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+
+.certRow:has(> .remove) > button:first-of-type {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.certRow > .remove {
+  flex-shrink: 0;
+  width: 2.5rem;
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}

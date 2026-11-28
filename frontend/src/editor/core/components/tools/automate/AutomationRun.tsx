@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Text,
@@ -17,6 +17,8 @@ import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@editor/types/automation";
 import { EXECUTION_STATUS } from "@editor/constants/automation";
 import { useResourceCleanup } from "@editor/utils/resourceManager";
+import { toolParamsNeedConfiguring } from "@editor/hooks/tools/shared/toolAutomation";
+import { ToolId } from "@editor/types/toolId";
 import type { useAutomateOperation } from "@editor/hooks/tools/automate/useAutomateOperation";
 
 interface AutomationRunProps {
@@ -53,6 +55,32 @@ export default function AutomationRun({
     ? null
     : t("automate.sequence.signInToRun", "Sign in to run automations.");
 
+  // A saved, imported or suggested automation can hold a step whose settings the tool no longer
+  // accepts; running it would only fail at the backend, so it is blocked here instead.
+  const stepsNeedingConfiguration = useMemo(
+    () =>
+      new Set(
+        (automation?.operations ?? []).flatMap((op, index) =>
+          toolParamsNeedConfiguring(
+            op.operation as ToolId,
+            op.parameters ?? {},
+            toolRegistry,
+          )
+            ? [index]
+            : [],
+        ),
+      ),
+    [automation, toolRegistry],
+  );
+  const configureReason =
+    stepsNeedingConfiguration.size > 0
+      ? t(
+          "automate.sequence.needsConfiguring",
+          "Edit this automation to finish configuring its steps.",
+        )
+      : null;
+  const disabledReason = signInReason ?? configureReason;
+
   // Initialize execution steps from automation
   useEffect(() => {
     if (automation?.operations) {
@@ -63,12 +91,15 @@ export default function AutomationRun({
           operation: op.operation,
           name: tool?.name || op.operation,
           status: EXECUTION_STATUS.PENDING,
+          error: stepsNeedingConfiguration.has(index)
+            ? t("automate.creation.tools.notConfigured", "! Not Configured")
+            : undefined,
         };
       });
       setExecutionSteps(steps);
       setCurrentStepIndex(-1);
     }
-  }, [automation, toolRegistry]);
+  }, [automation, toolRegistry, stepsNeedingConfiguration, t]);
 
   // Cleanup when component unmounts
   useEffect(() => {
@@ -246,7 +277,7 @@ export default function AutomationRun({
 
         {/* Action Buttons */}
         <Group justify="space-between" mt="xl">
-          <Tooltip label={signInReason} disabled={!signInReason} withArrow>
+          <Tooltip label={disabledReason} disabled={!disabledReason} withArrow>
             {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
             <span style={{ display: "inline-flex" }}>
               <Button
@@ -256,7 +287,7 @@ export default function AutomationRun({
                   isExecuting ||
                   !selectedFiles ||
                   selectedFiles.length === 0 ||
-                  Boolean(signInReason)
+                  Boolean(disabledReason)
                 }
                 loading={isExecuting}
               >

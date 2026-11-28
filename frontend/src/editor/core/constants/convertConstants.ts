@@ -167,7 +167,6 @@ export const FROM_FORMAT_OPTIONS = [
 
 export const TO_FORMAT_OPTIONS = [
   { value: "pdf", label: "PDF", group: "Document" },
-  { value: "pdfa", label: "PDF/A", group: "Document" },
   { value: "pdfx", label: "PDF/X", group: "Document" },
   { value: "pdfua", label: "PDF/UA", group: "Document" },
   { value: "docx", label: "DOCX", group: "Document" },
@@ -215,7 +214,6 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
     "md",
     "html",
     "xml",
-    "pdfa",
     "pdfx",
     "pdfua",
     "cbz",
@@ -277,7 +275,6 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     md: "pdf-to-markdown",
     html: "pdf-to-html",
     xml: "pdf-to-xml",
-    pdfa: "pdf-to-pdfa",
     pdfx: "pdf-to-pdfa", // PDF/X uses the same endpoint as PDF/A
     pdfua: "pdf-to-ua",
     cbr: "pdf-to-cbr",

@@ -8,6 +8,7 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@editor/hooks/tools/shared/useBaseParameters";
+import { localPaperSize } from "@editor/utils/paperSize";
 
 export interface SplitParameters extends BaseParameters {
   method: SplitMethod | null;
@@ -43,7 +44,7 @@ export const defaultParameters: SplitParameters = {
   duplexMode: false,
   splitMode: "SPLIT_ALL",
   customPages: "",
-  pageSize: "A4",
+  pageSize: localPaperSize("A4", "Letter"),
   xFactor: "2",
   yFactor: "2",
   rightToLeft: false,

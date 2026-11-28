@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXCertPathBuilderResult;
@@ -13,8 +14,17 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1String;
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSProcessable;
@@ -107,7 +117,8 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (InputStream in = file.getInputStream();
+                PDDocument document = pdfDocumentFactory.load(in)) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -133,8 +144,16 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
-                    byte[] signedContent = sig.getSignedContent(file.getInputStream());
-                    byte[] signatureBytes = sig.getContents(file.getInputStream());
+                    // Opened one after the other: an S3 stream left unread while the other is
+                    // consumed can be aborted by the SDK's idle timeout.
+                    byte[] signedContent;
+                    try (InputStream signedIn = file.getInputStream()) {
+                        signedContent = sig.getSignedContent(signedIn);
+                    }
+                    byte[] signatureBytes;
+                    try (InputStream contentsIn = file.getInputStream()) {
+                        signatureBytes = sig.getContents(contentsIn);
+                    }
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.
@@ -281,7 +300,7 @@ public class ValidateSignatureController {
                         }
 
                         // Set basic signature info
-                        result.setSignerName(sig.getName());
+                        result.setSignerName(signerName(sig.getName(), signerCert));
                         // A DocTimeStamp has no /M entry; its date is the TSA's genTime.
                         result.setSignatureDate(
                                 timeStampGenTime != null
@@ -366,5 +385,25 @@ public class ValidateSignatureController {
             out.write(signedContent);
         }
         return java.util.Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
+    }
+
+    // ISO 32000-1 12.8.1: /Name is only for when the certificate cannot name the signer, so most
+    // signatures leave it out and the certificate's common name is the signer.
+    static String signerName(String signatureName, X509Certificate signerCert) {
+        if (signatureName != null && !signatureName.isBlank()) {
+            return signatureName;
+        }
+        X500Principal subject = signerCert.getSubjectX500Principal();
+        for (RDN rdn : X500Name.getInstance(subject.getEncoded()).getRDNs()) {
+            for (AttributeTypeAndValue attribute : rdn.getTypesAndValues()) {
+                if (BCStyle.CN.equals(attribute.getType())) {
+                    ASN1Encodable value = attribute.getValue();
+                    return value instanceof ASN1String text
+                            ? text.getString()
+                            : IETFUtils.valueToString(value);
+                }
+            }
+        }
+        return subject.getName();
     }
 }

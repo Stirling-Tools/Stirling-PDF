@@ -4,6 +4,7 @@ import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { TextInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Metadata stamped onto every processed document. Saved under premium.proFeatures. */
 export function CustomMetadataCard({
@@ -42,6 +43,7 @@ export function CustomMetadataCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -79,6 +81,7 @@ export function CustomMetadataCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -113,6 +116,7 @@ export function CustomMetadataCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>

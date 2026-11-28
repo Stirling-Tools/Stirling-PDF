@@ -10,7 +10,10 @@ const SELECTION_RECTS = ".pdf-selection-layer > div:first-child > div";
 
 async function loadViewer(page: import("@playwright/test").Page) {
   await page.goto("/editor");
-  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  await page
+    .locator('[data-testid="file-input"], [data-testid="landing-file-input"]')
+    .first()
+    .setInputFiles(SAMPLE_PDF);
 
   const firstPage = page.locator('[data-page-index="0"]').first();
   await expect(firstPage).toBeVisible({ timeout: 30_000 });
@@ -179,7 +182,7 @@ test("saving redactions keeps the live document mounted", async ({ page }) => {
 
   await page.evaluate(() => {
     const span = document.querySelector<HTMLElement>(
-      ".ph-no-capture:has([data-page-index])",
+      ".ph-sensitive:has([data-page-index])",
     );
     span?.setAttribute("data-reload-probe", "1");
     for (const el of document.querySelectorAll("[data-page-index]")) {

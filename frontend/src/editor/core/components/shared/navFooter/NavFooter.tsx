@@ -10,6 +10,8 @@ import {
   type NavFooterCredits,
 } from "@editor/components/shared/navFooter/NavFooterCreditsRow";
 import "@editor/components/shared/navFooter/NavFooter.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface NavFooterAppLink {
   /** The app this footer is NOT in — the one the row opens. */
@@ -151,14 +153,14 @@ export function NavFooter({
       key: "account",
       node: (
         <Tooltip
-          label={accountLabel}
+          label={<PrivateContent>{accountLabel}</PrivateContent>}
           position="right"
           withinPortal
           disabled={!collapsed}
         >
           <button
             type="button"
-            className="nav-footer__row nav-footer__account"
+            className={`nav-footer__row nav-footer__account ${privateContentClassName}`}
             // Called with no args: a handler with an optional param must not get the event.
             onClick={onOpenSettings ? () => onOpenSettings() : undefined}
             disabled={!onOpenSettings}

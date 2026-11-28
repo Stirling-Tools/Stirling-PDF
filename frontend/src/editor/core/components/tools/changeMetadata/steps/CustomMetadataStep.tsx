@@ -2,6 +2,7 @@ import { Stack, TextInput, Group, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface CustomMetadataStepProps {
   parameters: ChangeMetadataParameters;
@@ -40,15 +41,6 @@ const CustomMetadataStep = ({
         </Button>
       </Group>
 
-      {parameters.customMetadata.length > 0 && (
-        <Text size="xs" c="dimmed">
-          {t(
-            "changeMetadata.customFields.description",
-            "Add custom metadata fields to the document",
-          )}
-        </Text>
-      )}
-
       {parameters.customMetadata.map((entry) => (
         <Stack key={entry.id} gap="xs">
           <TextInput
@@ -57,6 +49,7 @@ const CustomMetadataStep = ({
               "Custom key",
             )}
             value={entry.key}
+            className={privateContentClassName}
             onChange={(e) =>
               updateCustomMetadata(entry.id, e.target.value, entry.value)
             }
@@ -68,6 +61,7 @@ const CustomMetadataStep = ({
               "Custom value",
             )}
             value={entry.value}
+            className={privateContentClassName}
             onChange={(e) =>
               updateCustomMetadata(entry.id, entry.key, e.target.value)
             }

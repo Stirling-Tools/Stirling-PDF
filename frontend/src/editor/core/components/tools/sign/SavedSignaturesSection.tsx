@@ -22,11 +22,13 @@ import {
 } from "@mantine/core";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import {
   SavedSignature,
   SavedSignatureType,
 } from "@editor/hooks/tools/sign/useSavedSignatures";
 import type { StorageType } from "@editor/services/signatureStorageService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SavedSignaturesSectionProps {
   signatures: SavedSignature[];
@@ -69,18 +71,16 @@ function typeLabel(translate: ScopedTranslate, type: SavedSignatureType) {
 
 function SavedSignaturesHeader({ translate }: { translate: ScopedTranslate }) {
   return (
-    <Group justify="space-between" align="flex-start">
-      <Stack gap={0}>
-        <Text fw={600} size="md">
-          {translate("saved.heading", "Saved signatures")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {translate(
-            "saved.description",
-            "Reuse saved signatures at any time.",
-          )}
-        </Text>
-      </Stack>
+    <Group gap={4} wrap="nowrap">
+      <Text fw={600} size="md">
+        {translate("saved.heading", "Saved signatures")}
+      </Text>
+      <ToolInfoTooltip
+        label={translate(
+          "saved.description",
+          "Reuse saved signatures at any time.",
+        )}
+      />
     </Group>
   );
 }
@@ -146,17 +146,15 @@ function SignatureGroupHeading({
   description,
 }: SignatureGroupHeadingProps) {
   return (
-    <>
-      <Group gap="xs">
-        <Icon name={icon} size={18} />
+    <Group gap="xs" wrap="nowrap">
+      <Icon name={icon} size={18} />
+      <Group gap={4} wrap="nowrap">
         <Text fw={600} size="sm">
           {title}
         </Text>
+        <ToolInfoTooltip label={description} />
       </Group>
-      <Text size="xs" c="dimmed">
-        {description}
-      </Text>
-    </>
+    </Group>
   );
 }
 
@@ -250,6 +248,7 @@ function SignaturePreview({ signature }: { signature: SavedSignature }) {
             color: signature.textColor,
             whiteSpace: "nowrap",
           }}
+          className={privateContentClassName}
         >
           {signature.signerName}
         </Text>
@@ -274,6 +273,7 @@ function SignaturePreview({ signature }: { signature: SavedSignature }) {
         component="img"
         src={signature.dataUrl}
         alt={signature.label}
+        className={privateContentClassName}
         style={{
           maxWidth: "100%",
           maxHeight: "100%",
@@ -380,6 +380,7 @@ function SavedSignatureCard({
         <TextInput
           label={translate("saved.label", "Label")}
           value={labelDrafts[signature.id] ?? signature.label}
+          className={privateContentClassName}
           onChange={(event) => onLabelChange(event, signature)}
           onBlur={() => onLabelBlur(signature)}
           onKeyDown={(event) => onLabelKeyDown(event, signature)}

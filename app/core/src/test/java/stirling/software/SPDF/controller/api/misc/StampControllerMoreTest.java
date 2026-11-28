@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -256,6 +257,26 @@ class StampControllerMoreTest {
             req.setAlphabet(alphabet);
             req.setStampText(stampText);
             assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("keeps periods and umlauts in the default alphabet instead of '?'")
+        void romanStampKeepsPunctuationAndUmlauts() throws Exception {
+            String stampText =
+                    "Reproduktion eines digitalisierten Originals. "
+                            + "Die Reproduktion stimmt mit dem Original überein.";
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setAlphabet("roman");
+            req.setStampText(stampText);
+
+            ResponseEntity<Resource> response = stampController.addStamp(req);
+
+            try (InputStream is = response.getBody().getInputStream();
+                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
+                String extracted = new PDFTextStripper().getText(result);
+                assertThat(extracted).contains("Originals. Die").contains("überein.");
+                assertThat(extracted).doesNotContain("?");
+            }
         }
     }
 
@@ -505,11 +526,58 @@ class StampControllerMoreTest {
         }
 
         @Test
-        @DisplayName("unknown stamp type is a no-op that still returns the PDF")
-        void unknownStampTypeIsNoOp() throws Exception {
+        @DisplayName("unknown stamp type is rejected with a message naming the field")
+        void rejectsUnknownStampType() throws Exception {
             AddStampRequest req = baseRequest(pdfFile(2));
             req.setStampType("neither");
-            assertValidPdf(stampController.addStamp(req), 2);
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("stampType");
+        }
+
+        @Test
+        @DisplayName("text stamp type without text is rejected")
+        void rejectsMissingText() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampText(" ");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Stamp text");
+        }
+    }
+
+    @Nested
+    @DisplayName("Omitted optional fields fall back to the UI defaults")
+    class OmittedOptionalFields {
+
+        @Test
+        @DisplayName("only stampType and stampText stamps the PDF")
+        void textStampWithOnlyRequiredFields() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampType("text");
+            req.setStampText("QA TEST");
+            assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("customMargin given but customColor omitted still stamps")
+        void textStampWithoutColour() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampType("text");
+            req.setStampText("QA TEST");
+            req.setCustomMargin("10");
+            assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("omitted stampType is inferred from the supplied image")
+        void stampTypeInferredFromImage() throws Exception {
+            AddStampRequest req = new AddStampRequest();
+            req.setFileInput(pdfFile(1));
+            req.setStampImage(pngImage("stamp.png"));
+            assertValidPdf(stampController.addStamp(req), 1);
         }
     }
 }

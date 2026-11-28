@@ -21,7 +21,7 @@ const ConvertToCbrSettings = ({
   return (
     <Stack gap="sm" data-testid="cbr-output-settings">
       <Text size="sm" fw={500}>
-        {t("convert.cbrOutputOptions", "PDF to CBR Options")}:
+        {t("convert.cbrOutputOptions", "PDF to CBR Options")}
       </Text>
 
       <NumberInput
