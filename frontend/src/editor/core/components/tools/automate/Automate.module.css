@@ -551,6 +551,11 @@
   flex: 1;
 }
 
+/* Sized to its label, so the progress text keeps the width at the narrow panel. */
+.footerButtons > .cancelRun {
+  flex: 0 0 auto;
+}
+
 .summaryActions {
   display: flex;
   flex-wrap: wrap;

@@ -182,6 +182,49 @@ describe("executeAutomationSequence (automation execution)", () => {
       "03_memo_followup_scan.pdf",
     ]);
   });
+
+  test("a cancelled run stops before the next step and reports no failure", async () => {
+    const step = {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/misc/compress-pdf",
+        defaultParameters: {},
+        buildFormData: () => new FormData(),
+      },
+    };
+    const toolRegistry = {
+      compress: step,
+      repair: step,
+    } as unknown as ToolRegistry;
+    const automation = {
+      id: "two-steps",
+      name: "Two steps",
+      operations: [
+        { operation: "compress", parameters: {} },
+        { operation: "repair", parameters: {} },
+      ],
+    } as unknown as AutomationConfig;
+    const cancel = new AbortController();
+    const onStepError = vi.fn();
+
+    await expect(
+      executeAutomationSequence(
+        automation,
+        [new File(["a"], "a.pdf", { type: "application/pdf" })],
+        toolRegistry,
+        undefined,
+        () => cancel.abort(),
+        onStepError,
+        cancel.signal,
+      ),
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    expect(mockedApiClient.post).toHaveBeenCalledTimes(1);
+    expect((mockedApiClient.post as Mock).mock.calls[0][2]).toMatchObject({
+      signal: cancel.signal,
+    });
+    expect(onStepError).not.toHaveBeenCalled();
+  });
 });
 
 describe("automation steps on a signed PDF while edits are blocked", () => {

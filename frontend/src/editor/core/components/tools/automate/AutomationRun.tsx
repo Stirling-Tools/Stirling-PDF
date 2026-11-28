@@ -112,7 +112,6 @@ export default function AutomationRun({
     (!automateOperation.errorMessage || undoTried) &&
     (automateOperation.files.length > 0 ||
       automateOperation.downloadUrl !== null);
-  const [isUndoing, setIsUndoing] = useState(false);
   const hasFiles = selectedFiles.length > 0;
 
   // Automations execute on the connected server. True on web (server-backed); on desktop
@@ -165,17 +164,10 @@ export default function AutomationRun({
       ),
     );
 
-  // Undo resets the results once it has restored the inputs; a run started in
-  // that window would lose its results to that reset.
   const undo = async () => {
-    setIsUndoing(true);
     setUndoTried(true);
     focusRunAfterUndo.current = true;
-    try {
-      await onUndo();
-    } finally {
-      setIsUndoing(false);
-    }
+    await onUndo();
   };
 
   // The control that had focus unmounts or is disabled at each turn of a run:
@@ -186,6 +178,9 @@ export default function AutomationRun({
   const runButtonRef = useRef<HTMLButtonElement>(null);
   const runErrorRef = useRef<HTMLParagraphElement>(null);
   const focusRunAfterUndo = useRef(false);
+  // Set by Cancel: step callbacks still in flight from the cancelled run are ignored.
+  const cancelled = useRef(false);
+  const focusRunAfterCancel = useRef(false);
   const hadResultsRef = useRef(hasResults);
   const hadFailedStepRef = useRef(false);
 
@@ -220,6 +215,7 @@ export default function AutomationRun({
     automateOperation.clearError();
     setUndoTried(false);
     focusRunAfterUndo.current = false;
+    cancelled.current = false;
     // A failed run can leave files with no Undo record; drop them now, so a
     // start that fails before the operation resets its own state cannot bring
     // them back as results.
@@ -233,6 +229,7 @@ export default function AutomationRun({
         {
           automationConfig: automation,
           onStepStart: (stepIndex) => {
+            if (cancelled.current) return;
             setStepStatus(stepIndex, EXECUTION_STATUS.RUNNING);
             announce(
               t(
@@ -243,6 +240,7 @@ export default function AutomationRun({
             );
           },
           onStepComplete: (stepIndex) => {
+            if (cancelled.current) return;
             setStepStatus(stepIndex, EXECUTION_STATUS.COMPLETED);
             announce(
               t(
@@ -252,8 +250,10 @@ export default function AutomationRun({
               ),
             );
           },
-          onStepError: (stepIndex, error) =>
-            setStepStatus(stepIndex, EXECUTION_STATUS.ERROR, error),
+          onStepError: (stepIndex, error) => {
+            if (cancelled.current) return;
+            setStepStatus(stepIndex, EXECUTION_STATUS.ERROR, error);
+          },
         },
         selectedFiles,
       );
@@ -263,6 +263,22 @@ export default function AutomationRun({
       setIsStarting(false);
     }
   };
+
+  /** Stops the run; nothing it produced is kept, so the inputs stay as they were. */
+  const cancelRun = () => {
+    cancelled.current = true;
+    automateOperation.cancelOperation();
+    setIsStarting(false);
+    setExecutionSteps(initialSteps(automation));
+    announce(t("automate.run.cancelled", "Run cancelled"));
+  };
+
+  useEffect(() => {
+    if (!isExecuting && focusRunAfterCancel.current) {
+      focusRunAfterCancel.current = false;
+      runButtonRef.current?.focus({ preventScroll: true });
+    }
+  }, [isExecuting]);
 
   const runningIndex = executionSteps.findIndex(
     (step) => step.status === EXECUTION_STATUS.RUNNING,
@@ -333,7 +349,14 @@ export default function AutomationRun({
           count: stepCount,
         })}
         info={automation.description || undefined}
-        onBack={isExecuting ? undefined : onBack}
+        onBack={
+          isExecuting
+            ? () => {
+                cancelRun();
+                onBack();
+              }
+            : onBack
+        }
         actions={
           !isExecuting && (
             <AutomationActionsMenu
@@ -456,16 +479,6 @@ export default function AutomationRun({
                 variant="secondary"
                 accent="neutral"
                 size="sm"
-                leftSection={<Icon name="rotate-ccw" size={14} />}
-                onClick={executeAutomation}
-                disabled={!hasFiles || isUndoing || Boolean(runBlockedReason)}
-              >
-                {t("automate.run.runAgain", "Run again")}
-              </Button>
-              <Button
-                variant="secondary"
-                accent="neutral"
-                size="sm"
                 onClick={onDone}
               >
                 {t("automate.run.done", "Done")}
@@ -535,21 +548,36 @@ export default function AutomationRun({
           </section>
 
           <div className={classes.footer}>
-            <Button
-              ref={runButtonRef}
-              fullWidth
-              leftSection={
-                isExecuting ? (
-                  <Loader size={14} color="currentColor" />
-                ) : (
-                  <Icon name="play" size={16} />
-                )
-              }
-              onClick={executeAutomation}
-              disabled={isExecuting || !hasFiles || Boolean(runBlockedReason)}
-            >
-              {runLabel}
-            </Button>
+            <div className={classes.footerButtons}>
+              <Button
+                ref={runButtonRef}
+                fullWidth
+                leftSection={
+                  isExecuting ? (
+                    <Loader size={14} color="currentColor" />
+                  ) : (
+                    <Icon name="play" size={16} />
+                  )
+                }
+                onClick={executeAutomation}
+                disabled={isExecuting || !hasFiles || Boolean(runBlockedReason)}
+              >
+                {runLabel}
+              </Button>
+              {isExecuting && (
+                <Button
+                  variant="secondary"
+                  accent="neutral"
+                  className={classes.cancelRun}
+                  onClick={() => {
+                    focusRunAfterCancel.current = true;
+                    cancelRun();
+                  }}
+                >
+                  {t("automate.run.cancel", "Cancel")}
+                </Button>
+              )}
+            </div>
             {runBlockedReason && (
               <p className={classes.hint} role="status">
                 {runBlockedReason}

@@ -163,7 +163,7 @@ async function runSavedAutomation(context: PlayContext) {
 
 async function runAutomationToResults(context: PlayContext) {
   const panel = await runSavedAutomation(context);
-  await panel.findByRole("button", { name: "Run again" }, STAGE_TIMEOUT);
+  await panel.findByRole("button", { name: "Done" }, STAGE_TIMEOUT);
 }
 
 export const Panel: Story = {};
@@ -505,7 +505,7 @@ export const UndoRestoresRun: Story = {
     const panel = await panelOf(context);
     await userEvent.click(panel.getByRole("button", { name: "Undo" }));
     await panel.findByRole("button", { name: RUN_BUTTON }, STAGE_TIMEOUT);
-    await expect(panel.queryByRole("button", { name: "Run again" })).toBeNull();
+    await expect(panel.queryByRole("button", { name: "Done" })).toBeNull();
   },
 };
 
@@ -520,7 +520,7 @@ export const EditAndBackKeepsResults: Story = {
     await userEvent.click(
       panel.getByRole("button", { name: `Back to ${SAVED.name}` }),
     );
-    await panel.findByRole("button", { name: "Run again" }, STAGE_TIMEOUT);
+    await panel.findByRole("button", { name: "Done" }, STAGE_TIMEOUT);
     await expect(panel.getByRole("button", { name: "Undo" })).toBeVisible();
   },
 };

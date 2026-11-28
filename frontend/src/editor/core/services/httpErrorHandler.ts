@@ -82,6 +82,8 @@ if (typeof window !== "undefined") {
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
 export async function handleHttpError(error: unknown): Promise<boolean> {
+  // A request the caller aborted (a cancelled run) is not a failure to report.
+  if (axios.isCancel(error)) return false;
   const axiosError = axios.isAxiosError(error) ? error : undefined;
   if (axiosError?.response?.status === 402) {
     const body = await normalizeAxiosErrorData(axiosError.response.data).catch(

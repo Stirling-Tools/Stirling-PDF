@@ -74,6 +74,7 @@ function operation(overrides: Partial<Operation> = {}): Operation {
     downloadUrl: null,
     errorMessage: null,
     executeOperation: vi.fn(),
+    cancelOperation: vi.fn(),
     resetResults: vi.fn(),
     clearError: vi.fn(),
     ...overrides,
@@ -148,7 +149,28 @@ describe("AutomationRun", () => {
     expect(screen.getAllByText("Needs configuration")).toHaveLength(1);
   });
 
-  test("while running, shows that on the button and offers no way out", () => {
+  test("a run can be cancelled, which keeps nothing it produced", () => {
+    files.selected = [new File(["a"], "a.pdf")];
+    const op = operation({ isLoading: true });
+    renderRun(op);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(op.cancelOperation).toHaveBeenCalledTimes(1);
+  });
+
+  test("leaving a running automation cancels it first", () => {
+    files.selected = [new File(["a"], "a.pdf")];
+    const op = operation({ isLoading: true });
+    const handlers = renderRun(op);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Back to automations" }),
+    );
+    expect(op.cancelOperation).toHaveBeenCalledTimes(1);
+    expect(handlers.onBack).toHaveBeenCalledTimes(1);
+  });
+
+  test("while running, shows that on the button and offers only Back and Cancel", () => {
     files.selected = [new File(["a"], "a.pdf")];
     renderRun(operation({ isLoading: true }), {
       actions: [
@@ -161,8 +183,9 @@ describe("AutomationRun", () => {
       true,
     );
     expect(
-      screen.queryByRole("button", { name: "Back to automations" }),
-    ).toBeNull();
+      screen.getByRole("button", { name: "Back to automations" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Open menu for/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Customize" })).toBeNull();
   });
@@ -173,7 +196,7 @@ describe("AutomationRun", () => {
       operation({ isLoading: true, files: [new File(["out"], "out.pdf")] }),
     );
 
-    expect(screen.queryByRole("button", { name: "Run again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
     expect(screen.getByRole("button", { name: /^Starting/ })).toBeTruthy();
   });
 
@@ -186,13 +209,13 @@ describe("AutomationRun", () => {
       }),
     );
 
-    expect(screen.queryByRole("button", { name: "Run again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
     expect(screen.getByRole("alert").textContent).toBe(
       "Could not prepare the download",
     );
   });
 
-  test("offers no way out while the run waits to start", async () => {
+  test("offers Cancel while the run waits to start", async () => {
     files.selected = [new File(["a"], "a.pdf")];
     let start: () => void = () => {};
     const executeOperation = vi.fn(
@@ -201,16 +224,10 @@ describe("AutomationRun", () => {
     renderRun(operation({ executeOperation }));
 
     fireEvent.click(screen.getByRole("button", { name: /^Run on/ }));
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("button", { name: "Back to automations" }),
-      ).toBeNull(),
-    );
+    await screen.findByRole("button", { name: "Cancel" });
     start();
     await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Back to automations" }),
-      ).toBeTruthy(),
+      expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull(),
     );
   });
 
@@ -292,7 +309,7 @@ describe("AutomationRun", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Run on/ }));
     await screen.findByRole("button", { name: "Back to automations" });
     expect(screen.queryByRole("status")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Run again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Done" })).toBeNull();
     expect(screen.getByRole("button", { name: /^Run on/ })).toBeTruthy();
   });
 
@@ -339,13 +356,14 @@ describe("AutomationRun", () => {
     await screen.findByRole("button", { name: "Back to automations" });
   });
 
-  test("after a run, offers Run again and Done, and no Save", () => {
+  test("after a run, offers Done and no way to run or save it again", () => {
     files.selected = [new File(["a"], "a.pdf")];
     const handlers = renderRun(
       operation({ files: [new File(["out"], "out.pdf")] }),
     );
 
-    expect(screen.getByRole("button", { name: "Run again" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Run again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Run on/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(handlers.onDone).toHaveBeenCalledTimes(1);

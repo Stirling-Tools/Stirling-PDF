@@ -43,13 +43,18 @@ export async function submitServerPipeline(
   return response.data.jobId;
 }
 
-/** Polls a server run without a processing timeout. Disconnecting stops local delivery. */
+/**
+ * Polls a server run without a processing timeout. Disconnecting stops local delivery,
+ * as does aborting `signal`, which rejects with its reason; the run itself continues.
+ */
 export async function waitForServerPipeline(
   session: ServerAutomationSession,
   runId: string,
   onProgress?: (run: PolicyRunView) => void,
+  signal?: AbortSignal,
 ): Promise<PolicyRunView> {
   for (;;) {
+    signal?.throwIfAborted();
     const { data: run } = await apiClient.get<PolicyRunView>(
       `${session.baseUrl}/api/v1/policies/run/${encodeURIComponent(runId)}`,
       { automationSession: session.key },

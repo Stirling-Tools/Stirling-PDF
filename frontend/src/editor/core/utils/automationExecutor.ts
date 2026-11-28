@@ -64,9 +64,11 @@ const executeApiRequest = async (
   files: File[],
   filePrefix: string,
   preserveBackendFilename?: boolean,
+  signal?: AbortSignal,
 ): Promise<File[]> => {
   const response = await apiClient.post(endpoint, formData, {
     responseType: "blob",
+    signal,
   });
 
   return await processMultiFileResponse(
@@ -86,6 +88,7 @@ const executeSingleFileOperation = async (
   parameters: ErasedToolParams,
   files: File[],
   filePrefix: string,
+  signal?: AbortSignal,
 ): Promise<File[]> => {
   const resultFiles: File[] = [];
 
@@ -100,6 +103,7 @@ const executeSingleFileOperation = async (
   }
 
   for (const file of files) {
+    signal?.throwIfAborted();
     const formData = config.buildFormData(parameters, file);
 
     const processedFiles = await executeApiRequest(
@@ -108,6 +112,7 @@ const executeSingleFileOperation = async (
       [file],
       filePrefix,
       config.preserveBackendFilename,
+      signal,
     );
     resultFiles.push(...processedFiles);
   }
@@ -123,6 +128,7 @@ const executeMultiFileOperation = async (
   parameters: ErasedToolParams,
   files: File[],
   filePrefix: string,
+  signal?: AbortSignal,
 ): Promise<File[]> => {
   const endpoint =
     typeof config.endpoint === "function"
@@ -142,6 +148,7 @@ const executeMultiFileOperation = async (
     files,
     filePrefix,
     config.preserveBackendFilename,
+    signal,
   );
 };
 
@@ -172,6 +179,7 @@ export const executeToolOperationWithPrefix = async (
   files: File[],
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX,
+  signal?: AbortSignal,
 ): Promise<File[]> => {
   const config = toolRegistry[operationName as ToolId]?.operationConfig;
   if (!config) {
@@ -193,6 +201,8 @@ export const executeToolOperationWithPrefix = async (
   try {
     // Check if tool uses custom processor (like Convert tool)
     if (config.customProcessor) {
+      // Not passed `signal`: custom processors use their third argument for
+      // their own options. The step boundary still honours it.
       const result = await config.customProcessor(mergedParameters, files);
       return result.files;
     }
@@ -204,6 +214,7 @@ export const executeToolOperationWithPrefix = async (
         mergedParameters,
         files,
         filePrefix,
+        signal,
       );
     } else {
       return await executeSingleFileOperation(
@@ -211,9 +222,11 @@ export const executeToolOperationWithPrefix = async (
         mergedParameters,
         files,
         filePrefix,
+        signal,
       );
     }
   } catch (error) {
+    if (signal?.aborted) throw error;
     console.error(`❌ ${operationName} failed:`, error);
     throw new Error(
       `${operationName} operation failed: ${await resolveToolErrorMessage(error)}`,
@@ -237,7 +250,9 @@ async function stepErrorMessage(error: unknown): Promise<string> {
 }
 
 /**
- * Execute an entire automation sequence
+ * Execute an entire automation sequence. Aborting `signal` stops it before the
+ * next step and cancels the request in flight; it then rejects with the abort
+ * reason and reports no step error, since nothing failed.
  */
 export const executeAutomationSequence = async (
   automation: AutomationConfig,
@@ -246,6 +261,7 @@ export const executeAutomationSequence = async (
   onStepStart?: (stepIndex: number, operationName: string) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void,
+  signal?: AbortSignal,
 ): Promise<File[]> => {
   console.log(`🚀 Starting automation: ${automation.name || "Unnamed"}`);
   console.log(`📁 Input: ${initialFiles.length} file(s)`);
@@ -265,6 +281,7 @@ export const executeAutomationSequence = async (
     console.log(`   Input: ${currentFiles.length} file(s)`);
 
     try {
+      signal?.throwIfAborted();
       onStepStart?.(i, operation.operation);
 
       const resultFiles = await executeToolOperationWithPrefix(
@@ -273,6 +290,7 @@ export const executeAutomationSequence = async (
         currentFiles,
         toolRegistry,
         "",
+        signal,
       );
 
       console.log(
@@ -281,6 +299,7 @@ export const executeAutomationSequence = async (
       currentFiles = resultFiles;
       onStepComplete?.(i, resultFiles);
     } catch (error) {
+      if (signal?.aborted) throw signal.reason;
       console.error(`❌ Step ${i + 1} failed:`, error);
       onStepError?.(i, await stepErrorMessage(error));
       throw error;

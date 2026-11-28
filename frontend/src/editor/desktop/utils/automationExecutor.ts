@@ -26,6 +26,7 @@ export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =
     onStepStart,
     onStepComplete,
     onStepError,
+    signal,
   ) => {
     const session = await getServerAutomationSession();
     if (!automation.operations.length || !files.length)
@@ -92,23 +93,33 @@ export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =
         files,
         assets,
       );
-      const run = await waitForServerPipeline(session, runId, (progress) => {
-        const reportedStep = Math.min(progress.currentStep, steps.length - 1);
-        while (currentStep < reportedStep) {
-          if (currentStep >= 0) onStepComplete?.(currentStep, []);
-          currentStep++;
-          onStepStart?.(
-            currentStep,
-            automation.operations[currentStep].operation,
-          );
-        }
-      });
+      // No endpoint cancels an ad-hoc server run, so cancelling stops waiting
+      // for it and drops its outputs; the server still finishes the run.
+      const run = await waitForServerPipeline(
+        session,
+        runId,
+        (progress) => {
+          const reportedStep = Math.min(progress.currentStep, steps.length - 1);
+          while (currentStep < reportedStep) {
+            if (currentStep >= 0) onStepComplete?.(currentStep, []);
+            currentStep++;
+            onStepStart?.(
+              currentStep,
+              automation.operations[currentStep].operation,
+            );
+          }
+        },
+        signal,
+      );
       const outputs: File[] = [];
-      for (const output of run.outputs)
+      for (const output of run.outputs) {
+        signal?.throwIfAborted();
         outputs.push(await downloadServerPipelineOutput(session, output));
+      }
       onStepComplete?.(steps.length - 1, outputs);
       return outputs;
     } catch (error) {
+      if (signal?.aborted) throw signal.reason;
       onStepError?.(
         Math.max(currentStep, 0),
         error instanceof Error ? error.message : String(error),
