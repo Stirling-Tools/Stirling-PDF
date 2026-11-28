@@ -2,8 +2,8 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 
 /**
- * Stubbed coverage for the `/automate` super-tool. The Automate UI is a small
- * three-step state machine: Selection ↔ Creation ↔ Run. These specs exercise
+ * Stubbed coverage for the `/automate` super-tool. The Automate UI is one
+ * surface with three modes: library ↔ builder ↔ workspace (run). These specs exercise
  * the surface area that doesn't require a live backend run — the catalogue,
  * the builder save flow, and the per-automation menu.
  *
@@ -13,7 +13,7 @@ import type { Page } from "@playwright/test";
 
 /**
  * IndexedDB persists across tests sharing a worker. Each test wipes the
- * automation store before navigating so the "Saved" list starts empty.
+ * automation store before navigating so the library starts with nothing saved.
  */
 async function clearAutomationStorage(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -32,18 +32,17 @@ async function gotoAutomate(page: Page): Promise<void> {
 }
 
 /**
- * Land on the Selection step. The auto-goto fixture sometimes parks us on the
- * builder if a previous test left state behind; click the section header to
- * snap back to a known state.
+ * Land on the library. The auto-goto fixture sometimes parks us on the
+ * builder if a previous test left state behind; the back arrow snaps back to a
+ * known state.
  */
 async function ensureOnSelection(page: Page): Promise<void> {
-  const savedHeader = page.getByText("Saved").first();
-  if (!(await savedHeader.isVisible({ timeout: 2_000 }).catch(() => false))) {
-    await page
-      .getByText(/Automation Selection/i)
-      .first()
-      .click();
-    await expect(savedHeader).toBeVisible({ timeout: 5_000 });
+  const newButton = page.getByRole("button", { name: /^New$/ });
+  const back = page.getByRole("button", { name: /Back to automations/i });
+  await expect(newButton.or(back).first()).toBeVisible({ timeout: 20_000 });
+  if (!(await newButton.isVisible())) {
+    await back.click();
+    await expect(newButton).toBeVisible({ timeout: 5_000 });
   }
 }
 
@@ -80,19 +79,19 @@ test.describe("11. Automation Page", () => {
   });
 
   test.describe("11.1 Automation - Suggested Workflows", () => {
-    test("should display saved and suggested workflows", async ({ page }) => {
-      // Step 1: Verify the Automation Selection header is present
+    test("should display suggested workflows, and no Saved section while nothing is saved", async ({
+      page,
+    }) => {
       await expect(page).toHaveURL(/\/automate/);
-
-      await expect(
-        page.getByText(/Automation Selection/i).first(),
-      ).toBeVisible();
       await ensureOnSelection(page);
 
-      await expect(page.getByText("Saved").first()).toBeVisible();
       await expect(
-        page.getByText(/Create New Automation/i).first(),
+        page.getByRole("heading", { name: "Automations" }),
       ).toBeVisible();
+      await expect(page.getByRole("heading", { name: /^Saved/ })).toHaveCount(
+        0,
+      );
+      await expect(page.getByRole("button", { name: /^New$/ })).toBeVisible();
       await expect(page.getByText("Suggested").first()).toBeVisible();
 
       const suggestedWorkflows = [
@@ -117,20 +116,19 @@ test.describe("11. Automation Page", () => {
     }) => {
       await ensureOnSelection(page);
 
-      await page
-        .getByText(/Create New Automation/i)
-        .first()
-        .click();
+      await page.getByRole("button", { name: /^New$/ }).click();
 
-      await expect(page.getByText(/Create Automation/i).first()).toBeVisible({
+      await expect(page.getByText(/New automation/i).first()).toBeVisible({
         timeout: 5_000,
       });
-      await expect(page.getByText(/Automation Name/i).first()).toBeVisible({
+      await expect(page.getByLabel(/^Name/)).toBeVisible({
         timeout: 5_000,
       });
-      await expect(page.getByText(/Add Tool/i).first()).toBeVisible();
       await expect(
-        page.getByRole("button", { name: /Save Automation/i }).first(),
+        page.getByRole("button", { name: /Add step/i }).first(),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /^Save$/ }).first(),
       ).toBeVisible();
     });
 
@@ -138,43 +136,47 @@ test.describe("11. Automation Page", () => {
       page,
     }) => {
       await ensureOnSelection(page);
-      await page
-        .getByText(/Create New Automation/i)
-        .first()
-        .click();
+      await page.getByRole("button", { name: /^New$/ }).click();
 
-      const saveBtn = page
-        .getByRole("button", { name: /Save Automation/i })
-        .first();
+      const saveBtn = page.getByRole("button", { name: /^Save$/ }).first();
       await expect(saveBtn).toBeVisible({ timeout: 5_000 });
       await expect(saveBtn).toBeDisabled();
 
       // Naming alone shouldn't enable save — a tool must be added too.
-      await page.getByLabel(/Automation Name/i).fill("E2E Builder Smoke");
+      await page.getByLabel(/^Name/).fill("E2E Builder Smoke");
       await expect(saveBtn).toBeDisabled();
     });
 
-    test("both export buttons render in the builder and are disabled until valid", async ({
+    test("both export formats are offered in the builder once it is valid", async ({
       page,
     }) => {
       await ensureOnSelection(page);
+      await page.getByRole("button", { name: /^New$/ }).click();
+
+      const exportMenu = page.getByRole("button", { name: /^Export$/ });
+      await expect(exportMenu).toBeVisible({ timeout: 5_000 });
+      // Same disabled-when-invalid contract as Save — no name + no tool.
+      await expect(exportMenu).toBeDisabled();
+
+      await page.getByLabel(/^Name/).fill("E2E Export");
       await page
-        .getByText(/Create New Automation/i)
+        .getByPlaceholder(/Search tools/i)
         .first()
         .click();
+      await page.keyboard.type("Compress");
+      await page
+        .getByRole("button", { name: /Compress/ })
+        .first()
+        .click();
+      await expect(exportMenu).toBeEnabled();
 
-      const exportAutomate = page
-        .getByRole("button", { name: /^Export$/ })
-        .first();
-      const exportFolderScan = page
-        .getByRole("button", { name: /Export for Folder Scanning/i })
-        .first();
-
-      await expect(exportAutomate).toBeVisible({ timeout: 5_000 });
-      await expect(exportFolderScan).toBeVisible({ timeout: 5_000 });
-      // Same disabled-when-invalid contract as Save — no name + no tool.
-      await expect(exportAutomate).toBeDisabled();
-      await expect(exportFolderScan).toBeDisabled();
+      await exportMenu.click();
+      await expect(
+        page.getByRole("menuitem", { name: /Automate JSON/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("menuitem", { name: /Folder Scanning JSON/i }),
+      ).toBeVisible();
     });
   });
 
@@ -185,7 +187,7 @@ test.describe("11. Automation Page", () => {
       await ensureOnSelection(page);
 
       await openEntryMenu(page, /Secure PDF Ingestion/i);
-      await page.getByRole("menuitem", { name: /Copy to Saved/i }).click();
+      await page.getByRole("menuitem", { name: /^Duplicate$/i }).click();
 
       // The suggested entry stays in the list and a duplicate appears under
       // Saved, so the count of matching texts goes from 1 to 2.

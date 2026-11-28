@@ -1,62 +1,43 @@
 import { describe, expect, test, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
+  useTranslation: () => ({
+    t: (_key: string, fallback: string, opts?: { title?: string }) =>
+      opts?.title ? fallback.replace("{{title}}", opts.title) : fallback,
+  }),
 }));
 
-describe("AutomationEntry tooltip chain", () => {
-  test("keeps each arrow on the same line as the step it points to", async () => {
+describe("AutomationEntry", () => {
+  test("shows only the name, with no second line", () => {
     render(
       <MantineProvider>
-        <AutomationEntry
-          title="Clean up"
-          operations={["sanitize", "flatten", "compress"]}
-          onClick={() => {}}
-        />
+        <AutomationEntry title="Clean up" onClick={() => {}} />
       </MantineProvider>,
     );
 
-    fireEvent.focusIn(screen.getByRole("button", { name: /Clean up/ }));
-
-    const steps = await screen.findAllByTestId(
-      "automation-chain-step",
-      {},
-      { timeout: 3000 },
+    expect(screen.getByRole("button", { name: "Clean up" }).textContent).toBe(
+      "Clean up",
     );
-    expect(steps.map((step) => step.textContent)).toEqual([
-      "sanitize",
-      "→flatten",
-      "→compress",
-    ]);
-    for (const step of steps) {
-      expect(step.style.whiteSpace).toBe("nowrap");
-    }
   });
-});
 
-describe("AutomationEntry subtitle", () => {
-  test("shows the subtitle under a title capped at two lines", () => {
+  test("labels the actions menu with the automation's name", () => {
     render(
       <MantineProvider>
         <AutomationEntry
-          title="OCR → Compress → Add Password"
-          subtitle="You ran this 38 times"
-          operations={["ocr", "compress", "addPassword"]}
+          title="Invoice cleanup"
           onClick={() => {}}
+          actions={[
+            { key: "edit", label: "Edit", icon: "pencil", onClick: () => {} },
+          ]}
         />
       </MantineProvider>,
     );
 
-    const title = screen.getByText("OCR → Compress → Add Password");
-    const subtitle = screen.getByText("You ran this 38 times");
-    expect(title.getAttribute("data-line-clamp")).toBe("true");
-    expect(title.style.getPropertyValue("--text-line-clamp")).toBe("2");
     expect(
-      title.compareDocumentPosition(subtitle) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      screen.getByRole("button", { name: "Open menu for Invoice cleanup" }),
     ).toBeTruthy();
   });
 });

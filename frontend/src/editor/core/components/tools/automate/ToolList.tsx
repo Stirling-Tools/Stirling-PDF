@@ -1,193 +1,349 @@
-import React from "react";
+import { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, Stack, Group } from "@mantine/core";
+import { Loader, Menu } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { AutomationTool } from "@editor/types/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { paramsOverDefaults } from "@editor/hooks/tools/shared/toolAutomation";
 import ToolSelector from "@editor/components/tools/automate/ToolSelector";
-import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
+import AutomationStepCard, {
+  StepConnector,
+} from "@editor/components/tools/automate/AutomationStepCard";
+import { toolDisplayName } from "@editor/components/tools/automate/stepSummary";
+import classes from "@editor/components/tools/automate/Automate.module.css";
 
-interface ToolListProps {
-  tools: AutomationTool[];
-  toolRegistry: Partial<ToolRegistry>;
-  onToolUpdate: (index: number, updates: Partial<AutomationTool>) => void;
-  onToolRemove: (index: number) => void;
-  onToolConfigure: (index: number) => void;
-  onToolAdd: () => void;
-  getToolName: (operation: string) => string;
-  getToolDefaultParameters: (operation: string) => Record<string, unknown>;
-  isToolConfigured: (tool: AutomationTool) => boolean;
+function scrollIntoViewOnMount(element: HTMLElement | null) {
+  element?.scrollIntoView?.({ block: "nearest" });
 }
 
+interface ToolListProps {
+  steps: AutomationTool[];
+  toolRegistry: Partial<ToolRegistry>;
+  /** The one step whose settings are open, or null. */
+  expandedStepId: string | null;
+  /** A step just added: its picker opens straight away. */
+  pickerStepId?: string | null;
+  /** A step to put focus on when the list first renders, e.g. the step a failed run's "Edit step" opened. */
+  initialFocusStepId?: string | null;
+  isStepReady: (step: AutomationTool) => boolean;
+  onToggleSettings: (stepId: string) => void;
+  onSelectTool: (index: number, operation: string) => void;
+  onParameterChange: (index: number, key: string, value: unknown) => void;
+  onChangeTool: (index: number) => void;
+  onRemove: (index: number) => void;
+  onMove: (index: number, delta: -1 | 1) => void;
+  onAdd: () => void;
+}
+
+/** The builder's step list: numbered cards, settings inline, actions per step. */
 export default function ToolList({
-  tools,
+  steps,
   toolRegistry,
-  onToolUpdate,
-  onToolRemove,
-  onToolConfigure,
-  onToolAdd,
-  getToolName,
-  getToolDefaultParameters,
-  isToolConfigured,
+  expandedStepId,
+  pickerStepId = null,
+  initialFocusStepId = null,
+  isStepReady,
+  onToggleSettings,
+  onSelectTool,
+  onParameterChange,
+  onChangeTool,
+  onRemove,
+  onMove,
+  onAdd,
 }: ToolListProps) {
   const { t } = useTranslation();
+  const listRef = useRef<HTMLDivElement>(null);
+  // A move can disable the control that had focus (Move up on what is now step
+  // 1), and picking a tool unmounts the picker that had it; either would drop
+  // focus to the page and hide the hover-only arrows. Focus goes to the named
+  // control on that step instead, or its first enabled one; with no step to
+  // land on (the last one was removed), Add step.
+  const [focusRequest, setFocusRequest] = useState<{
+    stepId: string | null;
+    label: string;
+  } | null>(() =>
+    initialFocusStepId
+      ? {
+          stepId: initialFocusStepId,
+          label: t("automate.steps.settings", "Step settings"),
+        }
+      : null,
+  );
+  const addStepRef = useRef<HTMLButtonElement>(null);
 
-  const handleToolSelect = (index: number, newOperation: string) => {
-    onToolUpdate(index, {
-      operation: newOperation,
-      name: getToolName(newOperation),
-      parameters: getToolDefaultParameters(newOperation),
-    });
+  useEffect(() => {
+    if (!focusRequest) return;
+    setFocusRequest(null);
+    const card = focusRequest.stepId
+      ? listRef.current?.querySelector<HTMLElement>(
+          `[data-step-id="${focusRequest.stepId}"]`,
+        )
+      : null;
+    if (!card) {
+      addStepRef.current?.focus();
+      return;
+    }
+    // The move arrows are hidden until the card has hover or focus, and a hidden
+    // button cannot take focus; reveal them while focus is placed.
+    card.setAttribute("data-revealing", "");
+    const target = [
+      card.querySelector<HTMLButtonElement>(
+        `button[aria-label="${CSS.escape(focusRequest.label)}"]`,
+      ),
+      ...Array.from(card.querySelectorAll<HTMLButtonElement>("button")),
+    ].find(
+      (button) =>
+        button && !button.disabled && button.getClientRects().length > 0,
+    );
+    target?.focus();
+    target?.scrollIntoView?.({ block: "nearest" });
+    card.removeAttribute("data-revealing");
+  }, [focusRequest, steps]);
+
+  const settingsLabel = t("automate.steps.settings", "Step settings");
+
+  const menuLabelAt = (index: number) =>
+    t("automate.steps.menu", "More for step {{n}}", { n: index + 1 });
+
+  const move = (index: number, delta: -1 | 1, label: string) => {
+    setFocusRequest({ stepId: steps[index].id, label });
+    onMove(index, delta);
+  };
+
+  const remove = (index: number) => {
+    const next = steps[index + 1];
+    const previous = steps[index - 1];
+    setFocusRequest(
+      next
+        ? { stepId: next.id, label: menuLabelAt(index) }
+        : previous
+          ? { stepId: previous.id, label: menuLabelAt(index - 1) }
+          : { stepId: null, label: "" },
+    );
+    onRemove(index);
+  };
+
+  const closeSettings = (stepId: string) => {
+    setFocusRequest({ stepId, label: settingsLabel });
+    onToggleSettings(stepId);
+  };
+
+  const renderStep = (step: AutomationTool, index: number) => {
+    if (!step.operation) {
+      return (
+        <AutomationStepCard
+          index={index}
+          stepId={step.id}
+          title={
+            <span style={{ color: "var(--c-text-muted)", fontWeight: 400 }}>
+              {t("automate.steps.chooseTool", "Choose a tool")}
+            </span>
+          }
+          actions={
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              onClick={() => remove(index)}
+              aria-label={t("automate.steps.remove", "Remove step")}
+              title={t("automate.steps.remove", "Remove step")}
+            >
+              <Icon name="x" size={16} />
+            </ActionIcon>
+          }
+        >
+          <div
+            className={classes.stepPicker}
+            ref={step.id === pickerStepId ? scrollIntoViewOnMount : undefined}
+          >
+            <ToolSelector
+              onSelect={(operation) => {
+                setFocusRequest({ stepId: step.id, label: settingsLabel });
+                onSelectTool(index, operation);
+              }}
+              excludeTools={["automate"]}
+              toolRegistry={toolRegistry}
+              placeholder={t("automate.steps.searchTools", "Search tools…")}
+              defaultOpen={step.id === pickerStepId}
+            />
+          </div>
+        </AutomationStepCard>
+      );
+    }
+
+    const entry = toolRegistry[step.operation as ToolId];
+    const SettingsComponent = entry?.automationSettings;
+    const expanded = expandedStepId === step.id && Boolean(SettingsComponent);
+    const ready = isStepReady(step);
+    const moveUpLabel = t("automate.steps.moveUp", "Move up");
+    const moveDownLabel = t("automate.steps.moveDown", "Move down");
+    const menuLabel = menuLabelAt(index);
+
+    const meta = ready ? (
+      t("automate.steps.configured", "Configured")
+    ) : (
+      <span className={classes.needsConfiguration}>
+        {t("automate.steps.needsConfiguration", "Needs configuration")}
+      </span>
+    );
+
+    return (
+      <AutomationStepCard
+        index={index}
+        stepId={step.id}
+        title={toolDisplayName(t, toolRegistry, step.operation)}
+        meta={meta}
+        expanded={expanded}
+        needsSettings={!ready}
+        onHeadClick={
+          SettingsComponent ? () => onToggleSettings(step.id) : undefined
+        }
+        actions={
+          <>
+            {steps.length > 1 && (
+              <>
+                <ActionIcon
+                  variant="tertiary"
+                  accent="neutral"
+                  size="sm"
+                  className={classes.stepMove}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1, moveUpLabel)}
+                  aria-label={moveUpLabel}
+                  title={moveUpLabel}
+                >
+                  <Icon name="arrow-up" size={16} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="tertiary"
+                  accent="neutral"
+                  size="sm"
+                  className={classes.stepMove}
+                  disabled={index === steps.length - 1}
+                  onClick={() => move(index, 1, moveDownLabel)}
+                  aria-label={moveDownLabel}
+                  title={moveDownLabel}
+                >
+                  <Icon name="arrow-down" size={16} />
+                </ActionIcon>
+              </>
+            )}
+            {SettingsComponent && (
+              <ActionIcon
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                onClick={() => onToggleSettings(step.id)}
+                aria-label={settingsLabel}
+                aria-expanded={expanded}
+                title={settingsLabel}
+              >
+                <Icon name="sliders-horizontal" size={16} />
+              </ActionIcon>
+            )}
+            <Menu position="bottom-end" withinPortal>
+              <Menu.Target>
+                <ActionIcon
+                  variant="tertiary"
+                  accent="neutral"
+                  size="sm"
+                  aria-label={menuLabel}
+                >
+                  <Icon name="ellipsis-vertical" size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<Icon name="arrow-up" size={16} />}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1, menuLabelAt(index - 1))}
+                >
+                  {t("automate.steps.moveUp", "Move up")}
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<Icon name="arrow-down" size={16} />}
+                  disabled={index === steps.length - 1}
+                  onClick={() => move(index, 1, menuLabelAt(index + 1))}
+                >
+                  {t("automate.steps.moveDown", "Move down")}
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<Icon name="replace" size={16} />}
+                  onClick={() => onChangeTool(index)}
+                >
+                  {t("automate.steps.changeTool", "Change tool")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<Icon name="trash" size={16} />}
+                  style={{ color: "var(--c-danger)" }}
+                  onClick={() => remove(index)}
+                >
+                  {t("automate.steps.remove", "Remove step")}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </>
+        }
+      >
+        {expanded && SettingsComponent && (
+          <div className={classes.stepSettings}>
+            <Suspense fallback={<Loader size="sm" />}>
+              <SettingsComponent
+                parameters={paramsOverDefaults(
+                  step.operation as ToolId,
+                  step.parameters ?? {},
+                  toolRegistry,
+                )}
+                onParameterChange={(key, value) =>
+                  onParameterChange(index, String(key), value)
+                }
+                disabled={false}
+              />
+            </Suspense>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => closeSettings(step.id)}
+              style={{ alignSelf: "flex-end" }}
+            >
+              {t("automate.steps.done", "Done")}
+            </Button>
+          </div>
+        )}
+      </AutomationStepCard>
+    );
   };
 
   return (
-    <div>
-      <Text
-        size="sm"
-        fw={500}
-        mb="xs"
-        style={{ color: "var(--mantine-color-text)" }}
+    <div className={classes.section}>
+      <span className={classes.fieldLabel}>
+        {t("automate.steps.label", "Steps")}
+      </span>
+      <div
+        className={classes.stepList}
+        style={{ marginTop: "0.375rem" }}
+        ref={listRef}
       >
-        {t("automate.creation.tools.selected", "Selected Tools")} (
-        {tools.length})
-      </Text>
-      <Stack gap="0">
-        {tools.map((tool, index) => (
-          <React.Fragment key={tool.id}>
-            <div
-              style={{
-                border: "1px solid var(--c-border)",
-                borderRadius:
-                  tool.operation && !isToolConfigured(tool)
-                    ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
-                    : "var(--mantine-radius-lg)",
-                position: "relative",
-                padding: "var(--mantine-spacing-xs)",
-                borderBottomWidth:
-                  tool.operation && !isToolConfigured(tool) ? "0" : "1px",
-              }}
-            >
-              {/* Delete X - centered vertically, anchored right */}
-              {index > 1 && (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  hover={false}
-                  onClick={() => onToolRemove(index)}
-                  aria-label={t(
-                    "automate.creation.tools.remove",
-                    "Remove tool",
-                  )}
-                  title={t("automate.creation.tools.remove", "Remove tool")}
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    right: "8px",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                    color: "var(--mantine-color-gray-6)",
-                  }}
-                >
-                  <Icon name="x" size={16} />
-                </ActionIcon>
-              )}
-
-              <div>
-                {/* Tool Selection Dropdown with inline settings cog */}
-                <Group gap="xs" align="center" wrap="nowrap">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <ToolSelector
-                      key={`tool-selector-${tool.id}`}
-                      onSelect={(newOperation) =>
-                        handleToolSelect(index, newOperation)
-                      }
-                      excludeTools={["automate"]}
-                      toolRegistry={toolRegistry}
-                      selectedValue={tool.operation}
-                      placeholder={tool.name}
-                    />
-                  </div>
-
-                  {/* Settings cog - only show if tool is selected, aligned right */}
-                  {tool.operation && (
-                    <ActionIcon
-                      variant="tertiary"
-                      size="sm"
-                      onClick={() => onToolConfigure(index)}
-                      aria-label={t(
-                        "automate.creation.tools.configure",
-                        "Configure tool",
-                      )}
-                      title={t(
-                        "automate.creation.tools.configure",
-                        "Configure tool",
-                      )}
-                      style={{ color: "var(--mantine-color-gray-6)" }}
-                    >
-                      <Icon name="settings" size={16} />
-                    </ActionIcon>
-                  )}
-                </Group>
-              </div>
-            </div>
-            {/* Configuration status underneath */}
-            {tool.operation && !isToolConfigured(tool) && (
-              <div
-                style={{
-                  width: "100%",
-                  border: "1px solid var(--c-border)",
-                  borderTop: "none",
-                  borderRadius:
-                    "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
-                  backgroundColor: "var(--c-active)",
-                  padding: "var(--mantine-spacing-xs)",
-                }}
-              >
-                <Text pl="md" size="xs">
-                  {t(
-                    "automate.creation.tools.notConfigured",
-                    "! Not Configured",
-                  )}
-                </Text>
-              </div>
-            )}
-            {index < tools.length - 1 && (
-              <div style={{ textAlign: "center", padding: "8px 0" }}>
-                <Text size="xs" c="dimmed">
-                  ↓
-                </Text>
-              </div>
-            )}
-          </React.Fragment>
+        {steps.map((step, index) => (
+          <Fragment key={step.id}>
+            {index > 0 && <StepConnector />}
+            {renderStep(step, index)}
+          </Fragment>
         ))}
-
-        {/* Arrow before Add Tool Button */}
-        {tools.length > 0 && (
-          <div style={{ textAlign: "center", padding: "8px 0" }}>
-            <Text size="xs" c="dimmed">
-              ↓
-            </Text>
-          </div>
-        )}
-
-        {/* Add Tool Button */}
-        <div
-          style={{
-            border: "1px solid var(--mantine-color-gray-2)",
-            borderRadius: "var(--mantine-radius-sm)",
-            overflow: "hidden",
-          }}
-        >
-          <AutomationEntry
-            title={t("automate.creation.tools.addTool", "Add Tool")}
-            badgeIcon="circle-plus"
-            operations={[]}
-            onClick={onToolAdd}
-            keepIconColor={true}
-          />
-        </div>
-      </Stack>
+      </div>
+      <button
+        type="button"
+        className={classes.addStep}
+        onClick={onAdd}
+        ref={addStepRef}
+      >
+        <Icon name="plus" size={16} />
+        {t("automate.steps.add", "Add step")}
+      </button>
     </div>
   );
 }

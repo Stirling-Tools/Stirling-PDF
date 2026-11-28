@@ -19,10 +19,10 @@ export interface AutomationConfig {
   updatedAt: string;
 }
 
+/** A step being edited in the builder; `operation` is "" until a tool is picked. */
 export interface AutomationTool {
   id: string;
   operation: string;
-  name: string;
   parameters?: Record<string, unknown>;
 }
 
@@ -33,7 +33,13 @@ export interface AutomationStepData {
   step: AutomationStep;
   mode?: AutomationMode;
   automation?: AutomationConfig;
+  /** Where the automation came from; decides which actions the workspace offers. */
+  source?: AutomationSource;
+  /** Builder only: the step whose settings open first. */
+  focusStepIndex?: number;
 }
+
+export type AutomationSource = "saved" | "suggested";
 
 export interface ExecutionStep {
   id: string;
