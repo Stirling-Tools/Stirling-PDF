@@ -14,7 +14,6 @@ import { useAutomateOperation } from "@editor/hooks/tools/automate/useAutomateOp
 import { BaseToolProps } from "@editor/types/tool";
 import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
 import { useSavedAutomations } from "@editor/hooks/tools/automate/useSavedAutomations";
-import { useOpenAsPipeline } from "@editor/hooks/tools/automate/useOpenAsPipeline";
 import { useToolPanelSize } from "@editor/hooks/useToolPanelSize";
 import {
   AutomationConfig,
@@ -74,7 +73,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     copyFromSuggested,
     importAutomation,
   } = useSavedAutomations();
-  const pipelineOpener = useOpenAsPipeline();
 
   const go = (next: AutomationStepData) => {
     // A run's results and Undo survive a trip from its workspace to the builder
@@ -142,21 +140,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     go({ step: AUTOMATION_STEPS.CREATION, mode, automation, focusStepIndex });
   };
 
-  const runOnFolderAction = (
-    automation: AutomationConfig,
-  ): AutomationAction[] => {
-    const open = pipelineOpener(automation);
-    if (!open) return [];
-    return [
-      {
-        key: "runOnFolder",
-        label: t("automate.run.runOnFolderTitle", "Run this on every new file"),
-        icon: "folder-input",
-        onClick: open,
-      },
-    ];
-  };
-
   const savedActions = (automation: AutomationConfig): AutomationAction[] => [
     {
       key: "edit",
@@ -164,7 +147,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       icon: "pencil",
       onClick: () => openBuilder(AutomationMode.EDIT, automation),
     },
-    ...runOnFolderAction(automation),
     {
       key: "export",
       label: t("automate.export", "Export"),
@@ -203,7 +185,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       icon: "sliders-horizontal",
       onClick: () => openBuilder(AutomationMode.SUGGESTED, automation),
     },
-    ...runOnFolderAction(automation),
     {
       key: "copy",
       label: t("automate.duplicate", "Duplicate"),
@@ -318,7 +299,6 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                       openBuilder(AutomationMode.SUGGESTED, automation),
                   }
             }
-            onRunOnFolder={pipelineOpener(automation) ?? undefined}
             onRunningChange={setRunInFlight}
             onBack={() => go(LIBRARY)}
             onDone={() => {
